@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tooterminal</title>
+    <meta charset="UTF-8">
+
+    <link rel="shortcut icon" type="image/svg+xml" sizes="any" href="./favicon.svg" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
+    <link href="./css/jquery.terminal-1.6.1.min.css" rel="stylesheet"/>
+    <link href="./css/tooterminal.css" rel="stylesheet"/>
+
+    <script src="./js/jquery-1.7.1.min.js"></script>
+    <script src="./js/jquery.mousewheel-min.js"></script>
+    <script src="./js/jquery.terminal-1.6.1_tooterminal.js"></script>
+    <script src="./js/tooterminal.js"></script>
+    <script src="./js/cisco_emulator.js"></script>
+    <script src="./js/mode_elements.js"></script>
+
+</head>
+<body>
+    <div class="tooterminal">
+        <div class="timeline" id="timeline"></div>
+        <div class="toot window" id="toot">
+            <input type="text" id="toot_cw" placeholder="Contents Warning...">
+            <textarea id="toot_box" placeholder="toot message..."></textarea>
+            <select id="toot_visibility">
+                <option value="public">公開</option>
+                <option value="unlisted">未収容</option>
+                <option value="private">非公開</option>
+            </select>
+            <button id="toot_post">Toot!</button>
+        </div>
+        <div class="help window" id="help">
+            <div class="head" id="help_head">コンソール画面風 マストドンクライアント「Tooterminal」</div>
+            <div class="body" id="help_head">
+                <h1>Tooterminalについて</h1>
+                <p>
+                    Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。完全に俺得クライアントです。
+                    コマンドモードについて
+                    特権モード
+                    ユーザーモードはありません。特権モードからコンフィギュレーションモードまたはインスタンスモードに遷移して操作することになります。
+                    特権モードでは、コンフィグの確認・保存、登録済みインスタンスの確認、各種モードへの遷移等が行えます。
+                    コンフィギュレーションモード
+                    当クライアントに関する様々な設定を行います。
+                    手っ取り早い使い方
+                    インスタンスの登録→ログイン→タイムラインの閲覧→タイムラインを監視する→トゥートする
+                </p>
+            </div>
+            <button id="help_close">閉じる</button>
+        </div>
+    </div>
+</body>
+</html>

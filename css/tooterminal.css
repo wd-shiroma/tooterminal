@@ -1,0 +1,62 @@
+body {
+    background-color: #333;
+}
+
+.raw p {
+    margin: 0px;
+}
+
+.timeline {
+    ime-mode: inactive;
+}
+
+.window {
+    display: none;
+    background-color: #222;
+    position: absolute;
+    padding: 3px;
+    top: 1em;
+    right: 3em;
+    margin: auto;
+    color: #bbb;
+    border-radius: 5px;
+    border: 1px solid #353535;
+    font-size: 12px;
+}
+.toot {
+    width: 21em;
+    height: 10em;
+    ime-mode:active;
+}
+.toot textarea,select,button,input{
+    display: block;
+    margin: 2px;
+    background-color: #000;
+    color: inherit;
+    border-radius: inherit;
+    border: inherit;
+    font-size: inherit;
+}
+
+.toot textarea {
+    width: calc(100% - 10px);
+    height: 5em;
+    line-height: 1.2em;
+}
+
+.toot input {
+    width: calc(100% - 10px);
+}
+
+.toot select {
+    float: left;
+    height: 1.5em;
+}
+
+.window button {
+    margin-left: auto;
+    height: 1.5em;
+    top: 0px;
+    bottom: 0px;
+    margin-top: auto;
+}

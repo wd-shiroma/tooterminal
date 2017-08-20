@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<svg version="1.2" baseProfile="tiny" width="100mm" height="100mm" viewBox="0 0 10000 10000" preserveAspectRatio="xMidYMid" fill-rule="evenodd" stroke-width="28.222" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+ <defs class="ClipPathGroup">
+  <clipPath id="presentation_clip_path" clipPathUnits="userSpaceOnUse">
+   <rect x="0" y="0" width="10000" height="10000"/>
+  </clipPath>
+ </defs>
+ <defs class="TextShapeIndex">
+  <g ooo:slide="id1" ooo:id-list="id3 id4 id5 id6 id7 id8 id9 id10 id11 id12"/>
+ </defs>
+ <defs class="EmbeddedBulletChars">
+  <g id="bullet-char-template(57356)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 580,1141 L 1163,571 580,0 -4,571 580,1141 Z"/>
+  </g>
+  <g id="bullet-char-template(57354)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 8,1128 L 1137,1128 1137,0 8,0 8,1128 Z"/>
+  </g>
+  <g id="bullet-char-template(10146)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 174,0 L 602,739 174,1481 1456,739 174,0 Z M 1358,739 L 309,1346 659,739 1358,739 Z"/>
+  </g>
+  <g id="bullet-char-template(10132)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 2015,739 L 1276,0 717,0 1260,543 174,543 174,936 1260,936 717,1481 1274,1481 2015,739 Z"/>
+  </g>
+  <g id="bullet-char-template(10007)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 0,-2 C -7,14 -16,27 -25,37 L 356,567 C 262,823 215,952 215,954 215,979 228,992 255,992 264,992 276,990 289,987 310,991 331,999 354,1012 L 381,999 492,748 772,1049 836,1024 860,1049 C 881,1039 901,1025 922,1006 886,937 835,863 770,784 769,783 710,716 594,584 L 774,223 C 774,196 753,168 711,139 L 727,119 C 717,90 699,76 672,76 641,76 570,178 457,381 L 164,-76 C 142,-110 111,-127 72,-127 30,-127 9,-110 8,-76 1,-67 -2,-52 -2,-32 -2,-23 -1,-13 0,-2 Z"/>
+  </g>
+  <g id="bullet-char-template(10004)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 285,-33 C 182,-33 111,30 74,156 52,228 41,333 41,471 41,549 55,616 82,672 116,743 169,778 240,778 293,778 328,747 346,684 L 369,508 C 377,444 397,411 428,410 L 1163,1116 C 1174,1127 1196,1133 1229,1133 1271,1133 1292,1118 1292,1087 L 1292,965 C 1292,929 1282,901 1262,881 L 442,47 C 390,-6 338,-33 285,-33 Z"/>
+  </g>
+  <g id="bullet-char-template(9679)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 813,0 C 632,0 489,54 383,161 276,268 223,411 223,592 223,773 276,916 383,1023 489,1130 632,1184 813,1184 992,1184 1136,1130 1245,1023 1353,916 1407,772 1407,592 1407,412 1353,268 1245,161 1136,54 992,0 813,0 Z"/>
+  </g>
+  <g id="bullet-char-template(8226)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M 346,457 C 273,457 209,483 155,535 101,586 74,649 74,723 74,796 101,859 155,911 209,963 273,989 346,989 419,989 480,963 531,910 582,859 608,796 608,723 608,648 583,586 532,535 482,483 420,457 346,457 Z"/>
+  </g>
+  <g id="bullet-char-template(8211)" transform="scale(0.00048828125,-0.00048828125)">
+   <path d="M -4,459 L 1135,459 1135,606 -4,606 -4,459 Z"/>
+  </g>
+ </defs>
+ <defs class="TextEmbeddedBitmaps"/>
+ <g>
+  <g id="id2" class="Master_Slide">
+   <g id="bg-id2" class="Background"/>
+   <g id="bo-id2" class="BackgroundObjects"/>
+  </g>
+ </g>
+ <g class="SlideGroup">
+  <g>
+   <g id="id1" class="Slide" clip-path="url(#presentation_clip_path)">
+    <g class="Page">
+     <g class="com.sun.star.drawing.CustomShape">
+      <g id="id3">
+       <path fill="rgb(0,0,0)" stroke="none" d="M 1533,1900 C 1016,1900 500,2416 500,2933 L 500,7067 C 500,7584 1016,8101 1533,8101 L 8467,8101 C 8984,8101 9501,7584 9501,7067 L 9501,2933 C 9501,2416 8984,1900 8467,1900 L 1533,1900 Z M 500,1900 L 500,1900 Z M 9501,8101 L 9501,8101 Z"/>
+       <path fill="none" stroke="rgb(178,178,178)" stroke-width="1000" stroke-linejoin="round" d="M 1533,1900 C 1016,1900 500,2416 500,2933 L 500,7067 C 500,7584 1016,8101 1533,8101 L 8467,8101 C 8984,8101 9501,7584 9501,7067 L 9501,2933 C 9501,2416 8984,1900 8467,1900 L 1533,1900 Z"/>
+      </g>
+     </g>
+     <g class="com.sun.star.drawing.CustomShape">
+      <g id="id4">
+       <path fill="rgb(153,153,153)" stroke="none" d="M 7256,6800 L 6200,6800 6200,6200 8312,6200 8312,6800 7256,6800 Z"/>
+      </g>
+     </g>
+     <g class="Group">
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id5">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 2090,4382 C 1895,4382 1700,4577 1700,4772 L 1700,6410 C 1700,6605 1895,6801 2090,6801 L 2090,6801 C 2285,6801 2481,6605 2481,6410 L 2481,4772 C 2481,4577 2285,4382 2090,4382 L 2090,4382 Z M 1700,4382 L 1700,4382 Z M 2481,6801 L 2481,6801 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id6">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 2480,6799 L 2090,6799 2090,6036 2870,6036 2870,6799 2480,6799 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id7">
+        <path fill="rgb(0,0,0)" stroke="none" d="M 2870,4382 C 2675,4382 2480,4577 2480,4772 L 2480,6410 C 2480,6605 2675,6801 2870,6801 L 2870,6801 C 3065,6801 3261,6605 3261,6410 L 3261,4772 C 3261,4577 3065,4382 2870,4382 L 2870,4382 Z M 2480,4382 L 2480,4382 Z M 3261,6801 L 3261,6801 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id8">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 5210,4382 C 5015,4382 4820,4577 4820,4772 L 4820,6410 C 4820,6605 5015,6801 5210,6801 L 5210,6801 C 5405,6801 5601,6605 5601,6410 L 5601,4772 C 5601,4577 5405,4382 5210,4382 L 5210,4382 Z M 4820,4382 L 4820,4382 Z M 5601,6801 L 5601,6801 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id9">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 4820,6799 L 4430,6799 4430,6036 5210,6036 5210,6799 4820,6799 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id10">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 3650,4000 C 3455,4000 3260,4195 3260,4390 L 3260,6028 C 3260,6223 3455,6419 3650,6419 L 3650,6419 C 3845,6419 4041,6223 4041,6028 L 4041,4390 C 4041,4195 3845,4000 3650,4000 L 3650,4000 Z M 3260,4000 L 3260,4000 Z M 4041,6419 L 4041,6419 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id11">
+        <path fill="rgb(153,153,153)" stroke="none" d="M 4040,4762 L 3650,4762 3650,3999 4430,3999 4430,4762 4040,4762 Z"/>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id12">
+        <path fill="rgb(0,0,0)" stroke="none" d="M 4430,4000 C 4235,4000 4040,4195 4040,4390 L 4040,6410 C 4040,6605 4235,6800 4430,6800 L 4430,6800 C 4625,6800 4821,6605 4821,6410 L 4821,4390 C 4821,4195 4625,4000 4430,4000 L 4430,4000 Z M 4040,4000 L 4040,4000 Z M 4821,6801 L 4821,6801 Z"/>
+       </g>
+      </g>
+     </g>
+    </g>
+   </g>
+  </g>
+ </g>
+</svg>
