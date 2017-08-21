@@ -9,7 +9,7 @@
     <link href="./css/jquery.terminal-1.6.1.min.css" rel="stylesheet"/>
     <link href="./css/tooterminal.css" rel="stylesheet"/>
 
-    <script src="./js/jquery-1.7.1.min.js"></script>
+    <script src="./js/jquery-3.2.1.min.js"></script>
     <script src="./js/jquery.mousewheel-min.js"></script>
     <script src="./js/jquery.terminal-1.6.1_tooterminal.js"></script>
     <script src="./js/tooterminal.js"></script>
@@ -21,7 +21,7 @@
     <div class="tooterminal">
         <div class="timeline" id="timeline"></div>
         <div class="toot window" id="toot">
-            <input type="text" id="toot_cw" placeholder="Contents Warning...">
+            <input type="text" id="toot_cw" placeholder="contents warning...">
             <textarea id="toot_box" placeholder="toot message..."></textarea>
             <select id="toot_visibility">
                 <option value="public">公開</option>
@@ -34,17 +34,55 @@
             <div class="head" id="help_head">コンソール画面風 マストドンクライアント「Tooterminal」</div>
             <div class="body" id="help_head">
                 <h1>Tooterminalについて</h1>
-                <p>
-                    Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。完全に俺得クライアントです。
-                    コマンドモードについて
-                    特権モード
-                    ユーザーモードはありません。特権モードからコンフィギュレーションモードまたはインスタンスモードに遷移して操作することになります。
-                    特権モードでは、コンフィグの確認・保存、登録済みインスタンスの確認、各種モードへの遷移等が行えます。
-                    コンフィギュレーションモード
-                    当クライアントに関する様々な設定を行います。
-                    手っ取り早い使い方
-                    インスタンスの登録→ログイン→タイムラインの閲覧→タイムラインを監視する→トゥートする
-                </p>
+                <p>Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。完全に俺得クライアントです。</p>
+                <h2>CiscoIOSとは</h2>
+                <p>商用NW機器大手のCisco社製ルーター/スイッチ等で幅広く使われているファームウェアです</p>
+                <p>ネットワークエンジニアであれば、CCNAの資格取得でCiscoIOSに触れる機会が多いと思います。</p>
+                <p>強力なタブ補完機能とコマンド省略機能、ドキュメントが無くてもある程度コマンドを探して実行することができる利便性を備えたシステムだと思っています。</p>
+                <p>当クライアントは、CiscoIOSの操作性を最大限にリスペクトした、<a href="https://mstdn.jp/@shiroma" target="_blank">shiroma@mstdn.jp</a>が趣味で作成しているcisco_emulator.jsをマストドンクライアントとして実装したものとなっています。</p>
+                <h2>コマンドモードについて</h2>
+                <p>CiscoIOSを模した特権モードとコンフィギュレーションモードがあり、さらに追加で独自実装したインスタンスモードが存在します。</p>
+                <h3>特権モード</h3>
+                <p>Tooterminalを起動した状態のモード。プロンプトが「Tooterminal#」と表示されます。</p>
+                <p class="cmdline">Tooterminal# ←特権モード</p>
+                <p>特権モードでは、コンフィグの確認・保存、登録済みインスタンスの確認、各種モードへの遷移等が行えます。</p>
+                <h3>コンフィギュレーションモード</h3>
+                <p>当クライアントに関する様々な設定を行います。プロンプトが「Tooterminal(config)#」と表示されます。</p>
+                <p>「configuration terminal」と入力することで、モード遷移することができます。</p>
+                <p class="cmdline">Tooterminal# configuration terminal<br>Tooterminal(config)# ←コンフィギュレーションモード</p>
+                <p>※設定した内容はrunning-config(ページキャッシュ)に保存されるため、画面再読み込み等をすると設定はリセットされます。設定をstartup-config(localStorage)に保存するためには、特権モードにて「write memory」コマンドを実行してください。</p>
+                <p class="cmdline">Tooterminal# write memory</p>
+                <h3>インスタンスモード</h3>
+                <p>各インスタンスに関する操作を行うことが出来、本来のマストドンクライアントとしての機能はほぼここに実装してあります。</p>
+                <p>独自実装したモードです。特権モードにて「instance インスタンス名」と入力することで入ることができます。</p>
+                <p class="cmdline">Tooterminal# instance jp<br>shiroma@mstdn.jp# ←インスタンスモード(未ログインの場合はユーザ名が表示されない)</p>
+                <h1>簡易チュートリアル</h1>
+                <p>一般的なクライアント同様、タイムラインの監視とトゥートができるところまでの流れを解説します。</p>
+                <p>詳しい仕様等については<a href="https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md" target="_blank">githubのREADME.md</a>を参照してください。</p>
+                <h2>１．インスタンス登録＆インスタンスモードに遷移</h2>
+                <p>特権モードにて以下のコマンドを実行します。</p>
+                <p class="cmdline">Tooterminal# instance インスタンス名(任意)</p>
+                <p>インスタンス名は今後インスタンスモードに遷移する際に利用するので、短めの文字列にすることを推奨します。(jp, nico, pawooなど)</p>
+                <p>「Input instance domain:」と表示されるので、接続先インスタンスのドメイン名を入力してください。</p>
+                <p class="cmdline">Input instance domain: example.com</p>
+                <p>インスタンスにクライアント登録が成功するとそのままインスタンスモードに遷移し、プロンプトの表示が「@ドメイン名#」に切り替わります。</p>
+                <p class="cmdline">@example.com#</p>
+                <h2>２．ユーザーログイン</h2>
+                <p>インスタンスモードにいる状態で「login」と入力してください。</p>
+                <p class="cmdline">@example.com# login</p>
+                <p>別ウインドウが開き、インスタンスのログインページに遷移します。</p>
+                <p>ユーザーログインをするとアプリケーション登録の承認画面が表示されるため、「承認」を押下します。</p>
+                <p>英数字の認証コードが発行されるので、Tooterminalに「Input Authentication Code:」と表示されていることを確認し、コードをコピペしてください。</p>
+                <p class="cmdline">Input Authentication Code: db25bcf4180...</p>
+                <p>ログインに成功すると「Hello! (ユーザ名) @(ユーザID)」と表示され、プロンプトが「ユーザID@ドメイン名#」に切り替わります。</p>
+                <p class="cmdline">Hello! マスト太郎(センスない山田太郎) @masto_taro<br>masto_taro@example.com#</p>
+                <h2>３．タイムラインのストリーミング開始とトゥート画面表示</h2>
+                <h3>ストリーミングの再生</h3>
+                <p class="cmdline">userid@domain.domain# terminal monitor</p>
+                <p>ローカルタイムラインと通知が表示されます。ホームタイムラインなどのストリームについては、<a href="https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md" target="_blank">README.md</a>を参照してください。</p>
+                <h3>トゥート画面の表示</h3>
+                <p class="cmdline">userid@domain.domain# toot</p>
+                <p>「toot message...」と表示してある入力欄にトゥート内容を書き込んでください。メッセージを隠したい場合は、「contents worning...」の欄に閲覧注意文を入力してください。</p>
             </div>
             <button id="help_close">閉じる</button>
         </div>

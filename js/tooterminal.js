@@ -112,7 +112,7 @@ $(function() {
         onInit:       readConfiguration,
         prompt:       'Tooterminal# ',
         completion:   completion,
-        height:       $(window).height() - 30,
+        height:       $(window).height() - 20,
         exit:         false,
         clear:        false,
         keypress:     filterKey,

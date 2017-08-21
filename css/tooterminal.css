@@ -15,13 +15,17 @@ body {
     background-color: #222;
     position: absolute;
     padding: 3px;
-    top: 1em;
-    right: 3em;
+    top: 3vh;
+    right: 5vw;
     margin: auto;
     color: #bbb;
     border-radius: 5px;
     border: 1px solid #353535;
     font-size: 12px;
+    max-width: 90vw;
+    max-height: 94vh;
+    overflow-y: auto;
+    overflow-x: none;
 }
 .toot {
     width: 21em;
@@ -59,4 +63,32 @@ body {
     top: 0px;
     bottom: 0px;
     margin-top: auto;
+}
+
+.help h1 {
+    margin: 2em 0em 1em 0em;
+    text-decoration: underline;
+}
+.help h2 {
+    margin: 2em 0em 1em 0em;
+}
+.help h3 {
+    margin: 2em 0em 1em 0em;
+}
+.help p {
+    margin-left: 2em;
+    margin-right: 2em;
+}
+.help .cmdline {
+    font-family: monospace;
+    padding: 5px;
+    background-color: #000;
+    border-radius: 3px;
+    border: 1px solid #666;
+}
+.help a {
+    color: #0F60FF;
+}
+.help a:hover {
+    color: red;
 }

@@ -120,7 +120,7 @@ var GlobalModeElement = (function () {
             }, {
                 "type": "command",
                 "name": "help",
-                "description": "ヘルプページへジャンプします。",
+                "description": "ヘルプウインドウを表示します。",
                 "execute": this.help,
             }
         ];
@@ -346,6 +346,7 @@ var regist_instance = (input, term) => {
             data:{
                 client_name: config.application.name,
                 redirect_uris: config.application.uris,
+                website: 'https://wd-shiroma.github.io/tooterminal',
                 scopes:
                       (config.application.scopes.read   ? 'read '  : '')
                     + (config.application.scopes.write  ? 'write ' : '')
@@ -374,6 +375,7 @@ var regist_instance = (input, term) => {
                 exit:    false
             });
         }, (jqxhr, status, error) => {
+            term.error('Failed to connect the instance "' + input + '"');
             term.resume();
             console.log(jqxhr);
         });
@@ -801,6 +803,11 @@ var InstanceModeElement = (function () {
                         "execute": this.show_instance,
                     }, {
                         "type": "command",
+                        "name": "authentication",
+                        "description": 'インスタンス情報を表示します。',
+                        "execute": this.show_authentication,
+                    }, {
+                        "type": "command",
                         "name": "timeline",
                         "description": 'タイムラインの最新トゥートを表示します。',
                         "execute": this.show_statuses,
@@ -935,17 +942,16 @@ var InstanceModeElement = (function () {
                 instances[instance_name].token_type = data.token_type;
                 var store = localStorage;
                 store.setItem('instances', JSON.stringify(instances));
-                return $.ajax({
-                    url: 'https://' + instances[instance_name].domain + '/api/v1/accounts/verify_credentials',
-                    type: 'GET',
-                    headers: {
-                        Authorization: data.token_type + ' ' + data.access_token
-                    }
-                });
-            }).then((data, status, jqxhr) => {
-                term.echo('Hello! ' + data.display_name + ' @' + data.username);
-                instances[instance_name].user = data;
 
+                console.log(data);
+
+                return callAPI('/api/v1/accounts/verify_credentials');
+            }).then((data2, status, jqxhr) => {
+                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
+                instances[instance_name].user = data2;
+
+                console.log(data2);
+                console.log(jqxhr);
 
                 var store = localStorage;
                 store.setItem('instances', JSON.stringify(instances));
@@ -953,7 +959,7 @@ var InstanceModeElement = (function () {
                 term.pop();
 
                 var prompt = instances[instance_name].user.username;
-                prompt += ' @' + instances[instance_name].domain + '# ';
+                prompt += '@' + instances[instance_name].domain + '# ';
                 $.terminal.active().set_prompt(prompt);
             }, (jqxhr, status, error) => {
                 term.error('Ajax Error.');
@@ -1029,16 +1035,26 @@ var InstanceModeElement = (function () {
         }
 
         api.then((data, status, jqxhr) => {
-            term.echo(data.display_name + ', ID ' + data.id
-                + (data.locked ? ' (locked)' : ' (unlocked)'), {flush: false});
-            term.echo('Username: ' + data.username + ', Fullname: ' + data.acct, {flush: false});
-            term.echo('Created at ' + data.created_at, {flush: false});
-            term.echo('Statuses ' + data.statuses_count
-                    + ', Following ' + data.following_count
-                    + ', Followers ' + data.followers_count, {flush: false});
-            term.echo('<p>Note:</p>' + data.note, {raw: true, flush: false});
-            term.echo('URL: ' + data.url, {flush: false});
-            term.echo('', {flush: false});
+            var created = new Date(data.created_at);
+            var passing = parseInt((Date.now() - created.getTime()) / 60000);
+            var minutes = passing % 60;
+            var hours   = (passing = (passing - minutes) / 60) % 24;
+            var days    = (passing = (passing - hours) / 24) % 7;
+            var weeks   = (passing - days) / 7;
+            term.echo(data.display_name + ' ID:' + data.id
+                + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
+            term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
+            term.echo('Created at ' + created.toString(), {flush: false});
+            term.echo('Uptime is '
+                    + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
+                    + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
+            term.echo(data.statuses_count  + ' statuses posted, '
+                    + data.following_count + ' accounts are following, '
+                    + data.followers_count + ' accounts are followed', {flush: false});
+            term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
+            term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
+            term.echo('URL: ' + data.url, {raw: false, flush: false});
+            term.echo('[OK]', {flush: false});
             term.flush();
             term.resume();
         }, (jqxhr, status, error) => {
@@ -1099,6 +1115,19 @@ var InstanceModeElement = (function () {
             term.echo('E-mail: ' + data.email, {flush: false});
             term.echo('URI: ' + data.uri, {flush: false});
             term.flush();
+            term.resume();
+        }, (jqxhr, status, error) => {
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_authentication = function (term, analyzer) {
+        term.pause();
+        callAPI('/api/v1/instance', {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            var json_str = JSON.stringify(data, null, '    ');
+            term.echo(json_str);
             term.resume();
         }, (jqxhr, status, error) => {
             console.log(jqxhr);
