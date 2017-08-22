@@ -149,7 +149,7 @@ function makeStatus(payload) {
     var head = '[ '
         + (typeof payload.account.display_name === 'undefined' ? '' : payload.account.display_name)
         + ' @'       + payload.account.username
-        + ' '        + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate() + ' '
+        + ' '        + date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate() + ' '
         + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + '.' + date.getMilliseconds()
         + ' ]' + (payload.application !== null ? ' from ' + payload.application.name : '');
     var status = $('<div />')
