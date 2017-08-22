@@ -354,12 +354,11 @@ var regist_instance = (input, term) => {
             }
         })
         .then((data, status, jqxhr) => {
-            instances[instance_name] = {
-                client_id: data.client_id,
-                client_secret: data.client_secret,
-                domain: input,
-                application: config.application,
-            };
+            instances[instance_name]               = config.instances
+            instances[instance_name].client_id     = data.client_id;
+            instances[instance_name].client_secret = data.client_secret;
+            instances[instance_name].domain        = input;
+            instances[instance_name].application   = config.application;
 
             var prompt = '@' + instances[instance_name].domain + '# ';
             term.echo('New instance registed. enter \'login\' and regist your access_token');
@@ -732,7 +731,7 @@ var ConfigurationModeElement = (function () {
     return ConfigurationModeElement;
 }());
 
-var ws;
+var ws = {};
 var InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
@@ -871,6 +870,38 @@ var InstanceModeElement = (function () {
                         "name": "monitor",
                         "description": 'ストリーミングを有効にします。',
                         "execute": this.terminal_monitor,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "home",
+                                "description": 'ホームタイムラインをモニターします。',
+                                "execute": this.terminal_monitor,
+                            }, {
+                                "type": "command",
+                                "name": "local",
+                                "description": 'ローカルタイムラインをモニターします。',
+                                "execute": this.terminal_monitor,
+                            }, {
+                                "type": "command",
+                                "name": "public",
+                                "description": '連合タイムラインをモニターします。',
+                                "execute": this.terminal_monitor,
+                            }, {
+                                "type": "command",
+                                "name": "tag",
+                                "description": 'ハッシュタグをモニターします。',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "hashtag",
+                                        "description": 'ハッシュタグ文字列',
+                                        "execute": this.terminal_monitor,
+                                        "children": [
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
                     }, {
                         "type": "command",
                         "name": "no",
@@ -882,6 +913,42 @@ var InstanceModeElement = (function () {
                                 "name": "monitor",
                                 "description": 'ストリーミングを無効にします。',
                                 "execute": this.terminal_monitor,
+                                "children": [
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "monitor",
+                "description": 'デフォルトのストリーミング設定を行います。',
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "home",
+                        "description": 'ホームタイムラインをモニターします。',
+                        "execute": this.monitor,
+                    }, {
+                        "type": "command",
+                        "name": "local",
+                        "description": 'ローカルタイムラインをモニターします。',
+                        "execute": this.monitor,
+                    }, {
+                        "type": "command",
+                        "name": "public",
+                        "description": '連合タイムラインをモニターします。',
+                        "execute": this.monitor,
+                    }, {
+                        "type": "command",
+                        "name": "tag",
+                        "description": 'ハッシュタグをモニターします。',
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "hashtag",
+                                "description": 'ハッシュタグ文字列',
+                                "execute": this.monitor,
                                 "children": [
                                 ]
                             }
@@ -943,15 +1010,10 @@ var InstanceModeElement = (function () {
                 var store = localStorage;
                 store.setItem('instances', JSON.stringify(instances));
 
-                console.log(data);
-
                 return callAPI('/api/v1/accounts/verify_credentials');
             }).then((data2, status, jqxhr) => {
                 term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
                 instances[instance_name].user = data2;
-
-                console.log(data2);
-                console.log(jqxhr);
 
                 var store = localStorage;
                 store.setItem('instances', JSON.stringify(instances));
@@ -974,42 +1036,75 @@ var InstanceModeElement = (function () {
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {
         if (
             (typeof analyzer.line_parsed[1] === 'undefined' || analyzer.line_parsed[1].name === 'monitor')
-            && (typeof ws === 'undefined' || ws.readyStatus >= WebSocket.CLOSING)
+            && (typeof ws[instance_name] === 'undefined' || ws[instance_name].readyStatus >= WebSocket.CLOSING)
         ) {
-            ws = new WebSocket(
-                'wss://' + instances[instance_name].domain + '/api/v1/streaming/public'
-                + '?access_token=' + instances[instance_name].access_token
-                + '&stream=public:local'
-            );
+            if (typeof analyzer.line_parsed[2] === 'undefined') {
+                monitor = getConfig(instances[instance_name], 'monitor', default_config.instances)
+            }
+            else if (analyzer.line_parsed[2].name === 'tag') {
+                monitor = analyzer.paramaters.hashtag;
+            }
+            else {
+                monitor = analyzer.line_parsed[2].name;
+            }
+            var api = 'wss://' + instances[instance_name].domain
+                               + '/api/v1/streaming?access_token='
+                               + instances[instance_name].access_token;
+            switch (monitor) {
+                case 'local':
+                    api += '&stream=public:local';
+                    break;
+                case 'public':
+                    api += '&stream=public';
+                    break;
+                case 'home':
+                    api += '&stream=user';
+                    break;
+                default:
+                    api += '&stream=hashtag&tag=' + monitor;
+                    break;
+            }
+            ws[instance_name] = new WebSocket(api);
 
-            ws.onmessage = (e) => {
+            ws[instance_name].onmessage = (e) => {
                 var data = JSON.parse(e.data);
+                var payload;
 
                 if (data.event === 'delete') {
-                    return;
+                    payload = data.payload;
+                    term.error('deleted ID:' + payload);
                 }
-
-                var payload = JSON.parse(data.payload);
-                var status = makeStatus(payload);
-                term.echo(status, { raw: true });
+                else if(data.event === 'notification') {
+                    payload = JSON.parse(data.payload);
+                    term.echo('[[;yellow;]Notification! : ' + payload.type + ' << '
+                        + payload.account.display_name + ' @' + payload.account.acct
+                        + "\n" + payload.status.content + ']');
+                }
+                else if(data.event === 'update') {
+                    payload = JSON.parse(data.payload);
+                    var status = makeStatus(payload);
+                    term.echo(status, { raw: true });
+                }
                 //console.log(payload);
             };
 
-            ws.onopen = () => {
+            ws[instance_name].onopen = () => {
                 term.echo("Streaming start.");
             };
 
-            ws.onerror = (e) => {
+            ws[instance_name].onerror = (e) => {
                 console.warn(e);
             };
 
-            ws.onclose = () => {
+            ws[instance_name].onclose = () => {
                 term.echo("Streaming closed.");
             };
         }
         else if(analyzer.line_parsed[1].name === 'no'){
-            ws.close();
-            ws = undefined;
+            if (typeof ws[instance_name] !== 'undefined') {
+                ws[instance_name].close();
+                ws[instance_name] = undefined;
+            }
         }
     };
     InstanceModeElement.prototype.toot = function (term, analyzer) {
@@ -1019,6 +1114,12 @@ var InstanceModeElement = (function () {
         $('#toot').slideDown('first');
         $('#toot_box').focus();
         term.focus(false);
+    };
+    InstanceModeElement.prototype.monitor = function (term, analyzer) {
+        instances[instance_name].monitor = (analyzer.line_parsed[1].name === 'tag')
+                    ? analyzer.paramaters.hashtag
+                    : analyzer.line_parsed[1].name;
+        localStorage.setItem('instances', JSON.stringify(instances));
     };
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
         term.pause();

@@ -14,6 +14,9 @@ var default_config = {
     },
     terminal: {
         length: 0
+    },
+    instances: {
+        monitor: 'local'
     }
 }
 
@@ -55,7 +58,7 @@ var completion = (line, callback) => {
     }
 };
 
-var readConfiguration = (term) => {
+var initConfig = (term) => {
     var store = localStorage;
     var str = store.getItem('configuration');
     if (str) {
@@ -92,7 +95,6 @@ var filterKey = (event, term) => {
             term.set_command(cmd);
         },10);
     }
-    //console.log($.terminal.parse_arguments(t.get_command()));
 };
 
 var parseCommand = (command, term) => {
@@ -109,7 +111,7 @@ $(function() {
         name:        'global',
         greetings:   "=== CLI画面風 マストドンクライアント \"Tooterminal\" ===\n\n使い方は\"help\"コマンドまたは\"?\"キーを押してください。\n\n",
         login:        false,
-        onInit:       readConfiguration,
+        onInit:       initConfig,
         prompt:       'Tooterminal# ',
         completion:   completion,
         height:       $(window).height() - 20,
@@ -143,6 +145,29 @@ $(function() {
  * その他処理
  *****************************/
 
+
+function getConfig(config, index, def_conf) {
+    var idxs = index.split('.');
+    var cf = config;
+    for (var i = 0; i < idxs.length; i++) {
+        if (typeof cf[idxs[i]] !== 'undefined') {
+            cf = cf[idxs[i]];
+        }
+        else {
+            cf = undefined;
+            break;
+        }
+    }
+    if (typeof cf !== 'undefined') {
+        return cf;
+    }
+
+    cf = (typeof def_conf !== 'undefined' ? def_conf : default_config);
+    for (var i = 0; i < idxs.length; i++) {
+        cf = cf[idxs[i]];
+    }
+    return cf;
+}
 
 function makeStatus(payload) {
     var date = new Date(payload.created_at);
