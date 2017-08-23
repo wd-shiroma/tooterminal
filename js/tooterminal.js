@@ -128,6 +128,9 @@ $(function() {
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
         }
+        else if ($('#toot_box').val().match(/^@[0-9a-zA-Z_]+/)) {
+            $('#toot_visibility').val('unlisted');
+        }
     });
     $('#toot_post').on('click', () => {
         post_status();
@@ -138,6 +141,22 @@ $(function() {
     });
     $(document).on('click', '.read_more', function() {
         $(this).next().toggle('fast');
+    });
+    $(document).on('click', '.status', function(e) {
+        if ($(this).hasClass('status_deleted')) {
+            return;
+        }
+        var id = $(this).data('sid');
+        if (e.shiftKey) {
+            $('#toot').slideDown('first');
+            $('#toot_box').focus().val('@' + $(this).data('acct').toString() + ' ');
+        }
+        if (e.ctrlKey) {
+            favorite(this);
+        }
+        if (e.altKey) {
+            boost(this);
+        }
     });
 });
 
@@ -173,16 +192,27 @@ function makeStatus(payload) {
     var date = new Date(payload.created_at);
     var head = '[ '
         + (typeof payload.account.display_name === 'undefined' ? '' : payload.account.display_name)
-        + ' @'       + payload.account.username
-        + ' '        + date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate() + ' '
-        + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + '.' + date.getMilliseconds()
+        + ' @' + payload.account.username + ' '
+        + $('<i />').addClass('fa fa-' + (payload.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fa fa-' + (payload.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML')
+        + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
+        + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
+        + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3)
         + ' ]' + (payload.application !== null ? ' from ' + payload.application.name : '');
+
+    console.log(payload);
     var status = $('<div />')
-        .attr('id', 'id_' + payload.id)
+        .attr('name', 'id_' + payload.id)
+        .attr('data-sid', payload.id)
+        .attr('data-instance', instance_name)
+        .attr('data-uid', payload.account.id)
+        .attr('data-acct', payload.account.acct)
+        .attr('data-fav', payload.favorited ? '1' : '0')
+        .attr('data-reb', payload.reblogged ? '1' : '0')
         .addClass('status')
-        .css('margin', '0em 0.5em')
-        .append($('<span />').text(head))
-        .append('<br>');
+        .append($('<span />').html(head))
+        .append('<br />');
+    var content = payload.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
     if (payload.spoiler_text.length > 0) {
         status
             .append($('<div />')
@@ -192,17 +222,17 @@ function makeStatus(payload) {
                 .append($.terminal.format('[[bu;black;gray]-- More --]')))
             //.append('<br>')
             .append($('<div />')
-                .append($('<span />').html($(payload.content).html()))
+                .append($('<span />').html(content))
                 .addClass('status_contents')
                 .hide());
     }
     else {
         status
             .append($('<div />')
-                .append($('<span />').html($(payload.content).html()))
+                .append($('<span />').html(content))
                 .addClass('status_contents'));
     }
-    return status.append('<br>').html();
+    return status.prop('outerHTML');
 }
 
 function post_status() {
@@ -242,23 +272,24 @@ function post_status() {
 
 function callAPI(path, opts = {}) {
     var def;
+    var ins = typeof opts.instance_name === 'undefined'
+            ? instances[instance_name] : instances[opts.instance_name];
     if (typeof path === 'undefined') {
         def = new $.Deffered;
         def.reject('Undefined path');
     }
-    else if (typeof instances[instance_name] === 'undefined') {
+    else if (typeof ins === 'undefined') {
         def = new $.Deffered;
         def.reject('No instance');
     }
-    else if (typeof instances[instance_name].access_token === 'undefined') {
+    else if (typeof ins.access_token === 'undefined') {
         def = new $.Deffered;
         def.reject('No login');
     }
     else {
-        var ins = instances[instance_name];
         def = $.ajax({
             url: 'https://' + ins.domain + path,
-            type: typeof opts.type ? opts.type : 'GET',
+            type: typeof opts.type !== 'undefined' ? opts.type : 'GET',
             headers: {
                 Authorization: ins.token_type + ' ' + ins.access_token
             },
@@ -267,6 +298,54 @@ function callAPI(path, opts = {}) {
         });
     }
     return def;
+}
+
+function favorite(status, term) {
+    var isFav = ($(status).data('fav') == 1);
+    var api = '/api/v1/statuses/'
+            + $(status).data('sid').toString()
+            + (isFav ? '/unfavourite' : '/favourite' );
+    if (typeof term === 'undefined') {
+        term = $.terminal.active();
+    }
+    callAPI(api, {
+        instance_name: $(status).data('instance'),
+        type: 'POST'
+    }).then((data, stat, jqxhr) => {
+        var fav = $('[name=id_' + $(status).data('sid').toString() + ']').find('i')[0];
+        $(fav).removeClass().addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'));
+        $(status).data('fav', data.favourited ? '1' : '0');
+        if (isFav === data.favourited) {
+            term.error('favourited missed...');
+        }
+    }, (jqxhr, stat, error) => {
+        console.log('favorite: failed');
+        console.log(jqxhr);
+    });
+}
+
+function boost(status) {
+    var isReb = ($(status).data('reb') == 1);
+    var api = '/api/v1/statuses/'
+            + $(status).data('sid').toString()
+            + (isReb ? '/unreblog' : '/reblog' );
+    if (typeof term === 'undefined') {
+        term = $.terminal.active();
+    }
+    callAPI(api, {
+        instance_name: $(status).data('instance'),
+        type: 'POST'
+    }).then((data, stat, jqxhr) => {
+        var reb = $('[name=id_' + $(status).data('sid').toString() + ']').find('i')[1];
+        $(reb).removeClass().addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'));
+        $(status).data('reb', data.reblogged ? '1' : '0');
+        if (isReb === data.reblogged) {
+            term.error('reblogged missed...');
+        }
+    }, (jqxhr, stat, error) => {
+        console.log('favorite: failed');
+        console.log(jqxhr);
+    });
 }
 
 function tab(arg1, arg2, indent){

@@ -92,3 +92,17 @@ body {
 .help a:hover {
     color: red;
 }
+
+.status {
+    padding: 0em 0.5em 1em 0.5em;
+}
+.status:hover {
+    background-color: #252525;
+}
+.status:hover *{
+    background-color: inherit;
+}
+
+.status_deleted *{
+    text-decoration: line-through;
+}

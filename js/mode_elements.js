@@ -160,7 +160,7 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        term.echo('version 0.1 (updated at 2017-08-10)');
+        term.echo('version 0.2 (updated at 2017-08-23)');
         return true;
     };
 
@@ -731,7 +731,7 @@ var ConfigurationModeElement = (function () {
     return ConfigurationModeElement;
 }());
 
-var ws = {};
+var ws = [];
 var InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
@@ -957,6 +957,11 @@ var InstanceModeElement = (function () {
                 ]
             }, {
                 "type": "command",
+                "name": "clear",
+                "description": "画面を消去します。",
+                "execute": this.clear
+            }, {
+                "type": "command",
                 "name": "exit",
                 "description": 'インスタンスモードを終了します。',
                 "execute": this.exit,
@@ -1036,7 +1041,7 @@ var InstanceModeElement = (function () {
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {
         if (
             (typeof analyzer.line_parsed[1] === 'undefined' || analyzer.line_parsed[1].name === 'monitor')
-            && (typeof ws[instance_name] === 'undefined' || ws[instance_name].readyStatus >= WebSocket.CLOSING)
+            && (ws.length === 0 || ws[0].readyStatus >= WebSocket.CLOSING)
         ) {
             if (typeof analyzer.line_parsed[2] === 'undefined') {
                 monitor = getConfig(instances[instance_name], 'monitor', default_config.instances)
@@ -1048,63 +1053,125 @@ var InstanceModeElement = (function () {
                 monitor = analyzer.line_parsed[2].name;
             }
             var api = 'wss://' + instances[instance_name].domain
-                               + '/api/v1/streaming?access_token='
-                               + instances[instance_name].access_token;
-            switch (monitor) {
-                case 'local':
-                    api += '&stream=public:local';
-                    break;
-                case 'public':
-                    api += '&stream=public';
-                    break;
-                case 'home':
-                    api += '&stream=user';
-                    break;
-                default:
-                    api += '&stream=hashtag&tag=' + monitor;
-                    break;
+                                    + '/api/v1/streaming?access_token='
+                                    + instances[instance_name].access_token
+                                    + '&stream=user';
+            if (monitor === 'home') {
+                var ws_t = new WebSocket(api);
+
+                ws_t.onmessage = (e) => {
+                    var data = JSON.parse(e.data);
+                    var payload;
+
+                    if (data.event === 'delete') {
+                        payload = data.payload;
+                        term.error('deleted ID:' + payload);
+                        $('[name=id_' + payload + ']').addClass('status_deleted');
+                    }
+                    else if(data.event === 'notification') {
+                        payload = JSON.parse(data.payload);
+                        term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                            + payload.account.display_name + ' @' + payload.account.acct
+                            + "\n" + $(payload.status.content).text() + ']');
+                    }
+                    else if(data.event === 'update') {
+                        payload = JSON.parse(data.payload);
+                        var status = makeStatus(payload);
+                        term.echo(status, { raw: true });
+                    }
+                    //console.log(payload);
+                };
+
+                ws_t.onopen = () => {
+                    term.echo("Home Streaming start.");
+                };
+
+                ws_t.onerror = (e) => {
+                    console.warn(e);
+                };
+
+                ws_t.onclose = () => {
+                    term.echo("Home Streaming closed.");
+                };
+                ws.push(ws_t);
             }
-            ws[instance_name] = new WebSocket(api);
+            else {
+                var ws_t = new WebSocket(api);
 
-            ws[instance_name].onmessage = (e) => {
-                var data = JSON.parse(e.data);
-                var payload;
+                ws_t.onmessage = (e) => {
+                    var data = JSON.parse(e.data);
+                    var payload;
 
-                if (data.event === 'delete') {
-                    payload = data.payload;
-                    term.error('deleted ID:' + payload);
-                }
-                else if(data.event === 'notification') {
-                    payload = JSON.parse(data.payload);
-                    term.echo('[[;yellow;]Notification! : ' + payload.type + ' << '
-                        + payload.account.display_name + ' @' + payload.account.acct
-                        + "\n" + payload.status.content + ']');
-                }
-                else if(data.event === 'update') {
-                    payload = JSON.parse(data.payload);
-                    var status = makeStatus(payload);
-                    term.echo(status, { raw: true });
-                }
-                //console.log(payload);
-            };
+                    if(data.event === 'notification') {
+                        payload = JSON.parse(data.payload);
+                        term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                            + payload.account.display_name + ' @' + payload.account.acct
+                            + "\n" + $(payload.status.content).text() + ']');
+                    }
+                };
 
-            ws[instance_name].onopen = () => {
-                term.echo("Streaming start.");
-            };
+                ws_t.onopen = () => {
+                    term.echo("Notification Streaming start.");
+                };
 
-            ws[instance_name].onerror = (e) => {
-                console.warn(e);
-            };
+                ws_t.onerror = (e) => {
+                    console.warn(e);
+                };
 
-            ws[instance_name].onclose = () => {
-                term.echo("Streaming closed.");
-            };
+                ws_t.onclose = () => {
+                    term.echo("Notification Streaming closed.");
+                };
+
+                ws.push(ws_t);
+                delete(ws_t);
+
+                api = 'wss://'
+                        + instances[instance_name].domain
+                        + '/api/v1/streaming?access_token='
+                        + instances[instance_name].access_token
+                        + ((monitor === 'local')  ? '&stream=public:local'
+                         : (monitor === 'public') ? '&stream=public'
+                         : ('&stream=hashtag&tag=' + monitor));
+
+                ws_t = new WebSocket(api);
+
+                ws_t.onmessage = (e) => {
+                    var data = JSON.parse(e.data);
+                    var payload;
+
+                    if (data.event === 'delete') {
+                        payload = data.payload;
+                        term.error('deleted ID:' + payload);
+                        $('[name=id_' + payload + ']').addClass('status_deleted');
+                    }
+                    else if(data.event === 'update') {
+                        payload = JSON.parse(data.payload);
+                        var status = makeStatus(payload);
+                        term.echo(status, { raw: true });
+                    }
+                };
+
+                ws_t.onopen = () => {
+                    term.echo(monitor + " Streaming start.");
+                };
+
+                ws_t.onerror = (e) => {
+                    console.warn(e);
+                };
+
+                ws_t.onclose = () => {
+                    term.echo(monitor + " Streaming closed.");
+                };
+                ws.push(ws_t);
+                delete(ws_t);
+            }
         }
         else if(analyzer.line_parsed[1].name === 'no'){
-            if (typeof ws[instance_name] !== 'undefined') {
-                ws[instance_name].close();
-                ws[instance_name] = undefined;
+            for (var i = 0; i < ws.length; i++) {
+                ws[i].close();
+                ws[i] = undefined;
             }
+            ws = [];
         }
     };
     InstanceModeElement.prototype.toot = function (term, analyzer) {
@@ -1329,6 +1396,10 @@ var InstanceModeElement = (function () {
             console.log(jqxhr);
             term.resume();
         });
+    };
+    InstanceModeElement.prototype.clear = function (term, analyzer) {
+        term.clear();
+        return true;
     };
     return InstanceModeElement;
 }());
