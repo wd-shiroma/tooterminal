@@ -16,7 +16,8 @@ var default_config = {
         length: 0
     },
     instances: {
-        monitor: 'local'
+        monitor: 'local',
+        status: {},
     }
 }
 
