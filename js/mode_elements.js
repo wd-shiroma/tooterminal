@@ -119,6 +119,18 @@ var GlobalModeElement = (function () {
                 ]
             }, {
                 "type": "command",
+                "name": "reset",
+                "description": "ターミナルの状態をリセットします。",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "display-size",
+                        "description": "ターミナルサイズを自動調整します。",
+                        "execute": this.reset_display_size
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "help",
                 "description": "ヘルプウインドウを表示します。",
                 "execute": this.help,
@@ -153,7 +165,6 @@ var GlobalModeElement = (function () {
             strconfig = JSON.stringify(strconfig, null, '    ');
         }
         else {
-            //strconfig = default_config;
             strconfig = 'startup-config is not present';
         }
         term.echo(strconfig);
@@ -161,6 +172,10 @@ var GlobalModeElement = (function () {
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
         term.echo('version 0.2 (updated at 2017-08-23)');
+        return true;
+    };
+    GlobalModeElement.prototype.reset_display_size = function (term, analyzer) {
+        term.resize(window.innerWidth - 36, window.innerHeight - 36);
         return true;
     };
 
@@ -437,12 +452,12 @@ var ConfigurationModeElement = (function () {
                     {
                         "type": "command",
                         "name": "length",
-                        "description": "ターミナル表示行数を設定します。",
+                        "description": "トゥート表示件数を設定します。",
                         "children": [
                             {
                                 "type": "paramater",
-                                "name": "number(0-)",
-                                "description": "表示行数(0で無限)",
+                                "name": "number(20-80)",
+                                "description": "表示件数(デフォルト40)",
                                 "execute": this.set_number
                             }
                         ]
@@ -487,6 +502,31 @@ var ConfigurationModeElement = (function () {
                         ]
                     }, {
                         "type": "command",
+                        "name": "status",
+                        "description": "トゥート表示に関する設定をします。",
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "avatar",
+                                "description": "アイコンを表示します。",
+                                "execute": this.set_command,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "animation",
+                                        "description": "常にアニメーションを再生します。",
+                                        "execute": this.set_command
+                                    }, {
+                                        "type": "command",
+                                        "name": "mouseover",
+                                        "description": "マウスオーバーでアニメーションを再生します。",
+                                        "execute": this.set_command
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        "type": "command",
                         "name": "broadcast-to",
                         "description": "投稿範囲を設定します。",
                         "children": [
@@ -494,32 +534,21 @@ var ConfigurationModeElement = (function () {
                                 "type": "command",
                                 "name": "private",
                                 "description": "非公開",
-                                "execute": this.set_broadcast
+                                "execute": this.set_command
                             }, {
                                 "type": "command",
                                 "name": "unlisted",
                                 "description": "非収容",
-                                "execute": this.set_broadcast
+                                "execute": this.set_command
                             }, {
                                 "type": "command",
                                 "name": "public",
                                 "description": "公開",
-                                "execute": this.set_broadcast
+                                "execute": this.set_command
                             }
                         ]
-                    }, {
-                        "type": "command",
-                        "name": "statuses",
-                        "description": "トゥート取得数を設定します。",
-                        "children": [
-                            {
-                                "type": "paramater",
-                                "name": "number(1-40)",
-                                "description": "トゥート取得数",
-                                "execute": this.set_number
-                            }
-                        ]
-                    }/*, {
+                    }
+                    /*, {
                         "type": "command",
                         "name": "display",
                         "description": "表示に関する設定をします。",
@@ -604,9 +633,16 @@ var ConfigurationModeElement = (function () {
                                 "execute": this.set_default
                             }, {
                                 "type": "command",
-                                "name": "statuses",
-                                "description": "トゥート取得数を削除します。",
-                                "execute": this.set_default
+                                "name": "status",
+                                "description": "トゥート表示に関する設定を削除します。",
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "avatar",
+                                        "description": "アイコンを非表示にします。",
+                                        "execute": this.set_default
+                                    }
+                                ]
                             }/*, {
                                 "type": "command",
                                 "name": "display",
@@ -665,18 +701,17 @@ var ConfigurationModeElement = (function () {
         return true;
     };
     ConfigurationModeElement.prototype.set_default = function (term, analyzer) {
-        var target = config;
+        var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
+        var index = analyzer.line_parsed.length - 1;
 
-        var cmd = 'delete(config';
-        for (var i = 0; i < analyzer.line_parsed.length; i++) {
-            cmd += '.' + analyzer.line_parsed[i].name;
-            target = target[analyzer.line_parsed[i].name];
+        for (var i = 0; i < index; i++) {
+            t_conf = t_conf[analyzer.line_parsed[i].name];
         }
-        cmd += ')';
-        eval(cmd);
+        console.log(t_conf);
+        delete(t_conf[analyzer.line_parsed[index].name]);
 
         return true;
     };
@@ -685,7 +720,7 @@ var ConfigurationModeElement = (function () {
         return true;
     };
     ConfigurationModeElement.prototype.set_true = function (term, analyzer) {
-        var target = config;
+        var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
@@ -696,14 +731,14 @@ var ConfigurationModeElement = (function () {
             if (eval('typeof ' + cmd) === 'undefined') {
                 eval(cmd + ' = {}');
             }
-            target = target[analyzer.line_parsed[i].name];
+            t_conf = t_conf[analyzer.line_parsed[i].name];
         }
         cmd += ' = true';
         eval(cmd);
         return true;
     };
     ConfigurationModeElement.prototype.set_false = function (term, analyzer) {
-        var target = config;
+        var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
@@ -714,10 +749,28 @@ var ConfigurationModeElement = (function () {
             if (eval('typeof ' + cmd) === 'undefined') {
                 eval(cmd + ' = {}');
             }
-            target = target[analyzer.line_parsed[i].name];
+            t_conf = t_conf[analyzer.line_parsed[i].name];
         }
         cmd += ' = false';
         eval(cmd);
+        return true;
+    };
+    ConfigurationModeElement.prototype.set_command = function (term, analyzer) {
+        var index = analyzer.line_parsed.length - 1;
+        var t_conf = config;
+        for (var i = 0; i < index-1; i++) {
+            if (typeof t_conf[analyzer.line_parsed[i].name] === 'undefined') {
+                t_conf[analyzer.line_parsed[i].name] = {};
+            }
+            t_conf = t_conf[analyzer.line_parsed[i].name];
+        }
+        if (typeof analyzer.line_parsed[index].children === 'undefined') {
+            t_conf[analyzer.line_parsed[index-1].name] = analyzer.line_parsed[index].name;
+        }
+        else {
+            t_conf[analyzer.line_parsed[index-1].name] = {};
+            t_conf[analyzer.line_parsed[index-1].name][analyzer.line_parsed[index].name] = {}
+        }
         return true;
     };
     ConfigurationModeElement.prototype.set_broadcast = function (term, analyzer) {

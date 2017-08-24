@@ -114,30 +114,46 @@ $(function() {
         onInit:       initConfig,
         prompt:       'Tooterminal# ',
         completion:   completion,
-        height:       $(window).height() - 20,
+        height:       window.innerHeight - 18,
+        onResize:     (term) => { console.log(window); term.resize($(window).width() - 36, $(window).height() - 36); },
         exit:         false,
         clear:        false,
+        scrollOnEcho: false,
         keypress:     filterKey,
         onCommandChange: parseCommand,
     }).focus();;
     $('#toot_box').on('keydown', (event) => {
         if (event.keyCode === 27) {
+            $('#sid').text('');
+            $('#reply').hide();
+            $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
             $('#toot').slideUp('first');
             $.terminal.active().focus();
         }
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
         }
-        else if ($('#toot_box').val().match(/^@[0-9a-zA-Z_]+/)) {
+        else if ($('#toot_box').val().match(/^@[0-9a-zA-Z_]+/) && $('.reply #sid').text() === '') {
             $('#toot_visibility').val('unlisted');
         }
     });
+    var count_toot_size = () => {
+        var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
+        $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
+    }
+    $('#toot_cw').on('keyup', count_toot_size);
+    $('#toot_box').on('keyup', count_toot_size);
     $('#toot_post').on('click', () => {
         post_status();
     });
     $('#help_close').on('click', () => {
         $('#help').slideUp('first');
         $.terminal.active().focus();
+    });
+    $('#reply_close').on('click', (e) => {
+        $('#sid').text('');
+        $('#reply').hide();
+        $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
     });
     $(document).on('click', '.read_more', function() {
         $(this).next().toggle('fast');
@@ -150,6 +166,10 @@ $(function() {
         if (e.shiftKey) {
             $('#toot').slideDown('first');
             $('#toot_box').focus().val('@' + $(this).data('acct').toString() + ' ');
+            $('#reply').show();
+            $('#sid').text($(this).data('sid'));
+            $('#reply_head').text('reply to: ' + $(this).data('dispname'));
+            $('#reply_body').text($(this).find('#post_body')[0].textContent);
         }
         if (e.ctrlKey) {
             favorite(this);
@@ -158,6 +178,7 @@ $(function() {
             boost(this);
         }
     });
+    autosize($('#toot_box'));
 });
 
 /*****************************
@@ -190,33 +211,57 @@ function getConfig(config, index, def_conf) {
 
 function makeStatus(payload) {
     var date = new Date(payload.created_at);
+
+    var is_reblog = payload.reblog !== null;
+    var contents = (is_reblog ? payload.reblog : payload);
+
     var head = '[ '
-        + (typeof payload.account.display_name === 'undefined' ? '' : payload.account.display_name)
-        + ' @' + payload.account.username + ' '
-        + $('<i />').addClass('fa fa-' + (payload.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
-        + $('<i />').addClass('fa fa-' + (payload.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML')
+        + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
+        + ' @' + contents.account.acct + ' '
+        + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fa fa-' + (contents.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML')
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3)
-        + ' ]' + (payload.application !== null ? ' from ' + payload.application.name : '');
+        + ' ]' + (contents.application !== null ? ' from ' + contents.application.name
+                : is_reblog ? "<br />reblogged by " + payload.account.display_name + ' @' + payload.account.acct : '');
 
-    console.log(payload);
+    var avatar = $('<div />').addClass('status_avatar');
+    if (typeof config.instances.status.avatar !== 'undefined') {
+        avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
+        var img = new Image();
+        img.onload = () => {
+            $('[name=img_' + contents.account.id + ']').attr('src', contents.account.avatar_static);
+        };
+        img.onerror = (e) => {
+            console.log(e);
+        };
+        img.src = contents.account.avatar_static;
+    }
+    else {
+        avatar.hide();
+    }
+
     var status = $('<div />')
-        .attr('name', 'id_' + payload.id)
-        .attr('data-sid', payload.id)
+        .attr('name', 'id_' + contents.id)
+        .attr('data-sid', contents.id)
         .attr('data-instance', instance_name)
-        .attr('data-uid', payload.account.id)
-        .attr('data-acct', payload.account.acct)
-        .attr('data-fav', payload.favorited ? '1' : '0')
-        .attr('data-reb', payload.reblogged ? '1' : '0')
+        .attr('data-uid', contents.account.id)
+        .attr('data-dispname', contents.account.display_name)
+        .attr('data-acct', contents.account.acct)
+        .attr('data-fav', contents.favorited ? '1' : '0')
+        .attr('data-reb', contents.reblogged ? '1' : '0')
         .addClass('status')
-        .append($('<span />').html(head))
+        .append(avatar)
+        .append($('<span />')
+            .html(head))
         .append('<br />');
-    var content = payload.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
-    if (payload.spoiler_text.length > 0) {
-        status
+    var content = contents.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
+    if (contents.spoiler_text.length > 0) {
+        status.append($('<div />')
+            .attr('id', 'post_body')
             .append($('<div />')
-                .append($('<span />').text(payload.spoiler_text)))
+                .append($('<span />').text(contents.spoiler_text)))
             .append($('<div />')
                 .addClass('read_more')
                 .append($.terminal.format('[[bu;black;gray]-- More --]')))
@@ -224,11 +269,12 @@ function makeStatus(payload) {
             .append($('<div />')
                 .append($('<span />').html(content))
                 .addClass('status_contents')
-                .hide());
+                .hide()));
     }
     else {
         status
             .append($('<div />')
+                .attr('id', 'post_body')
                 .append($('<span />').html(content))
                 .addClass('status_contents'));
     }
@@ -244,7 +290,8 @@ function post_status() {
         visibility: visibility
     };
 
-    if (status.length === 0) {
+    var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
+    if (status.length === 0 || msg_size < 0) {
         return false;
     }
     else if(typeof instances[instance_name] === 'undefined'
@@ -253,6 +300,11 @@ function post_status() {
     }
     if (cw.length !== 0) {
         data.spoiler_text = cw;
+    }
+
+    var reply_id = $('.reply #sid').text();
+    if (reply_id !== '') {
+        data.in_reply_to_id = reply_id;
     }
 
     return $.ajax({

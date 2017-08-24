@@ -29,8 +29,9 @@ body {
 }
 .toot {
     width: 21em;
-    height: 10em;
+    height: auto;
     ime-mode:active;
+    overflow: none;
 }
 .toot textarea,select,button,input{
     display: block;
@@ -46,6 +47,7 @@ body {
     width: calc(100% - 10px);
     height: 5em;
     line-height: 1.2em;
+    resize: none;
 }
 
 .toot input {
@@ -55,6 +57,28 @@ body {
 .toot select {
     float: left;
     height: 1.5em;
+}
+
+#toot_size {
+    float: left;
+}
+
+.reply {
+    display: none;
+    margin: 2px;
+    border-radius: 5px;
+    border: 1px solid #353535;
+}
+
+.reply_head {
+    background-color: #111;
+}
+.reply_close {
+    width: 1.5em;
+    text-align: center;
+    float: right;
+    margin-left: auto;
+    background-color: #333;
 }
 
 .window button {
@@ -105,4 +129,16 @@ body {
 
 .status_deleted *{
     text-decoration: line-through;
+}
+
+.status_avatar {
+    height: 100%;
+    margin-right: 0.7em;
+    text-align: center;
+    float: left;
+}
+
+.status_avatar img {
+    width: 3em;
+    height: 3em;
 }

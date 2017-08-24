@@ -12,6 +12,7 @@
     <script src="./js/jquery-3.2.1.min.js"></script>
     <script src="./js/jquery.mousewheel-min.js"></script>
     <script src="./js/jquery.terminal-1.6.1_tooterminal.js"></script>
+    <script src="./js/autosize.min.js"></script>
     <script src="./js/tooterminal.js"></script>
     <script src="./js/cisco_emulator.js"></script>
     <script src="./js/mode_elements.js"></script>
@@ -21,6 +22,12 @@
     <div class="tooterminal">
         <div class="timeline" id="timeline"></div>
         <div class="toot window" id="toot">
+            <div class="reply" id="reply">
+                <div id="sid" style="display:none;"></div>
+                <div class="reply_close" id="reply_close"><i class="fa fa-times" aria-hidden="true"></i></div>
+                <div class="reply_head" id="reply_head">reply to: </div>
+                <div class="reply_body" id="reply_body">ここに返信メッセージが表示されます。</div>
+            </div>
             <input type="text" id="toot_cw" placeholder="contents warning...">
             <textarea id="toot_box" placeholder="toot message..."></textarea>
             <select id="toot_visibility">
@@ -28,6 +35,7 @@
                 <option value="unlisted">未収容</option>
                 <option value="private">非公開</option>
             </select>
+            <div id="toot_size">500</div>
             <button id="toot_post">Toot!</button>
         </div>
         <div class="help window" id="help">

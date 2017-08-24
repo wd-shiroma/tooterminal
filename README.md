@@ -309,3 +309,56 @@ Toot!ボタンを押下するか、Ctrl+Enterでトゥートできます。
 
 投稿枠はEscで非表示にできます。
 
+## アイコンを表示する
+
+Tooterminalはデフォルトでアイコンが非表示になっています。
+
+有効にするためにはコンフィギュレーションモードで表示を有効にしてください。
+
+```
+Tooterminal# configure terminal 
+Tooterminal(config)# instances status avatar
+Tooterminal(config)# exit
+Tooterminal# show running-configuration 
+{
+    "application": {
+        "name": "Tooterminal",
+        "uris": "urn:ietf:wg:oauth:2.0:oob",
+        "scopes": {
+            "read": true,
+            "write": true,
+            "follow": true
+        }
+    },
+    "terminal": {
+        "length": 0
+    },
+    "instances": {
+        "monitor": "local",
+        "status": {
+            "avatar": {}  ★☆←avaterのコンフィグが入っていることを確認★☆
+        }
+    }
+}
+Tooterminal# write memory   ★☆←再読み込み後に設定が読み込まれるように、セーブしてください。★☆
+Building configuration...
+[OK]
+Tooterminal#
+```
+
+## ショートカットキー
+
+TooterminalではCtrl、Alt、Shiftを駆使した様々なショートカットが利用できます。
+
+* Ctrl + D
+現在のモードを終了します(exitと同じ)
+* トゥートにマウスオーバーして Ctrl + クリック
+トゥートをお気に入り登録します。
+* トゥートにマウスオーバーして Alt + クリック
+トゥートをブーストします。
+* トゥートにマウスオーバーして Shift + クリック
+トゥートに返信します。
+* 投稿画面で Ctrl + Enter
+トゥートします。(Tootボタン押下と同様)
+* 投稿画面で Esc
+投稿ウインドウ、ヘルプウインドウを閉じます。
