@@ -710,7 +710,6 @@ var ConfigurationModeElement = (function () {
         for (var i = 0; i < index; i++) {
             t_conf = t_conf[analyzer.line_parsed[i].name];
         }
-        console.log(t_conf);
         delete(t_conf[analyzer.line_parsed[index].name]);
 
         return true;
@@ -1124,8 +1123,13 @@ var InstanceModeElement = (function () {
                     else if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
                         term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
-                            + payload.account.display_name + ' @' + payload.account.acct
-                            + "\n" + $(payload.status.content).text() + ']');
+                            + payload.account.display_name + ' @' + payload.account.acct + ']');
+                        if (payload.type === 'mention') {
+                            term.echo(makeStatus(payload), {raw: true});
+                        }
+                        else {
+                            term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                        }
                     }
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);
@@ -1158,8 +1162,13 @@ var InstanceModeElement = (function () {
                     if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
                         term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
-                            + payload.account.display_name + ' @' + payload.account.acct
-                            + "\n" + $(payload.status.content).text() + ']');
+                            + payload.account.display_name + ' @' + payload.account.acct + ']');
+                        if (payload.type === 'mention') {
+                            term.echo(makeStatus(payload), {raw: true});
+                        }
+                        else {
+                            term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                        }
                     }
                 };
 

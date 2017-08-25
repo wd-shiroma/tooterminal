@@ -116,7 +116,7 @@ $(function() {
         prompt:       'Tooterminal# ',
         completion:   completion,
         height:       window.innerHeight - 18,
-        onResize:     (term) => { console.log(window); term.resize($(window).width() - 36, $(window).height() - 36); },
+        onResize:     (term) => { term.resize($(window).width() - 36, $(window).height() - 36); },
         exit:         false,
         clear:        false,
         scrollOnEcho: false,
@@ -170,7 +170,10 @@ $(function() {
             $('#reply').show();
             $('#sid').text($(this).data('sid'));
             $('#reply_head').text('reply to: ' + $(this).data('dispname'));
-            $('#reply_body').text($(this).find('#post_body')[0].textContent);
+            $('#reply_body').text($(this).find('#status_contents')[0].textContent);
+            if ($($(this).find('.status_head i')[2]).hasClass('fa-envelope')) {
+                $('#toot_visibility').val('direct');
+            }
         }
         if (e.ctrlKey) {
             favorite(this);
@@ -213,21 +216,31 @@ function getConfig(config, index, def_conf) {
 function makeStatus(payload) {
     var date = new Date(payload.created_at);
 
-    var is_reblog = payload.reblog !== null;
-    var contents = (is_reblog ? payload.reblog : payload);
+    var is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
+    var is_mention = (payload.type === 'mention');
+    var contents = is_reblog  ? payload.reblog
+                 : is_mention ? payload.status
+                 : payload;
 
     var head = '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' @' + contents.account.acct + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
-        + $('<i />').addClass('fa fa-' + (contents.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML')
+        + $('<i />').addClass('fa fa-' + (contents.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fa fa-' + (
+                    contents.visibility === 'public'   ? 'globe'
+                  : contents.visibility === 'unlisted' ? 'unlock'
+                  : contents.visibility === 'private'  ? 'lock'
+                  : contents.visibility === 'direct'   ? 'envelope'
+                  : 'question'))
+            .attr('aria-hidden', 'true').prop('outerHTML')
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3)
         + ' ]' + (contents.application !== null ? ' from ' + contents.application.name
-                : is_reblog ? "<br />reblogged by " + payload.account.display_name + ' @' + payload.account.acct : '');
+                : is_reblog ? "<br />" + $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') : '');
 
-    var avatar = $('<div />').addClass('status_avatar');
+    var avatar = $('<td />').addClass('status_avatar');
     if (typeof config.instances.status.avatar !== 'undefined') {
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
         var img = new Image();
@@ -243,7 +256,31 @@ function makeStatus(payload) {
         avatar.hide();
     }
 
-    var status = $('<div />')
+    var main = $('<td />')
+        .addClass('status_main')
+            .append($('<div />').addClass('status_head').html($.terminal.format(head)))
+
+    var content = contents.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
+    if (contents.spoiler_text.length > 0) {
+        main.append($('<div />')
+            .attr('id', 'status_contents')
+            .append($('<div />')
+                .append($.terminal.format(contents.spoiler_text)))
+            .append($('<div />')
+                .addClass('read_more')
+                .append($.terminal.format('[[bu;black;gray]-- More --]')))
+            .append($('<div />')
+                .append($('<span />').html(content))
+                .hide()));
+    }
+    else {
+        main
+            .append($('<div />')
+                .attr('id', 'status_contents')
+                .append($('<span />').html(content)));
+    }
+
+    var status = $('<table />')
         .attr('name', 'id_' + contents.id)
         .attr('data-sid', contents.id)
         .attr('data-instance', instance_name)
@@ -254,31 +291,7 @@ function makeStatus(payload) {
         .attr('data-reb', contents.reblogged ? '1' : '0')
         .addClass('status')
         .append(avatar)
-        .append($('<span />')
-            .html(head))
-        .append('<br />');
-    var content = contents.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
-    if (contents.spoiler_text.length > 0) {
-        status.append($('<div />')
-            .attr('id', 'post_body')
-            .append($('<div />')
-                .append($('<span />').text(contents.spoiler_text)))
-            .append($('<div />')
-                .addClass('read_more')
-                .append($.terminal.format('[[bu;black;gray]-- More --]')))
-            //.append('<br>')
-            .append($('<div />')
-                .append($('<span />').html(content))
-                .addClass('status_contents')
-                .hide()));
-    }
-    else {
-        status
-            .append($('<div />')
-                .attr('id', 'post_body')
-                .append($('<span />').html(content))
-                .addClass('status_contents'));
-    }
+        .append(main);
     return status.prop('outerHTML');
 }
 
@@ -318,6 +331,8 @@ function post_status() {
     }).then((data, status, jqxhr) => {
         $('#toot_box').val('');
         $('#toot_cw').val('');
+        $('#toot_visibility').val('public');
+        $('#reply_close').trigger('click');
     }, (jqxhr, status, error) => {
         console.log(jqxhr);
     });
@@ -396,7 +411,7 @@ function boost(status) {
             term.error('reblogged missed...');
         }
     }, (jqxhr, stat, error) => {
-        console.log('favorite: failed');
+        console.log('reblogged: failed');
         console.log(jqxhr);
     });
 }
