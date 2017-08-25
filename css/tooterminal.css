@@ -118,8 +118,17 @@ body {
 }
 
 .status {
+    width: 100%;
     padding: 0em 0.5em 1em 0.5em;
+    margin: 0px
 }
+
+.status td {
+    padding-bottom: 1em;
+    border: none;
+    margin-left: 0px;
+}
+
 .status:hover {
     background-color: #252525;
 }
@@ -127,12 +136,18 @@ body {
     background-color: inherit;
 }
 
+.status:active {
+    padding: 0.1em 0.4em 0.9em 0.6em;
+    background-color: #333;
+}
+
 .status_deleted *{
     text-decoration: line-through;
 }
 
 .status_avatar {
-    height: 100%;
+    width: 3em;
+    height: auto;
     margin-right: 0.7em;
     text-align: center;
     float: left;
@@ -142,3 +157,10 @@ body {
     width: 3em;
     height: 3em;
 }
+
+td.status_main{
+    width: 100%;
+    text-align: left;
+    vertical-align: top;
+}
+
