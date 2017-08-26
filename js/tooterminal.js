@@ -122,7 +122,7 @@ $(function() {
         scrollOnEcho: false,
         keypress:     filterKey,
         onCommandChange: parseCommand,
-    }).focus();;
+    }).focus();
     $('#toot_box').on('keydown', (event) => {
         if (event.keyCode === 27) {
             $('#sid').text('');
@@ -156,6 +156,11 @@ $(function() {
         $('#reply').hide();
         $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
     });
+    $('.img_background').on('click', function(){
+        $('#img_view').fadeOut('first');
+        $('.img_background').fadeOut('first');
+        $.terminal.active().enable();
+    })
     $(document).on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     });
@@ -180,6 +185,25 @@ $(function() {
         }
         if (e.altKey) {
             boost(this);
+        }
+    });
+    $(document).on('click', '.status_contents img', function(e) {
+        var elem = $(this);
+        console.log(elem);
+        var img = new Image();
+        img.onload = () => {
+            $('#img_view').attr('src', elem.data('url')).fadeIn('first');
+            term.disable();
+        };
+        img.onerror = (e) => {
+            console.log(e);
+        };
+        $('.img_background').fadeIn('first');
+        img.src = elem.data('url');
+    });
+    $(document).on('keydown.img_background', (event) => {
+        if (event.keyCode === 27) {
+            $('.img_background').trigger('click');
         }
     });
     autosize($('#toot_box'));
@@ -215,7 +239,6 @@ function getConfig(config, index, def_conf) {
 
 function makeStatus(payload) {
     var date = new Date(payload.created_at);
-
     var is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     var is_mention = (payload.type === 'mention');
     var contents = is_reblog  ? payload.reblog
@@ -256,29 +279,62 @@ function makeStatus(payload) {
         avatar.hide();
     }
 
-    var main = $('<td />')
-        .addClass('status_main')
-            .append($('<div />').addClass('status_head').html($.terminal.format(head)))
 
-    var content = contents.content.replace(/^<p>(.+)<\/p>$/, '$1').replace(/<\/p><p>/g, '<br />');
-    if (contents.spoiler_text.length > 0) {
-        main.append($('<div />')
-            .attr('id', 'status_contents')
-            .append($('<div />')
-                .append($.terminal.format(contents.spoiler_text)))
+    var content = contents.content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
+
+    var thumb;
+    if (contents.media_attachments.length > 0) {
+        thumb = $('<div />');
+        contents.media_attachments.forEach((media, index, arr) => {
+            var id = 'media_' + media.id;
+            thumb.append($('<img />').attr('id', id).attr('data-url', media.url));
+            var img = new Image();
+            img.onload = () => {
+                $('#' + id).attr('src', media.preview_url);
+            };
+            img.onerror = (e) => {
+                console.log(e);
+            };
+            img.src = media.preview_url;
+        });
+    }
+
+    var content_visible = $('<div />')
+        .addClass('status_contents')
+        .attr('id', 'status_contents');
+
+    if (contents.sensitive) {
+        var content_more = $('<div />');
+        if (contents.spoiler_text.length > 0) {
+            content_visible.append($.terminal.format(contents.spoiler_text));
+            content_more.append(content);
+        }
+        else {
+            content_visible.append(content);
+        }
+
+        if(typeof thumb !== 'undefined') {
+            content_more.append(thumb);
+        }
+
+        content_visible
             .append($('<div />')
                 .addClass('read_more')
                 .append($.terminal.format('[[bu;black;gray]-- More --]')))
-            .append($('<div />')
-                .append($('<span />').html(content))
-                .hide()));
+            .append(content_more.hide());
     }
     else {
-        main
-            .append($('<div />')
-                .attr('id', 'status_contents')
-                .append($('<span />').html(content)));
+        content_visible.append(content);
+        if (typeof thumb !== 'undefined') {
+            content_visible.append(thumb);
+        }
     }
+
+    var main = $('<td />')
+        .addClass('status_main')
+            .append($('<div />').addClass('status_head').html($.terminal.format(head)))
+            .append(content_visible);
+
 
     var status = $('<table />')
         .attr('name', 'id_' + contents.id)
@@ -329,10 +385,11 @@ function post_status() {
         },
         data: data
     }).then((data, status, jqxhr) => {
-        $('#toot_box').val('');
+        $('#toot_box').val('').trigger('keyup');
         $('#toot_cw').val('');
         $('#toot_visibility').val('public');
         $('#reply_close').trigger('click');
+        autosize.update($('#toot_box'));
     }, (jqxhr, status, error) => {
         console.log(jqxhr);
     });

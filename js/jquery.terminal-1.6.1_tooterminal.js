@@ -4037,6 +4037,7 @@
                 var string = $.type(line) === 'function' ? line() : line;
                 string = $.type(string) === 'string' ? string : String(string);
                 if (string !== '') {
+                    /*
                     string = $.map(string.split(format_exec_re), function(string) {
                         if (string && string.match(format_exec_re) &&
                             !$.terminal.is_formatting(string)) {
@@ -4055,10 +4056,11 @@
                             return string;
                         }
                     }).join('');
-                    if (string !== '') {
+                    */
+                    //if (string !== '') {
                         // string can be empty after removing extended commands
                         buffer_line(string, line_settings);
-                    }
+                    //}
                 }
             } catch (e) {
                 output_buffer = [];

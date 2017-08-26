@@ -823,29 +823,28 @@ var InstanceModeElement = (function () {
                         "execute": this.show_user,
                         "children": [
                             {
-                                "type": "paramater",
-                                "name": "userid",
-                                "description": 'ユーザーID',
-                                "execute": this.show_user,
+                                "type": "command",
+                                "name": "id",
+                                "description": 'ユーザーIDを指定',
                                 "children": [
                                     {
-                                        "type": "command",
-                                        "name": "statuses",
-                                        "description": 'ユーザーの投稿を表示します。',
-                                        "execute": this.show_statuses,
-                                    }, {
-                                        "type": "command",
-                                        "name": "following",
-                                        "description": 'フォローアカウントを表示します。',
-                                        "execute": this.show_follows,
-                                    }, {
-                                        "type": "command",
-                                        "name": "followers",
-                                        "description": 'フォロワーアカウントを表示します。',
-                                        "execute": this.show_follows,
+                                        "type": "paramater",
+                                        "name": "userid",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_user
                                     }
                                 ]
-                            }
+                            }, {
+                                "type": "command",
+                                "name": "self",
+                                "description": 'ログインユーザー',
+                                "execute": this.show_user
+                            }, /*{
+                                "type": "command",
+                                "name": "select",
+                                "description": 'トゥートから選択',
+                                "execute": this.show_user
+                            }*/
                         ]
                     }, {
                         "type": "command",
@@ -891,6 +890,96 @@ var InstanceModeElement = (function () {
                                     }
                                 ]
                             }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "following",
+                        "description": 'フォローアカウントを表示します。',
+                        //"execute": this.show_follows,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "id",
+                                "description": 'ユーザーIDを指定',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "userid",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_follows
+                                    }
+                                ]
+                            }, /*{
+                                "type": "command",
+                                "name": "self",
+                                "description": 'ログインユーザー',
+                                "execute": this.show_follows
+                            }, {
+                                "type": "command",
+                                "name": "select",
+                                "description": 'トゥートから選択',
+                                "execute": this.show_follows
+                            }*/
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "followers",
+                        "description": 'フォロワーアカウントを表示します。',
+                        //"execute": this.show_follows,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "id",
+                                "description": 'ユーザーIDを指定',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "userid",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_follows
+                                    }
+                                ]
+                            }, /*{
+                                "type": "command",
+                                "name": "self",
+                                "description": 'ログインユーザー',
+                                "execute": this.show_follows
+                            }, {
+                                "type": "command",
+                                "name": "select",
+                                "description": 'トゥートから選択',
+                                "execute": this.show_follows
+                            }*/
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "statuses",
+                        "description": 'トゥートを表示します。',
+                        //"execute": this.show_statuses,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "id",
+                                "description": 'ユーザーIDを指定',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "userid",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_statuses
+                                    }
+                                ]
+                            }, /*{
+                                "type": "command",
+                                "name": "self",
+                                "description": 'ログインユーザー',
+                                "execute": this.show_statuses
+                            }, {
+                                "type": "command",
+                                "name": "select",
+                                "description": 'トゥートから選択',
+                                "execute": this.show_statuses
+                            }*/
                         ]
                     }
                 ]
@@ -1251,7 +1340,7 @@ var InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
         term.pause();
         var api;
-        if (typeof analyzer.line_parsed[2] === 'undefined') {
+        if (typeof analyzer.line_parsed[2] === 'undefined' || analyzer.line_parsed[2] === 'self') {
             api = callAPI('/api/v1/accounts/verify_credentials', {
                 type: 'GET',
             });
@@ -1379,13 +1468,13 @@ var InstanceModeElement = (function () {
                 data: (type === 'local' ? {local: true} : undefined)
             });
         }
-        else if (analyzer.line_parsed[1].name === 'statuses') {
-            api = callAPI('/api/v1/statuses', {
+        else if (analyzer.line_parsed.length === 4 && analyzer.line_parsed[2].name === 'id'){
+            api = callAPI('/api/v1/accounts/' + analyzer.paramaters.userid + '/statuses', {
                 type: 'GET',
             });
         }
         else {
-            api = callAPI('/api/v1/accounts/' + analyzer.paramaters.userid + '/statuses', {
+            api = callAPI('/api/v1/statuses', {
                 type: 'GET',
             });
         }
@@ -1405,7 +1494,14 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_follows = function (term, analyzer) {
         term.pause();
-        callAPI('/api/v1/accounts/' + analyzer.paramaters.userid + '/' + analyzer.line_parsed[3].name, {
+        var api;
+        if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
+            api = '/api/v1/accounts/' + analyzer.line_parsed[1].name;
+        }
+        else {
+            api = '/api/v1/accounts/' + analyzer.paramaters.userid + '/' + analyzer.line_parsed[1].name
+        }
+        callAPI(api, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
             var lines = [

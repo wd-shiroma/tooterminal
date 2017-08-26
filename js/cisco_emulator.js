@@ -156,7 +156,6 @@ var ModeManager = (function () {
             }
             this.cmd_list = filter;
             if (this.cmd_list.length === 0) {
-                console.log(line);
                 this.is_parsed = false;
                 this.err_code = 0x1F01;
                 var spacer;
