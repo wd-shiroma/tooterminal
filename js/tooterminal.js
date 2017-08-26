@@ -161,10 +161,21 @@ $(function() {
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     })
-    $(document).on('click', '.read_more', function() {
+    $(document)
+    .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
-    });
-    $(document).on('click', '.status', function(e) {
+    })
+    .on('mouseover', '.status', function() {
+        if (typeof config.instances.status.thumbnail === 'undefined'){
+            $(this).find('.status_thumbnail').show();
+        }
+    })
+    .on('mouseout', '.status', function() {
+        if (typeof config.instances.status.thumbnail === 'undefined'){
+            $(this).find('.status_thumbnail').hide();
+        }
+    })
+    .on('click', '.status', function(e) {
         if ($(this).hasClass('status_deleted')) {
             return;
         }
@@ -186,8 +197,8 @@ $(function() {
         if (e.altKey) {
             boost(this);
         }
-    });
-    $(document).on('click', '.status_contents img', function(e) {
+    })
+    .on('click', '.status_contents img', function(e) {
         var elem = $(this);
         console.log(elem);
         var img = new Image();
@@ -200,8 +211,8 @@ $(function() {
         };
         $('.img_background').fadeIn('first');
         img.src = elem.data('url');
-    });
-    $(document).on('keydown.img_background', (event) => {
+    })
+    .on('keydown.img_background', (event) => {
         if (event.keyCode === 27) {
             $('.img_background').trigger('click');
         }
@@ -284,7 +295,7 @@ function makeStatus(payload) {
 
     var thumb;
     if (contents.media_attachments.length > 0) {
-        thumb = $('<div />');
+        thumb = $('<div />').addClass('status_thumbnail');
         contents.media_attachments.forEach((media, index, arr) => {
             var id = 'media_' + media.id;
             thumb.append($('<img />').attr('id', id).attr('data-url', media.url));
@@ -297,6 +308,9 @@ function makeStatus(payload) {
             };
             img.src = media.preview_url;
         });
+        if (typeof config.instances.status.thumbnail === 'undefined') {
+            thumb.hide();
+        }
     }
 
     var content_visible = $('<div />')

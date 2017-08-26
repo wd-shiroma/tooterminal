@@ -523,6 +523,11 @@ var ConfigurationModeElement = (function () {
                                         "execute": this.set_command
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "thumbnail",
+                                "description": "サムネイル画像を表示します。",
+                                "execute": this.set_true
                             }
                         ]
                     }, {
@@ -640,6 +645,11 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "avatar",
                                         "description": "アイコンを非表示にします。",
+                                        "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "thumbnail",
+                                        "description": "サムネイル画像を非表示にします。",
                                         "execute": this.set_default
                                     }
                                 ]
