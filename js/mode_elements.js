@@ -1185,7 +1185,6 @@ var InstanceModeElement = (function () {
                 };
 
                 ws.push(ws_t);
-                delete(ws_t);
 
                 api = 'wss://'
                         + instances[instance_name].domain
@@ -1225,7 +1224,6 @@ var InstanceModeElement = (function () {
                     term.echo(monitor + " Streaming closed.");
                 };
                 ws.push(ws_t);
-                delete(ws_t);
             }
         }
         else if(analyzer.line_parsed[1].name === 'no'){
