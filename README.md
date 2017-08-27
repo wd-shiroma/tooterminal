@@ -309,6 +309,12 @@ Toot!ボタンを押下するか、Ctrl+Enterでトゥートできます。
 
 投稿枠はEscで非表示にできます。
 
+** 画像の貼り付けは現在クリップボードの画像データからの貼り付けの未対応しています。 **
+
+貼り付けた画像は対象をクリックすることで添付を取り消すことが出来ます。
+
+![画像投稿](./img/toot_window.png "画像投稿")
+
 ## アイコンを表示する
 
 Tooterminalはデフォルトでアイコンが非表示になっています。
@@ -316,10 +322,10 @@ Tooterminalはデフォルトでアイコンが非表示になっています。
 有効にするためにはコンフィギュレーションモードで表示を有効にしてください。
 
 ```
-Tooterminal# configure terminal 
+Tooterminal# configure terminal
 Tooterminal(config)# instances status avatar
 Tooterminal(config)# exit
-Tooterminal# show running-configuration 
+Tooterminal# show running-configuration
 {
     "application": {
         "name": "Tooterminal",
