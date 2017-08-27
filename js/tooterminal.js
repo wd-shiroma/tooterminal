@@ -140,9 +140,9 @@ $(function() {
     })
     .on('paste', (elem) => {
 
-    	if ($('.toot_media img').length >= 4) {
-    		return;
-    	}
+        if ($('.toot_media img').length >= 4) {
+            return;
+        }
 
         if (typeof elem.originalEvent.clipboardData !== 'undefined'
             && typeof elem.originalEvent.clipboardData.types !== 'undefined'
@@ -154,40 +154,39 @@ $(function() {
             var ins = instances[instance_name];
             var len = $('.toot_media img').length;
             $('#toot_media').append($('<img />').attr('id', 'media_' + len));
-		    formData.append('file', imageFile);
+            formData.append('file', imageFile);
             $.ajax('https://' + ins.domain + '/api/v1/media' , {
                 type: 'POST',
-		      	contentType: false,
-		      	processData: false,
-	            headers: {
-	                Authorization: ins.token_type + ' ' + ins.access_token
-	            },
+                contentType: false,
+                processData: false,
+                headers: {
+                    Authorization: ins.token_type + ' ' + ins.access_token
+                },
                 data: formData
             }).then((data, status, jqxhr) => {
-		        $('#media_' + len)
-	        		.attr('data-id', data.id)
-		        	.attr('data-url', data.text_url);
-		        var img = new Image();
-		        img.onload = () => {
-		        	console.log($('#media_' + len));
-		            $('#media_' + len).attr('src', data.preview_url);
-		            $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
-		            autosize.update($('#toot_box'));
-		            count_toot_size();
-		        };
-		        img.onerror = (e) => {
-		            console.log(e);
-		        };
-		        img.src = data.preview_url;
+                $('#media_' + len)
+                    .attr('data-id', data.id)
+                    .attr('data-url', data.text_url);
+                var img = new Image();
+                img.onload = () => {
+                    $('#media_' + len).attr('src', data.preview_url);
+                    $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
+                    autosize.update($('#toot_box'));
+                    count_toot_size();
+                };
+                img.onerror = (e) => {
+                    console.log(e);
+                };
+                img.src = data.preview_url;
             }, (jqxhr, status, error) => {
-            	$.terminal.active().error('Media upload error.');
-            	$('#media_' + len).remove();
-            	console.log(jqxhr);
+                $.terminal.active().error('Media upload error.');
+                $('#media_' + len).remove();
+                console.log(jqxhr);
             });
         }
     });
     $('#toot').on('dragenter', (e) => {
-    	//
+        //
     });
     var count_toot_size = () => {
         var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
@@ -271,8 +270,8 @@ $(function() {
         $.terminal.active().echo('まだ投票できないです。。。');
     })
     .on('click', '.toot_media img', (e,e2,e3) => {
-    	$(e.target).remove();
-    	$('#toot_box').val($('#toot_box').val().replace($(e.target).data('url'),''));
+        $(e.target).remove();
+        $('#toot_box').val($('#toot_box').val().replace($(e.target).data('url'),''));
     });
     autosize($('#toot_box'));
 });
@@ -487,7 +486,7 @@ function post_status() {
     data.media_ids = [];
     var imgs = $('#toot_media img');
     for (var i = 0; i < imgs.length; i++) {
-    	data.media_ids.push($(imgs[i]).data('id'));
+        data.media_ids.push($(imgs[i]).data('id'));
     }
 
     return $.ajax({
