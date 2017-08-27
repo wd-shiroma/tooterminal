@@ -349,7 +349,7 @@ var cnt;
 var instance_name;
 var regist_instance = (input, term) => {
     input = input.trim();
-    if (!input.match(/^([A-Za-z0-9][A-Za-z0-9\-]{1,61}[A-Za-z0-9]\.)+[A-Za-z]+$/)) {
+    if (!input.match(/^([A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+$/)) {
         term.error('domain couldn\'t unrecognize');
     }
     else if (input.length > 0) {

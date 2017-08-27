@@ -137,6 +137,57 @@ $(function() {
         else if ($('#toot_box').val().match(/^@[0-9a-zA-Z_]+/) && $('.reply #sid').text() === '') {
             $('#toot_visibility').val('unlisted');
         }
+    })
+    .on('paste', (elem) => {
+
+    	if ($('.toot_media img').length >= 4) {
+    		return;
+    	}
+
+        if (typeof elem.originalEvent.clipboardData !== 'undefined'
+            && typeof elem.originalEvent.clipboardData.types !== 'undefined'
+            && elem.originalEvent.clipboardData.types.length === 1
+            && elem.originalEvent.clipboardData.types[0] === "Files"
+        ) {
+            var imageFile = elem.originalEvent.clipboardData.items[0].getAsFile();
+            var formData = new FormData();
+            var ins = instances[instance_name];
+            var len = $('.toot_media img').length;
+            $('#toot_media').append($('<img />').attr('id', 'media_' + len));
+		    formData.append('file', imageFile);
+            $.ajax('https://' + ins.domain + '/api/v1/media' , {
+                type: 'POST',
+		      	contentType: false,
+		      	processData: false,
+	            headers: {
+	                Authorization: ins.token_type + ' ' + ins.access_token
+	            },
+                data: formData
+            }).then((data, status, jqxhr) => {
+		        $('#media_' + len)
+	        		.attr('data-id', data.id)
+		        	.attr('data-url', data.text_url);
+		        var img = new Image();
+		        img.onload = () => {
+		        	console.log($('#media_' + len));
+		            $('#media_' + len).attr('src', data.preview_url);
+		            $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
+		            autosize.update($('#toot_box'));
+		            count_toot_size();
+		        };
+		        img.onerror = (e) => {
+		            console.log(e);
+		        };
+		        img.src = data.preview_url;
+            }, (jqxhr, status, error) => {
+            	$.terminal.active().error('Media upload error.');
+            	$('#media_' + len).remove();
+            	console.log(jqxhr);
+            });
+        }
+    });
+    $('#toot').on('dragenter', (e) => {
+    	//
     });
     var count_toot_size = () => {
         var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
@@ -160,7 +211,7 @@ $(function() {
         $('#img_view').fadeOut('first');
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
-    })
+    });
     $(document)
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
@@ -200,22 +251,28 @@ $(function() {
     })
     .on('click', '.status_contents img', function(e) {
         var elem = $(this);
-        console.log(elem);
         var img = new Image();
         img.onload = () => {
             $('#img_view').attr('src', elem.data('url')).fadeIn('first');
-            term.disable();
         };
         img.onerror = (e) => {
             console.log(e);
         };
         $('.img_background').fadeIn('first');
+        $.terminal.active().disable();
         img.src = elem.data('url');
     })
     .on('keydown.img_background', (event) => {
         if (event.keyCode === 27) {
             $('.img_background').trigger('click');
         }
+    })
+    .on('click', '.status_enquete span', function(e) {
+        $.terminal.active().echo('まだ投票できないです。。。');
+    })
+    .on('click', '.toot_media img', (e,e2,e3) => {
+    	$(e.target).remove();
+    	$('#toot_box').val($('#toot_box').val().replace($(e.target).data('url'),''));
     });
     autosize($('#toot_box'));
 });
@@ -290,8 +347,34 @@ function makeStatus(payload) {
         avatar.hide();
     }
 
+    var content;
+    var enquete;
 
-    var content = contents.content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
+    if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
+        enquete = JSON.parse(contents.enquete);
+        content = $('<div />').append(enquete.question.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>'));
+        var enquete_items = $('<div />').addClass('status_' + enquete.type);
+        for (var i = 0; i < enquete.items.length; i++) {
+            if (enquete.type === 'enquete') {
+                enquete_items.append($('<span />')
+                    .html(enquete.items[i]));
+            }
+            else {
+                enquete_items
+                    .append($('<span />')
+                        .append($('<span />')
+                            .addClass('progress')
+                            .text(enquete.ratios_text[i]))
+                        .append($('<span />')
+                            .addClass('proceed')
+                            .css('width', enquete.ratios[i].toString() + '%')));
+            }
+        }
+        content.append(enquete_items);
+    }
+    else {
+        content = $(contents.content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>'));
+    }
 
     var thumb;
     if (contents.media_attachments.length > 0) {
@@ -316,9 +399,10 @@ function makeStatus(payload) {
     var content_visible = $('<div />')
         .addClass('status_contents')
         .attr('id', 'status_contents');
+    var content_more;
 
     if (contents.sensitive) {
-        var content_more = $('<div />');
+        content_more = $('<div />');
         if (contents.spoiler_text.length > 0) {
             content_visible.append($.terminal.format(contents.spoiler_text));
             content_more.append(content);
@@ -330,18 +414,27 @@ function makeStatus(payload) {
         if(typeof thumb !== 'undefined') {
             content_more.append(thumb);
         }
+    }
+    else {
+        if (contents.spoiler_text.length > 0) {
+            content_visible.append($.terminal.format(contents.spoiler_text));
+            content_more = $('<div />');
+            content_more.append(content);
+        }
+        else {
+            content_visible.append(content);
+        }
+        if (typeof thumb !== 'undefined') {
+            content_visible.append(thumb);
+        }
+    }
 
+    if (typeof content_more !== 'undefined') {
         content_visible
             .append($('<div />')
                 .addClass('read_more')
                 .append($.terminal.format('[[bu;black;gray]-- More --]')))
             .append(content_more.hide());
-    }
-    else {
-        content_visible.append(content);
-        if (typeof thumb !== 'undefined') {
-            content_visible.append(thumb);
-        }
     }
 
     var main = $('<td />')
@@ -391,6 +484,12 @@ function post_status() {
         data.in_reply_to_id = reply_id;
     }
 
+    data.media_ids = [];
+    var imgs = $('#toot_media img');
+    for (var i = 0; i < imgs.length; i++) {
+    	data.media_ids.push($(imgs[i]).data('id'));
+    }
+
     return $.ajax({
         url: 'https://' + instances[instance_name].domain + '/api/v1/statuses',
         type: 'POST',
@@ -403,6 +502,7 @@ function post_status() {
         $('#toot_cw').val('');
         $('#toot_visibility').val('public');
         $('#reply_close').trigger('click');
+        $('#toot_media').html('');
         autosize.update($('#toot_box'));
     }, (jqxhr, status, error) => {
         console.log(jqxhr);
