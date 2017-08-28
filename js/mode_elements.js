@@ -476,28 +476,57 @@ var ConfigurationModeElement = (function () {
                             {
                                 "type": "command",
                                 "name": "monitor",
-                                "description": "ストリーミングを有効にします。",
-                                "execute": this.set_default
+                                "description": "取得するタイムラインの設定をします。",
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "home",
+                                        "description": "ホームタイムラインのストリーミングを有効にします。",
+                                        "execute": this.set_command
+                                    }, {
+                                        "type": "command",
+                                        "name": "local",
+                                        "description": "ローカルタイムラインのストリーミングを有効にします。",
+                                        "execute": this.set_command
+                                    }, {
+                                        "type": "command",
+                                        "name": "public",
+                                        "description": "連合タイムラインのストリーミングを有効にします。",
+                                        "execute": this.set_command
+                                    }
+                                ]
                             }, {
                                 "type": "command",
-                                "name": "home",
-                                "description": "ホームタイムラインのストリーミングを有効にします。",
-                                "execute": this.set_default
-                            }, {
-                                "type": "command",
-                                "name": "local",
-                                "description": "ローカルタイムラインのストリーミングを有効にします。",
-                                "execute": this.set_default
-                            }, {
-                                "type": "command",
-                                "name": "federate",
-                                "description": "連合タイムラインのストリーミングを有効にします。",
-                                "execute": this.set_true
-                            }, {
-                                "type": "command",
-                                "name": "notification",
-                                "description": "通知タイムラインのストリーミングを有効にします。",
-                                "execute": this.set_default
+                                "name": "logging",
+                                "description": "ストリーミングに表示する通知の設定をします。",
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "delete",
+                                        "description": "削除されたトゥートIDの通知を表示します。",
+                                        "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "favourite",
+                                        "description": "お気に入り登録の通知を表示します。",
+                                        "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "reblog",
+                                        "description": "ブーストの通知を表示します。",
+                                        "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "mention",
+                                        "description": "リプライの通知を表示します。",
+                                        "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "following",
+                                        "description": "フォロー通知を表示します。",
+                                        "execute": this.set_default
+                                    }
+                                ]
                             }
                         ]
                     }, {
@@ -532,13 +561,13 @@ var ConfigurationModeElement = (function () {
                         ]
                     }, {
                         "type": "command",
-                        "name": "broadcast-to",
+                        "name": "visibility",
                         "description": "投稿範囲を設定します。",
                         "children": [
                             {
                                 "type": "command",
-                                "name": "private",
-                                "description": "非公開",
+                                "name": "public",
+                                "description": "公開",
                                 "execute": this.set_command
                             }, {
                                 "type": "command",
@@ -547,8 +576,13 @@ var ConfigurationModeElement = (function () {
                                 "execute": this.set_command
                             }, {
                                 "type": "command",
-                                "name": "public",
-                                "description": "公開",
+                                "name": "private",
+                                "description": "非公開",
+                                "execute": this.set_command
+                            }, {
+                                "type": "command",
+                                "name": "direct",
+                                "description": "ダイレクト",
                                 "execute": this.set_command
                             }
                         ]
@@ -607,28 +641,40 @@ var ConfigurationModeElement = (function () {
                                     {
                                         "type": "command",
                                         "name": "monitor",
-                                        "description": "ストリーミングを無効にします。",
-                                        "execute": this.set_false
-                                    }, {
-                                        "type": "command",
-                                        "name": "home",
-                                        "description": "ホームタイムラインのストリーミングを無効にします。",
-                                        "execute": this.set_false
-                                    }, {
-                                        "type": "command",
-                                        "name": "local",
-                                        "description": "ローカルタイムラインのストリーミングを無効にします。",
-                                        "execute": this.set_false
-                                    }, {
-                                        "type": "command",
-                                        "name": "federate",
-                                        "description": "連合タイムラインのストリーミングを無効にします。",
+                                        "description": "取得するタイムラインの設定をします。",
                                         "execute": this.set_default
                                     }, {
                                         "type": "command",
-                                        "name": "notification",
-                                        "description": "通知タイムラインのストリーミングを無効にします。",
-                                        "execute": this.set_false
+                                        "name": "logging",
+                                        "description": "ストリーミングに表示する通知の設定をします。",
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "delete",
+                                                "description": "削除されたトゥートIDの通知を非表示にします。",
+                                                "execute": this.set_false
+                                            }, {
+                                                "type": "command",
+                                                "name": "favourite",
+                                                "description": "お気に入り登録の通知を非表示にします。",
+                                                "execute": this.set_false
+                                            }, {
+                                                "type": "command",
+                                                "name": "reblog",
+                                                "description": "ブーストの通知を非表示にします。",
+                                                "execute": this.set_false
+                                            }, {
+                                                "type": "command",
+                                                "name": "mention",
+                                                "description": "リプライの通知を非表示にします。",
+                                                "execute": this.set_false
+                                            }, {
+                                                "type": "command",
+                                                "name": "following",
+                                                "description": "フォロー通知を非表示にします。",
+                                                "execute": this.set_false
+                                            }
+                                        ]
                                     }
                                 ]
                             }, {
@@ -719,6 +765,9 @@ var ConfigurationModeElement = (function () {
 
         for (var i = 0; i < index; i++) {
             t_conf = t_conf[analyzer.line_parsed[i].name];
+            if (typeof t_conf === 'undefined') {
+                return true;
+            }
         }
         delete(t_conf[analyzer.line_parsed[index].name]);
 
@@ -1167,6 +1216,9 @@ var InstanceModeElement = (function () {
                 store.setItem('instances', JSON.stringify(instances));
 
                 return callAPI('/api/v1/accounts/verify_credentials');
+            }, (jqxhr, status, error) => {
+                term.error('User token updating error.(' + jqxhr.status + ')');
+                console.log(jqxhr);
             }).then((data2, status, jqxhr) => {
                 term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
                 instances[instance_name].user = data2;
@@ -1180,7 +1232,7 @@ var InstanceModeElement = (function () {
                 prompt += '@' + instances[instance_name].domain + '# ';
                 $.terminal.active().set_prompt(prompt);
             }, (jqxhr, status, error) => {
-                term.error('Ajax Error.');
+                term.error('Getting user status failed.(' + jqxhr.status + ')');
                 term.resume();
                 term.pop();
             });
@@ -1195,7 +1247,7 @@ var InstanceModeElement = (function () {
             && (ws.length === 0 || ws[0].readyStatus >= WebSocket.CLOSING)
         ) {
             if (typeof analyzer.line_parsed[2] === 'undefined') {
-                monitor = getConfig(instances[instance_name], 'monitor', default_config.instances)
+                monitor = getConfig(instances[instance_name], 'monitor', def_conf.instances)
             }
             else if (analyzer.line_parsed[2].name === 'tag') {
                 monitor = analyzer.paramaters.hashtag;
@@ -1214,20 +1266,34 @@ var InstanceModeElement = (function () {
                     var data = JSON.parse(e.data);
                     var payload;
 
-                    if (data.event === 'delete') {
+                    var is_del = (data.event === 'delete') &&
+                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) !== false);
+
+                    if (is_del) {
                         payload = data.payload;
                         term.error('deleted ID:' + payload);
                         $('[name=id_' + payload + ']').addClass('status_deleted');
                     }
                     else if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
-                        term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
-                            + payload.account.display_name + ' @' + payload.account.acct + ']');
-                        if (payload.type === 'mention') {
-                            term.echo(makeStatus(payload), {raw: true});
-                        }
-                        else {
-                            term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                        var is_fav = (payload.type === 'favourite') &&
+                                     (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
+                        var is_reb = (payload.type === 'reblog') &&
+                                     (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
+                        var is_fol = (payload.type === 'notification') &&
+                                     (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
+                        var is_men = (payload.type === 'mention') &&
+                                     (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
+
+                        if (is_fav || is_reb || is_fol || is_men) {
+                            term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                                + payload.account.display_name + ' @' + payload.account.acct + ']');
+                            if (payload.type === 'mention') {
+                                term.echo(makeStatus(payload), {raw: true});
+                            }
+                            else {
+                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                            }
                         }
                     }
                     else if(data.event === 'update') {
@@ -1243,7 +1309,8 @@ var InstanceModeElement = (function () {
                 };
 
                 ws_t.onerror = (e) => {
-                    console.warn(e);
+                    term.error('Home Streaming error. closed.');
+                    console.log(e);
                 };
 
                 ws_t.onclose = () => {
@@ -1260,13 +1327,24 @@ var InstanceModeElement = (function () {
 
                     if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
-                        term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
-                            + payload.account.display_name + ' @' + payload.account.acct + ']');
-                        if (payload.type === 'mention') {
-                            term.echo(makeStatus(payload), {raw: true});
-                        }
-                        else {
-                            term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                        var is_fav = (payload.type === 'favourite') &&
+                                     (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
+                        var is_reb = (payload.type === 'reblog') &&
+                                     (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
+                        var is_fol = (payload.type === 'notification') &&
+                                     (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
+                        var is_men = (payload.type === 'mention') &&
+                                     (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
+
+                        if (is_fav || is_reb || is_fol || is_men) {
+                            term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                                + payload.account.display_name + ' @' + payload.account.acct + ']');
+                            if (payload.type === 'mention') {
+                                term.echo(makeStatus(payload), {raw: true});
+                            }
+                            else {
+                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                            }
                         }
                     }
                 };
@@ -1299,7 +1377,10 @@ var InstanceModeElement = (function () {
                     var data = JSON.parse(e.data);
                     var payload;
 
-                    if (data.event === 'delete') {
+                    var is_del = (data.event === 'delete') &&
+                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) !== false);
+
+                    if (is_del) {
                         payload = data.payload;
                         term.error('deleted ID:' + payload);
                         $('[name=id_' + payload + ']').addClass('status_deleted');
@@ -1334,9 +1415,17 @@ var InstanceModeElement = (function () {
         }
     };
     InstanceModeElement.prototype.toot = function (term, analyzer) {
+        var visibility;
         if (typeof analyzer.line_parsed[1] !== 'undefined') {
-            $('#toot_visibility').val(analyzer.line_parsed[1].name);
+            visibility = analyzer.line_parsed[1].name;
         }
+        else {
+            visibility = getConfig(config, 'instances.visibility', def_conf);
+        }
+        if (typeof visibility === 'undefined') {
+            visibility = 'public';
+        }
+        $('#toot_visibility').val(visibility);
         $('#toot').slideDown('first');
         $('#toot_box').focus();
         term.focus(false);
@@ -1387,7 +1476,7 @@ var InstanceModeElement = (function () {
         }, (jqxhr, status, error) => {
             console.log(jqxhr);
             var response = JSON.parse(jqxhr.responseText);
-            term.echo(response.error);
+            term.echo('Getting user data failed.(' + jqxhr + ')');
             term.resume();
         });
 
@@ -1425,6 +1514,7 @@ var InstanceModeElement = (function () {
             term.echo(lines.join("\n"));
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Search request is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });
@@ -1444,6 +1534,7 @@ var InstanceModeElement = (function () {
             term.flush();
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Getting instance data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });
@@ -1498,6 +1589,7 @@ var InstanceModeElement = (function () {
             term.flush();
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Getting timeline posts is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });
@@ -1532,6 +1624,7 @@ var InstanceModeElement = (function () {
             term.echo(lines.join("\n"));
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Getting account data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });
@@ -1545,6 +1638,7 @@ var InstanceModeElement = (function () {
             term.echo(json_str);
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Getting followers data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });
@@ -1559,6 +1653,7 @@ var InstanceModeElement = (function () {
             term.echo(json_str);
             term.resume();
         }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });

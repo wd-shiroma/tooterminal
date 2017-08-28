@@ -2,7 +2,7 @@
  * 設定
  *****************************/
 
-var default_config = {
+var def_conf = {
     application: {
         name: 'Tooterminal',
         uris: 'urn:ietf:wg:oauth:2.0:oob',
@@ -67,7 +67,7 @@ var initConfig = (term) => {
     }
     else {
         console.log('Initialization: read default config')
-        config = default_config;
+        config = def_conf;
     }
 
     str = store.getItem('instances');
@@ -121,6 +121,8 @@ $(function() {
         clear:        false,
         scrollOnEcho: false,
         keypress:     filterKey,
+        onFocus:      (term) => { return false; },
+        onResume:     false,
         onCommandChange: parseCommand,
     }).focus();
     $('#toot_box').on('keydown', (event) => {
@@ -179,7 +181,7 @@ $(function() {
                 };
                 img.src = data.preview_url;
             }, (jqxhr, status, error) => {
-                $.terminal.active().error('Media upload error.');
+                $.terminal.active().error('Media upload error.(' + jqxhr.status + ')');
                 $('#media_' + len).remove();
                 console.log(jqxhr);
             });
@@ -216,12 +218,14 @@ $(function() {
         $(this).next().toggle('fast');
     })
     .on('mouseover', '.status', function() {
-        if (typeof config.instances.status.thumbnail === 'undefined'){
+        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').show();
         }
     })
     .on('mouseout', '.status', function() {
-        if (typeof config.instances.status.thumbnail === 'undefined'){
+        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').hide();
         }
     })
@@ -281,7 +285,7 @@ $(function() {
  *****************************/
 
 
-function getConfig(config, index, def_conf) {
+function getConfig(config, index, d_conf) {
     var idxs = index.split('.');
     var cf = config;
     for (var i = 0; i < idxs.length; i++) {
@@ -297,9 +301,12 @@ function getConfig(config, index, def_conf) {
         return cf;
     }
 
-    cf = (typeof def_conf !== 'undefined' ? def_conf : default_config);
+    cf = (typeof d_conf !== 'undefined' ? d_conf : def_conf);
     for (var i = 0; i < idxs.length; i++) {
         cf = cf[idxs[i]];
+        if (typeof cf === 'undefined') {
+            break;
+        }
     }
     return cf;
 }
@@ -331,7 +338,8 @@ function makeStatus(payload) {
                 : is_reblog ? "<br />" + $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') : '');
 
     var avatar = $('<td />').addClass('status_avatar');
-    if (typeof config.instances.status.avatar !== 'undefined') {
+    var cfg = getConfig(config, 'instances.status.avatar', def_conf);
+    if (typeof cfg !== 'undefined') {
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
         var img = new Image();
         img.onload = () => {
@@ -372,7 +380,10 @@ function makeStatus(payload) {
         content.append(enquete_items);
     }
     else {
-        content = $(contents.content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>'));
+        content = contents.content;
+        if (content.match(/^<.+>$/)) {
+            content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>')
+        }
     }
 
     var thumb;
@@ -390,7 +401,8 @@ function makeStatus(payload) {
             };
             img.src = media.preview_url;
         });
-        if (typeof config.instances.status.thumbnail === 'undefined') {
+        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        if (typeof cfg === 'undefined') {
             thumb.hide();
         }
     }
@@ -497,13 +509,18 @@ function post_status() {
         },
         data: data
     }).then((data, status, jqxhr) => {
+        var visibility = getConfig(config, 'instances.visibility', def_conf);
+        if (typeof visibility === 'undefined') {
+            visibility = 'public';
+        }
         $('#toot_box').val('').trigger('keyup');
         $('#toot_cw').val('');
-        $('#toot_visibility').val('public');
+        $('#toot_visibility').val(visibility);
         $('#reply_close').trigger('click');
         $('#toot_media').html('');
         autosize.update($('#toot_box'));
     }, (jqxhr, status, error) => {
+        $.terminal.active().error('Toot post error.(' + jqxhr.status + ')');
         console.log(jqxhr);
     });
 }
@@ -557,7 +574,7 @@ function favorite(status, term) {
             term.error('favourited missed...');
         }
     }, (jqxhr, stat, error) => {
-        console.log('favorite: failed');
+        $.terminal.active().error('Favorite failed.(' + jqxhr.status + ')');
         console.log(jqxhr);
     });
 }
@@ -581,7 +598,7 @@ function boost(status) {
             term.error('reblogged missed...');
         }
     }, (jqxhr, stat, error) => {
-        console.log('reblogged: failed');
+        $.terminal.active().error('Reblogged failed.(' + jqxhr.status + ')');
         console.log(jqxhr);
     });
 }
