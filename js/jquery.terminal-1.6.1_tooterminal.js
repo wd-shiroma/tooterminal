@@ -6334,8 +6334,8 @@
             });
             if (!is_touch) {
                 // work weird on mobile
-                $win.on('focus.terminal_' + self.id(), focus_terminal).
-                    on('blur.terminal_' + self.id(), blur_terminal);
+                //$win.on('focus.terminal_' + self.id(), focus_terminal).
+                //    on('blur.terminal_' + self.id(), blur_terminal);
             } else {
                 /*
                 self.find('textarea').on('blur.terminal', function() {
@@ -6379,7 +6379,7 @@
                         if (!wasDragging) {
                             if (++count === 1) {
                                 if (!self.enabled() && !frozen) {
-                                    self.focus();
+                                    //self.focus();
                                     command_line.enable();
                                     count = 0;
                                 } else {

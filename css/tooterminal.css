@@ -186,6 +186,10 @@ td.status_main{
     padding-bottom: 1em;
 }
 
+.status_contents a {
+    word-break: break-all;
+}
+
 .status_enquete span{
     border-radius: 5px;
     border: 1px solid #353535;

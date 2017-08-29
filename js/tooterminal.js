@@ -124,14 +124,13 @@ $(function() {
         onFocus:      (term) => { return false; },
         onResume:     false,
         onCommandChange: parseCommand,
-    }).focus();
-    $('#toot_box').on('keydown', (event) => {
+    });
+    $('#toot').on('keydown', (event) => {
         if (event.keyCode === 27) {
             $('#sid').text('');
             $('#reply').hide();
             $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
             $('#toot').slideUp('first');
-            $.terminal.active().focus();
         }
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
@@ -276,6 +275,11 @@ $(function() {
     .on('click', '.toot_media img', (e,e2,e3) => {
         $(e.target).remove();
         $('#toot_box').val($('#toot_box').val().replace($(e.target).data('url'),''));
+    })
+    .on('keydown', (e) => {
+        if (e.keyCode === 65 && e.altKey && term_mode === mode_instance && $('#toot').css('display') === 'none') {
+            $.terminal.active().exec('toot');
+        }
     });
     autosize($('#toot_box'));
 });
@@ -311,7 +315,7 @@ function getConfig(config, index, d_conf) {
     return cf;
 }
 
-function makeStatus(payload) {
+function makeStatus(payload){
     var date = new Date(payload.created_at);
     var is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     var is_mention = (payload.type === 'mention');
@@ -319,7 +323,7 @@ function makeStatus(payload) {
                  : is_mention ? payload.status
                  : payload;
 
-    var head = '[ '
+    var head = (is_reblog ? $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' @' + contents.account.acct + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
@@ -334,8 +338,7 @@ function makeStatus(payload) {
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3)
-        + ' ]' + (contents.application !== null ? ' from ' + contents.application.name
-                : is_reblog ? "<br />" + $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') : '');
+        + ' ]' + (contents.application !== null ? ' from ' + contents.application.name : '');
 
     var avatar = $('<td />').addClass('status_avatar');
     var cfg = getConfig(config, 'instances.status.avatar', def_conf);
@@ -359,7 +362,8 @@ function makeStatus(payload) {
 
     if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
         enquete = JSON.parse(contents.enquete);
-        content = $('<div />').append(enquete.question.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>'));
+        content = $('<div />').append(enquete.question
+            .replace(/<p>(.*?)<\/p>/g, '<p><span>$1' + (enquete.type === 'enquete' ? '(回答枠)' : '(結果)') + '</span></p>'));
         var enquete_items = $('<div />').addClass('status_' + enquete.type);
         for (var i = 0; i < enquete.items.length; i++) {
             if (enquete.type === 'enquete') {
@@ -371,7 +375,7 @@ function makeStatus(payload) {
                     .append($('<span />')
                         .append($('<span />')
                             .addClass('progress')
-                            .text(enquete.ratios_text[i]))
+                            .text(enquete.items[i]))
                         .append($('<span />')
                             .addClass('proceed')
                             .css('width', enquete.ratios[i].toString() + '%')));
@@ -477,7 +481,6 @@ function post_status() {
         status: status,
         visibility: visibility
     };
-
     var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
     if (status.length === 0 || msg_size < 0) {
         return false;
@@ -513,12 +516,14 @@ function post_status() {
         if (typeof visibility === 'undefined') {
             visibility = 'public';
         }
-        $('#toot_box').val('').trigger('keyup');
         $('#toot_cw').val('');
+        $('#toot_box').val('').trigger('keyup');
         $('#toot_visibility').val(visibility);
         $('#reply_close').trigger('click');
         $('#toot_media').html('');
         autosize.update($('#toot_box'));
+        $('#toot').slideUp('fast');
+        $('#timeline').focus();
     }, (jqxhr, status, error) => {
         $.terminal.active().error('Toot post error.(' + jqxhr.status + ')');
         console.log(jqxhr);
