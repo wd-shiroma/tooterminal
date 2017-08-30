@@ -1646,7 +1646,7 @@ var InstanceModeElement = (function () {
             if (type === 'local') {
                 data.local = true;
             }
-            if (typeof analyzer.line_parsed[2].name === 'tag') {
+            else if (type === 'tag') {
                 path += '/' + analyzer.paramaters.tag_name;
             }
             api = callAPI(path, {
