@@ -6,6 +6,16 @@ body {
     margin: 0px;
 }
 
+.a_acct {
+    color: #bbb !important;
+    text-decoration: underline;
+}
+
+.a_acct:hover {
+    color: #777 !important;
+    text-decoration: underline;
+}
+
 .timeline {
     ime-mode: inactive;
 }

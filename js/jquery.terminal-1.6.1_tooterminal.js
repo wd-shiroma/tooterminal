@@ -2398,7 +2398,7 @@
     var color_hex_re = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
     var url_re = /(\bhttps?:\/\/(?:(?:(?!&[^;]+;)|(?=&amp;))[^\s"'<>\][)])+\b)/gi;
     var url_nf_re = /\b(https?:\/\/(?:(?:(?!&[^;]+;)|(?=&amp;))[^\s"'<>\][)])+)\b(?![^[\]]*])/gi;
-//    var email_re = /((([^<>('")[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})))/g;
+    var email_re = /((?:@?([a-zA-Z0-1_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-1_]+)))/g;
     var command_re = /((?:"[^"\\]*(?:\\[\S\s][^"\\]*)*"|'[^'\\]*(?:\\[\S\s][^'\\]*)*'|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|$)|(?:\\\s|\S))+)(?=\s|$)/gi;
     var format_begin_re = /(\[\[[!gbiuso]*;[^;]*;[^\]]*\])/i;
     var format_start_re = /^(\[\[[!gbiuso]*;[^;]*;[^\]]*\])/i;
@@ -2867,16 +2867,16 @@
                             }
                             var result;
                             if (style.indexOf('!') !== -1) {
-//                                if (data.match(email_re)) {
-//                                    result = '<a href="mailto:' + data + '"';
-//                                } else {
+                                if (data.match(email_re)) {
+                                    result = '<a class="a_acct" name="a_acct"';
+                                } else {
                                     result = '<a target="_blank" href="' + data + '"';
                                     if (settings.linksNoReferrer) {
                                         result += ' rel="noreferrer noopener"';
                                     } else {
                                         result += ' rel="noopener"';
                                     }
-//                                }
+                                }
                                 // make focus to terminal textarea that will enable
                                 // terminal when pressing tab and terminal is disabled
                                 result += ' tabindex="1000"';
@@ -3975,8 +3975,8 @@
         function buffer_line(string, options) {
             // urls should always have formatting to keep url if split
             if (settings.convertLinks && !options.raw) {
-//                string = string.replace(email_re, '[[!;;]$1]').
-//                    replace(url_nf_re, '[[!;;]$1]');
+                string = string.replace(email_re, '[[!;;]$1]').
+                    replace(url_nf_re, '[[!;;]$1]');
             }
             var i, len;
             if (!options.raw) {

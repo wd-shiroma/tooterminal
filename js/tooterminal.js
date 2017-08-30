@@ -216,6 +216,22 @@ $(function() {
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     })
+    .on('click', '.a_acct', function(e) {
+        console.log(this);
+        var acct = $(this).text().match(/((?:@?([a-zA-Z0-1_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-1_]+)))/);
+        callAPI('/api/v1/accounts/search', {
+            data: {
+                q: acct[0],
+                limit: 1
+            }
+        })
+        .then((data, status, jqxhr) => {
+            $.terminal.active().exec('show statuses id ' + data[0].id)
+            .done(() => {
+                $.terminal.active().exec('show user id ' + data[0].id);
+            })
+        })
+    })
     .on('mouseover', '.status', function() {
         var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
         if (typeof cfg === 'undefined'){
@@ -325,7 +341,7 @@ function makeStatus(payload){
 
     var head = (is_reblog ? $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
-        + ' @' + contents.account.acct + ' '
+        + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (contents.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (
