@@ -341,7 +341,7 @@ function makeStatus(payload){
                  : is_mention ? payload.status
                  : payload;
 
-    var head = (is_reblog ? $.terminal.format("[[i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
+    var head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
