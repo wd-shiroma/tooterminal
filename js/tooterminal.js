@@ -217,7 +217,9 @@ $(function() {
         $(this).next().toggle('fast');
     })
     .on('click', '.a_acct', function(e) {
-        console.log(this);
+        if (term_mode !== mode_instance) {
+            return;
+        }
         var acct = $(this).text().match(/((?:@?([a-zA-Z0-1_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-1_]+)))/);
         callAPI('/api/v1/accounts/search', {
             data: {
@@ -226,7 +228,7 @@ $(function() {
             }
         })
         .then((data, status, jqxhr) => {
-            $.terminal.active().exec('show statuses id ' + data[0].id)
+            $.terminal.active().exec('show statuses id ' + data[0].id + ' limit 10')
             .done(() => {
                 $.terminal.active().exec('show user id ' + data[0].id);
             })

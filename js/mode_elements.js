@@ -926,16 +926,61 @@ var InstanceModeElement = (function () {
                                 "name": "home",
                                 "description": 'ホームタイムライン',
                                 "execute": this.show_statuses,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "limit",
+                                        "description": '取得トゥート数',
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "post_limits",
+                                                "description": '1-80(初期値40)',
+                                                "execute": this.show_statuses,
+                                            }
+                                        ]
+                                    }
+                                ]
                             }, {
                                 "type": "command",
                                 "name": "local",
                                 "description": 'ローカルタイムライン',
                                 "execute": this.show_statuses,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "limit",
+                                        "description": '取得トゥート数',
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "post_limits",
+                                                "description": '1-80(初期値40)',
+                                                "execute": this.show_statuses,
+                                            }
+                                        ]
+                                    }
+                                ]
                             }, {
                                 "type": "command",
                                 "name": "public",
                                 "description": '連合タイムライン',
                                 "execute": this.show_statuses,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "limit",
+                                        "description": '取得トゥート数',
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "post_limits",
+                                                "description": '1-80(初期値40)',
+                                                "execute": this.show_statuses,
+                                            }
+                                        ]
+                                    }
+                                ]
                             }, {
                                 "type": "command",
                                 "name": "tag",
@@ -946,6 +991,21 @@ var InstanceModeElement = (function () {
                                         "name": "tag_name",
                                         "description": 'タグ名',
                                         "execute": this.show_statuses,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "limit",
+                                                "description": '取得トゥート数',
+                                                "children": [
+                                                    {
+                                                        "type": "paramater",
+                                                        "name": "post_limits",
+                                                        "description": '1-80(初期値40)',
+                                                        "execute": this.show_statuses,
+                                                    }
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -1025,7 +1085,22 @@ var InstanceModeElement = (function () {
                                         "type": "paramater",
                                         "name": "userid",
                                         "description": 'ユーザID',
-                                        "execute": this.show_statuses
+                                        "execute": this.show_statuses,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "limit",
+                                                "description": '取得トゥート数',
+                                                "children": [
+                                                    {
+                                                        "type": "paramater",
+                                                        "name": "post_limits",
+                                                        "description": '1-80(初期値40)',
+                                                        "execute": this.show_statuses,
+                                                    }
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }, /*{
@@ -1558,25 +1633,37 @@ var InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_statuses = function (term, analyzer) {
         term.pause();
         var api;
+        var limit = (
+            typeof analyzer.paramaters.post_limits !== 'undefined'
+            && analyzer.paramaters.post_limits > 0
+            && analyzer.paramaters.post_limits <= 80
+        ) ? analyzer.paramaters.post_limits : 40;
+
         if (analyzer.line_parsed[1].name === 'timeline') {
             var type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
             var path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
-            if (typeof analyzer.line_parsed[3] !== 'undefined') {
+            var data = { limit: limit };
+            if (type === 'local') {
+                data.local = true;
+            }
+            if (typeof analyzer.line_parsed[2].name === 'tag') {
                 path += '/' + analyzer.paramaters.tag_name;
             }
             api = callAPI(path, {
                 type: 'GET',
-                data: (type === 'local' ? {local: true} : undefined)
+                data: data
             });
         }
-        else if (analyzer.line_parsed.length === 4 && analyzer.line_parsed[2].name === 'id'){
+        else if (analyzer.line_parsed[1].name === 'statuses' && analyzer.line_parsed[2].name === 'id'){
             api = callAPI('/api/v1/accounts/' + analyzer.paramaters.userid + '/statuses', {
                 type: 'GET',
+                data: { limit: limit }
             });
         }
         else {
             api = callAPI('/api/v1/statuses', {
                 type: 'GET',
+                data: { limit: limit }
             });
         }
         api.then((data, status, jqxhr) => {
