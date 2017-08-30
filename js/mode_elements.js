@@ -1367,7 +1367,7 @@ var InstanceModeElement = (function () {
                                 term.echo(makeStatus(payload), {raw: true});
                             }
                             else {
-                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                                term.echo('[[;goldenrod;]message : ' + $(payload.status.content).text() + ']');
                             }
                         }
                     }
@@ -1418,7 +1418,7 @@ var InstanceModeElement = (function () {
                                 term.echo(makeStatus(payload), {raw: true});
                             }
                             else {
-                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                                term.echo('[[;goldenrod;]message : ' + $(payload.status.content).text() + ']');
                             }
                         }
                     }
