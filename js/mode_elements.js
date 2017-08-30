@@ -1361,13 +1361,13 @@ var InstanceModeElement = (function () {
                                      (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
 
                         if (is_fav || is_reb || is_fol || is_men) {
-                            term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                            term.echo('[[!;goldenrod;]Notification! : ' + payload.type + ' << '
                                 + payload.account.display_name + ' @' + payload.account.acct + ']');
                             if (payload.type === 'mention') {
                                 term.echo(makeStatus(payload), {raw: true});
                             }
                             else {
-                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                                term.echo('[[!;goldenrod;]' + $(payload.status.content).text() + ']');
                             }
                         }
                     }
@@ -1412,13 +1412,13 @@ var InstanceModeElement = (function () {
                                      (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
 
                         if (is_fav || is_reb || is_fol || is_men) {
-                            term.echo('[[;goldenrod;]Notification! : ' + payload.type + ' << '
+                            term.echo('[[!;goldenrod;]Notification! : ' + payload.type + ' << '
                                 + payload.account.display_name + ' @' + payload.account.acct + ']');
                             if (payload.type === 'mention') {
                                 term.echo(makeStatus(payload), {raw: true});
                             }
                             else {
-                                term.echo('[[;goldenrod;]' + $(payload.status.content).text() + ']');
+                                term.echo('[[!;goldenrod;]' + $(payload.status.content).text() + ']');
                             }
                         }
                     }
