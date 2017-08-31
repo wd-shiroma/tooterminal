@@ -525,10 +525,12 @@ function make_notification(payload) {
     var is_men = (payload.type === 'mention') &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
 
+    console.log(payload);
+
     if (is_fav || is_reb || is_fol || is_men) {
         var msg = '[[;goldenrod;]Notification! : ' + payload.type + ' << '
             + payload.account.display_name + ' @' + payload.account.acct
-            + "<br />" + $(payload.status.content).text() + ']';
+            + "<br />" + (payload.status ? $(payload.status.content).text() : '') + ']';
         msg = $.terminal.format(msg);
         if (payload.type === 'mention') {
             msg += makeStatus(payload);
