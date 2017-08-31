@@ -8,11 +8,11 @@ body {
 
 .a_acct {
     color: #aaa !important;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .a_acct:hover {
-    color: #777 !important;
+    color: #fff !important;
     text-decoration: underline;
 }
 
@@ -255,7 +255,7 @@ td.status_main{
     padding: 0;
 }
 
-.img_view {
+.media_view {
     position: absolute;
     top: 0px;
     left: 0px;

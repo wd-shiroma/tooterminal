@@ -40,16 +40,28 @@ var ModeManager = (function () {
         var information = ['Exec commands:'];
         var cmd_name;
         for (var i = 0; i < cmd_list.length; i++) {
-            cmd_name = cmd_list[i].type == 'paramater' ? ('<' + cmd_list[i].name + '>')
-                : cmd_list[i].type == 'number' ? ('[' + cmd_list[i].name + ']')
-                    : cmd_list[i].name;
+            if (cmd_list[i].type == 'paramater') {
+                cmd_name = ('<' + cmd_list[i].name + '>');
+            }
+            else if (cmd_list[i].type == 'number') {
+                var max = parseInt(cmd_list[i].max);
+                var min = parseInt(cmd_list[i].min);
+                cmd_name = ('<' + (isNaN(min) ? '' : min) + '-' + (isNaN(max) ? '' : max) + '>');
+            }
+            else {
+                cmd_name = cmd_list[i].name;
+            }
             information.push({
                 command: cmd_name,
                 description: cmd_list[i].description
             });
         }
         var cur_cmd = this.line_parsed[this.line_parsed.length - 1];
-        if (typeof cur_cmd !== 'undefined' && typeof cur_cmd.execute === 'function' && cur_cmd.type !== 'paramater') {
+        if (typeof cur_cmd !== 'undefined'
+            && typeof cur_cmd.execute === 'function'
+            && cur_cmd.type !== 'paramater'
+            && cur_cmd.type !== 'number'
+        ) {
             if (information.length === 2) {
                 information.pop();
             }
@@ -137,6 +149,27 @@ var ModeManager = (function () {
                         filter.push(this.cmd_list[j]);
                     }
                 }
+                else if (this.cmd_list[j].type === "number") {
+                    var num = parseInt(stored);
+                    var max = parseInt(this.cmd_list[j].max);
+                    var min = parseInt(this.cmd_list[j].min);
+
+                    if (stored.length === 0) {
+                        filter.push(this.cmd_list[j]);
+                    }
+                    else if (isNaN(num)) {
+                        continue;
+                    }
+                    else if (!isNaN(max) && max < num) {
+                        continue;
+                    }
+                    else if (!isNaN(min) && min > num) {
+                        continue;
+                    }
+                    else {
+                        filter.push(this.cmd_list[j]);
+                    }
+                }
                 else if (this.cmd_list[j].type === "paramater") {
                     //1ブロックまたはクォーテーションで囲まれた範囲をパラメータとして処理する。
                     filter.push(this.cmd_list[j]);
@@ -176,7 +209,9 @@ var ModeManager = (function () {
                 this.err_msg = "% Incomplete command.";
             }
             for (var i = 0; i < this.line_parsed.length; i++) {
-                if (this.line_parsed[i].type === 'paramater'){
+                if (this.line_parsed[i].type === 'paramater'
+                    || this.line_parsed[i].type === 'number'
+                ){
                     this.paramaters[this.line_parsed[i].name] = this.line_split[i];
                 }
             }

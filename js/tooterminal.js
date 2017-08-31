@@ -85,7 +85,7 @@ var filterKey = (event, term) => {
 
         var lines = info.map((cmd) => {
             return (typeof cmd.command === 'undefined')
-                ? cmd : ('  ' + tab(cmd.command, cmd.description, 30));
+                ? cmd : ('  ' + tab(cmd.command, cmd.description, 22));
         });
         lines.unshift(term.get_prompt() + term.get_command() + '?');
         lines.push('');
@@ -209,6 +209,7 @@ $(function() {
     });
     $('.img_background').on('click', function(){
         $('#img_view').fadeOut('first');
+        $('#video_view').fadeOut('first');
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     });
@@ -220,7 +221,8 @@ $(function() {
         if (term_mode !== mode_instance) {
             return;
         }
-        var acct = $(this).text().match(/((?:@?([a-zA-Z0-1_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-1_]+)))/);
+
+        var acct = $(this).text().match(/((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+))|(?:@([a-zA-Z0-9_]+)))/);
         callAPI('/api/v1/accounts/search', {
             data: {
                 q: acct[0],
@@ -228,7 +230,7 @@ $(function() {
             }
         })
         .then((data, status, jqxhr) => {
-            $.terminal.active().exec('show statuses id ' + data[0].id + ' limit 10')
+            $.terminal.active().exec('show statuses id ' + data[0].id + ' limit 3')
             .done(() => {
                 $.terminal.active().exec('show user id ' + data[0].id);
             })
@@ -271,16 +273,30 @@ $(function() {
     })
     .on('click', '.status_contents img', function(e) {
         var elem = $(this);
-        var img = new Image();
-        img.onload = () => {
-            $('#img_view').attr('src', elem.data('url')).fadeIn('first');
-        };
-        img.onerror = (e) => {
-            console.log(e);
-        };
-        $('.img_background').fadeIn('first');
-        $.terminal.active().disable();
-        img.src = elem.data('url');
+
+        if (elem.data('type') === 'gifv') {
+            var video = $('#video_view')[0];
+            console.log(video);
+            video.src = elem.data('url');
+            video.loop = true;
+            video.autoplay = true;
+            video.muted = true;
+            video.controls = true;
+            $('#video_view').fadeIn('first');
+            $('.img_background').fadeIn('first');
+        }
+        else {
+            var img = new Image();
+            img.onload = () => {
+                $('#img_view').attr('src', elem.data('url')).fadeIn('first');
+            };
+            img.onerror = (e) => {
+                console.log(e);
+            };
+            $('.img_background').fadeIn('first');
+            $.terminal.active().disable();
+            img.src = elem.data('url');
+        }
     })
     .on('keydown.img_background', (event) => {
         if (event.keyCode === 27) {
@@ -412,16 +428,24 @@ function makeStatus(payload){
     if (contents.media_attachments.length > 0) {
         thumb = $('<div />').addClass('status_thumbnail');
         contents.media_attachments.forEach((media, index, arr) => {
+            var preview_url = (!media.preview_url.match(/^https?:\/\//)
+                    ? 'https://' + instances[instance_name].domain + media.preview_url
+                    : media.preview_url);
+            console.log(media);
+            var url = media.remote_url ? media.remote_url : media.url;
             var id = 'media_' + media.id;
-            thumb.append($('<img />').attr('id', id).attr('data-url', media.url));
+            thumb.append($('<img />')
+                .attr('id', id)
+                .attr('data-url', url)
+                .attr('data-type', media.type));
             var img = new Image();
             img.onload = () => {
-                $('#' + id).attr('src', media.preview_url);
+                $('#' + id).attr('src', preview_url);
             };
             img.onerror = (e) => {
                 console.log(e);
             };
-            img.src = media.preview_url;
+            img.src = preview_url;
         });
         var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
         if (typeof cfg === 'undefined') {
@@ -489,6 +513,28 @@ function makeStatus(payload){
         .append(avatar)
         .append(main);
     return status.prop('outerHTML');
+}
+
+function make_notification(payload) {
+    var is_fav = (payload.type === 'favourite') &&
+                 (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
+    var is_reb = (payload.type === 'reblog') &&
+                 (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
+    var is_fol = (payload.type === 'notification') &&
+                 (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
+    var is_men = (payload.type === 'mention') &&
+                 (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
+
+    if (is_fav || is_reb || is_fol || is_men) {
+        var msg = '[[;goldenrod;]Notification! : ' + payload.type + ' << '
+            + payload.account.display_name + ' @' + payload.account.acct
+            + "<br />" + $(payload.status.content).text() + ']';
+        msg = $.terminal.format(msg);
+        if (payload.type === 'mention') {
+            msg += makeStatus(payload);
+        }
+    }
+    return msg;
 }
 
 function post_status() {
@@ -590,9 +636,11 @@ function favorite(status, term) {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
-        var fav = $('[name=id_' + $(status).data('sid').toString() + ']').find('i')[0];
-        $(fav).removeClass().addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'));
-        $(status).data('fav', data.favourited ? '1' : '0');
+        $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
+            var fav = $(elem).find('i')[0];
+            $(fav).removeClass().addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'));
+            $(status).data('fav', data.favourited ? '1' : '0');
+        });
         if (isFav === data.favourited) {
             term.error('favourited missed...');
         }
@@ -614,9 +662,11 @@ function boost(status) {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
-        var reb = $('[name=id_' + $(status).data('sid').toString() + ']').find('i')[1];
-        $(reb).removeClass().addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'));
-        $(status).data('reb', data.reblogged ? '1' : '0');
+        $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
+            var reb = $(elem).find('i')[1];
+            $(reb).removeClass().addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'));
+            $(status).data('reb', data.reblogged ? '1' : '0');
+        });
         if (isReb === data.reblogged) {
             term.error('reblogged missed...');
         }
