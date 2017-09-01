@@ -271,12 +271,15 @@ $(function() {
             boost(this);
         }
     })
+    .on('dblclick', '.status', function(e){
+        $.terminal.active().insert(' id ' + $(this).data('uid'));
+    })
     .on('click', '.status_contents img', function(e) {
         var elem = $(this);
 
+        $('#img_view').attr('src', elem.attr('src')).fadeIn('first');
         if (elem.data('type') === 'gifv') {
             var video = $('#video_view')[0];
-            console.log(video);
             video.src = elem.data('url');
             video.loop = true;
             video.autoplay = true;
@@ -288,7 +291,7 @@ $(function() {
         else {
             var img = new Image();
             img.onload = () => {
-                $('#img_view').attr('src', elem.data('url')).fadeIn('first');
+                $('#img_view').attr('src', elem.data('url'));
             };
             img.onerror = (e) => {
                 console.log(e);
@@ -431,7 +434,6 @@ function makeStatus(payload){
             var preview_url = (!media.preview_url.match(/^https?:\/\//)
                     ? 'https://' + instances[instance_name].domain + media.preview_url
                     : media.preview_url);
-            console.log(media);
             var url = media.remote_url ? media.remote_url : media.url;
             var id = 'media_' + media.id;
             thumb.append($('<img />')
@@ -520,11 +522,10 @@ function make_notification(payload) {
                  (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
     var is_reb = (payload.type === 'reblog') &&
                  (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
-    var is_fol = (payload.type === 'notification') &&
+    var is_fol = (payload.type === 'follow') &&
                  (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
     var is_men = (payload.type === 'mention') &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
-
     console.log(payload);
 
     if (is_fav || is_reb || is_fol || is_men) {
