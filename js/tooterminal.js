@@ -381,14 +381,19 @@ function makeStatus(payload){
     var cfg = getConfig(config, 'instances.status.avatar', def_conf);
     if (typeof cfg !== 'undefined') {
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
+        var url = contents.account.avatar_static;
+        if (!url.match(/^http/)) {
+        	url = 'https://' + instances[instance_name].domain + url;
+        }
+
         var img = new Image();
         img.onload = () => {
-            $('[name=img_' + contents.account.id + ']').attr('src', contents.account.avatar_static);
+            $('[name=img_' + contents.account.id + ']').attr('src', url);
         };
         img.onerror = (e) => {
             console.log(e);
         };
-        img.src = contents.account.avatar_static;
+        img.src = url;
     }
     else {
         avatar.hide();
@@ -528,8 +533,9 @@ function make_notification(payload) {
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
     console.log(payload);
 
+    var msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
-        var msg = '[[;goldenrod;]Notification! : ' + payload.type + ' << '
+        msg = '[[;goldenrod;]Notification! : ' + payload.type + ' << '
             + payload.account.display_name + ' @' + payload.account.acct
             + "<br />" + (payload.status ? $(payload.status.content).text() : '') + ']';
         msg = $.terminal.format(msg);

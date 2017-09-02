@@ -506,7 +506,7 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "delete",
                                         "description": "削除されたトゥートIDの通知を表示します。",
-                                        "execute": this.set_default
+                                        "execute": this.set_true
                                     }, {
                                         "type": "command",
                                         "name": "favourite",
@@ -649,12 +649,13 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "logging",
                                         "description": "ストリーミングに表示する通知の設定をします。",
+                                        "execute": this.set_default,
                                         "children": [
                                             {
                                                 "type": "command",
                                                 "name": "delete",
                                                 "description": "削除されたトゥートIDの通知を非表示にします。",
-                                                "execute": this.set_false
+                                                "execute": this.set_default
                                             }, {
                                                 "type": "command",
                                                 "name": "favourite",
@@ -1384,7 +1385,7 @@ var InstanceModeElement = (function () {
                     var payload;
 
                     var is_del = (data.event === 'delete') &&
-                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) !== false);
+                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) === true);
 
                     if (is_del) {
                         payload = data.payload;
@@ -1459,7 +1460,7 @@ var InstanceModeElement = (function () {
                     var payload;
 
                     var is_del = (data.event === 'delete') &&
-                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) !== false);
+                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) === true);
 
                     if (is_del) {
                         payload = data.payload;

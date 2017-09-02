@@ -278,3 +278,25 @@ var ModeManager = (function () {
     };
     return ModeManager;
 }());
+
+
+var ConfigManager = (function () {
+    function ConfigManager(conf) {
+        this.config = conf;
+    }
+
+    ConfigManager.prototype.getConfig = function (line) {
+        var cmd_list = this.result.cmd_list;
+        var completion = [];
+        for (var i = 0; i < cmd_list.length; i++) {
+            completion.push(
+                  cmd_list[i].type == 'paramater' ? ('<' + cmd_list[i].name + '>')
+                : cmd_list[i].type == 'number'    ? ('[' + cmd_list[i].name + ']')
+                : (cmd_list[i].name)
+            );
+        }
+        //this.debug();
+        return completion;
+    };
+    return ModeManager;
+}());
