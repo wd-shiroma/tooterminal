@@ -612,7 +612,6 @@ function post_status() {
         $('#reply_close').trigger('click');
         $('#toot_media').html('');
         autosize.update($('#toot_box'));
-        $('#toot').slideUp('fast');
         $('#timeline').focus();
     }, (jqxhr, status, error) => {
         $.terminal.active().error('Toot post error.(' + jqxhr.status + ')');
