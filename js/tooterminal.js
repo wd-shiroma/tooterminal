@@ -230,7 +230,7 @@ $(function() {
             }
         })
         .then((data, status, jqxhr) => {
-            $.terminal.active().exec('show statuses id ' + data[0].id + ' limit 3')
+            $.terminal.active().exec('show user id ' + data[0].id + ' statuses limit 3')
             .done(() => {
                 $.terminal.active().exec('show user id ' + data[0].id);
             })
