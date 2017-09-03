@@ -361,7 +361,7 @@ var regist_instance = (input, term) => {
             data:{
                 client_name: config.application.name,
                 redirect_uris: config.application.uris,
-                website: 'https://wd-shiroma.github.io/tooterminal',
+                website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
                 scopes:
                       (config.application.scopes.read   ? 'read '  : '')
                     + (config.application.scopes.write  ? 'write ' : '')
@@ -895,14 +895,64 @@ var InstanceModeElement = (function () {
                                         "min": 1,
                                         "max": 9999999,
                                         "description": 'ユーザID',
-                                        "execute": this.show_user
+                                        "execute": this.show_user,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "statuses",
+                                                "description": 'ユーザの最新トゥートを表示',
+                                                "execute": this.show_statuses,
+                                                "children": [
+                                                    {
+                                                        "type": "command",
+                                                        "name": "limit",
+                                                        "description": 'トゥート表示件数を設定します。',
+                                                        "children": [
+                                                            {
+                                                                "type": "number",
+                                                                "name": "post_limits",
+                                                                "min": 1,
+                                                                "max": 40,
+                                                                "description": 'トゥート数(初期値20)',
+                                                                "execute": this.show_statuses
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }, {
                                 "type": "command",
                                 "name": "self",
                                 "description": 'ログインユーザー',
-                                "execute": this.show_user
+                                "execute": this.show_user,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "statuses",
+                                        "description": 'ユーザの最新トゥートを表示',
+                                        "execute": this.show_statuses,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "limit",
+                                                "description": 'トゥート表示件数を設定します。',
+                                                "children": [
+                                                    {
+                                                        "type": "number",
+                                                        "name": "post_limits",
+                                                        "min": 1,
+                                                        "max": 40,
+                                                        "description": 'トゥート数(初期値20)',
+                                                        "execute": this.show_statuses
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
                             }, /*{
                                 "type": "command",
                                 "name": "select",
@@ -1113,37 +1163,19 @@ var InstanceModeElement = (function () {
                         "type": "command",
                         "name": "statuses",
                         "description": 'トゥートを表示します。',
-                        "execute": this.show_statuses,
                         "children": [
                             {
                                 "type": "command",
                                 "name": "id",
-                                "description": 'ユーザーIDを指定',
+                                "description": 'トゥートIDを指定',
                                 "children": [
                                     {
                                         "type": "number",
-                                        "name": "userid",
+                                        "name": "status_id",
                                         "min": 1,
                                         "max": 9999999,
-                                        "description": 'ユーザID',
-                                        "execute": this.show_statuses,
-                                        "children": [
-                                            {
-                                                "type": "command",
-                                                "name": "limit",
-                                                "description": '取得トゥート数',
-                                                "children": [
-                                                    {
-                                                        "type": "number",
-                                                        "name": "post_limits",
-                                                        "min": 1,
-                                                        "max": 40,
-                                                        "description": 'トゥート数(初期値20)',
-                                                        "execute": this.show_statuses,
-                                                    }
-                                                ]
-                                            }
-                                        ]
+                                        "description": 'トゥートID',
+                                        "execute": this.show_status_id
                                     }
                                 ]
                             }, {
@@ -1663,8 +1695,8 @@ var InstanceModeElement = (function () {
                 data: data
             });
         }
-        else if (analyzer.line_parsed[1].name === 'statuses'){
-            var userid = analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'
+        else if (analyzer.line_parsed[1].name === 'user'){
+            var userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
                        ? instances[instance_name].user.id
                        : analyzer.line_parsed[2].name === 'id' ? analyzer.paramaters.userid
                        : -1;
@@ -1696,6 +1728,36 @@ var InstanceModeElement = (function () {
             term.resume();
         }, (jqxhr, status, error) => {
             term.error('Getting timeline posts is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
+        term.pause();
+        var sid = analyzer.paramaters.status_id;
+        var cur_status;
+        callAPI('/api/v1/statuses/' + sid, {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            cur_status = makeStatus(data);
+            return callAPI('/api/v1/statuses/' + sid + '/context', {
+                type: 'GET',
+            })
+        }).then((data, status, jqxhr) => {
+            var s;
+            for (var i = 0; i < data.ancestors.length; i++) {
+                s = makeStatus(data.ancestors[i]);
+                term.echo(s, { raw: true, flush: false });
+            }
+            term.echo(cur_status, { raw: true, flush: false });
+            for (var i = 0; i < data.descendants.length; i++) {
+                s = makeStatus(data.descendants[i]);
+                term.echo(s, { raw: true, flush: false });
+            }
+            term.flush();
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting statuses is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
         });

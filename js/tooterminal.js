@@ -272,7 +272,7 @@ $(function() {
         }
     })
     .on('dblclick', '.status', function(e){
-        $.terminal.active().insert(' id ' + $(this).data('uid'));
+        $.terminal.active().exec('show status id ' + $(this).data('sid'));
     })
     .on('click', '.status_contents img', function(e) {
         var elem = $(this);
@@ -360,6 +360,22 @@ function makeStatus(payload){
                  : is_mention ? payload.status
                  : payload;
 
+    var app;
+    if (contents.application === null) {
+        app = '';
+    }
+    else if(contents.application.website === null) {
+        app = ' via ' + contents.application.name;
+    }
+    else{
+        app = $('<a />')
+            .text(contents.application.name)
+            .attr('href', contents.application.website)
+            .attr('target', '_blank')
+            .prop('outerHTML');
+        app = ' via ' + app;
+    }
+
     var head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
@@ -372,10 +388,11 @@ function makeStatus(payload){
                   : contents.visibility === 'direct'   ? 'envelope'
                   : 'question'))
             .attr('aria-hidden', 'true').prop('outerHTML')
+        + (contents.in_reply_to_id ? ' ' + $($('<i />').addClass('fa fa-mail-reply'))
+                  .attr('aria-hidden', 'true').prop('outerHTML') + ' ' : '')
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
-        + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3)
-        + ' ]' + (contents.application !== null ? ' from ' + contents.application.name : '');
+        + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
 
     var avatar = $('<td />').addClass('status_avatar');
     var cfg = getConfig(config, 'instances.status.avatar', def_conf);
@@ -383,7 +400,7 @@ function makeStatus(payload){
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
         var url = contents.account.avatar_static;
         if (!url.match(/^http/)) {
-        	url = 'https://' + instances[instance_name].domain + url;
+            url = 'https://' + instances[instance_name].domain + url;
         }
 
         var img = new Image();
@@ -694,6 +711,11 @@ function tab(arg1, arg2, indent){
 
     for(var i = arg1_length; i < indent; i++, result += ' ');
     return result + arg2;
+}
+
+function status_recursive(sid, status_) {
+    var pr = new Primrose();
+    ins
 }
 
 String.prototype.addTab = function(arg1, indent){
