@@ -1173,7 +1173,7 @@ var InstanceModeElement = (function () {
                                         "type": "number",
                                         "name": "status_id",
                                         "min": 1,
-                                        "max": 9999999,
+                                        "max": 9999999999,
                                         "description": 'トゥートID',
                                         "execute": this.show_status_id
                                     }
