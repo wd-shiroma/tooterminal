@@ -215,7 +215,7 @@ $(function() {
     $('#reply_close').on('click', (e) => {
         $('#sid').text('');
         $('#reply').hide();
-        $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
+        $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+(?:@(?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+)?\s+/, ''));
     });
     $('.img_background').on('click', function(){
         $('#img_view').fadeOut('first');
@@ -417,9 +417,15 @@ function makeStatus(payload){
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
 
+        console.log(contents);
+
     var reply = '';
-    for (var i = 0; i < contents.mentions.length; i++) {
-        reply += '@' + contents.mentions[i].acct + ' ';
+    if (contents.mentions.length > 0) {
+        //reply = '@' + contents.account.acct + ' ';
+        for (var i = 0; i < contents.mentions.length; i++) {
+            reply += '@' + contents.mentions[i].acct + ' ';
+        }
+        reply = reply.replace('@' + instances[instance_name].user.acct + ' ', '');
     }
 
     var avatar = $('<td />').addClass('status_avatar');
