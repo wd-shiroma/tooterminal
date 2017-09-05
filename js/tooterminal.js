@@ -421,7 +421,7 @@ function makeStatus(payload){
 
     var reply = '';
     if (contents.mentions.length > 0) {
-        //reply = '@' + contents.account.acct + ' ';
+        reply = '@' + contents.account.acct + ' ';
         for (var i = 0; i < contents.mentions.length; i++) {
             reply += '@' + contents.mentions[i].acct + ' ';
         }
