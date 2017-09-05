@@ -5,6 +5,7 @@
 var def_conf = {
     application: {
         name: 'Tooterminal',
+        website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
         uris: 'urn:ietf:wg:oauth:2.0:oob',
         scopes: {
             read:   true,
@@ -17,6 +18,14 @@ var def_conf = {
     },
     instances: {
         monitor: 'local',
+        terminal: {
+            logging: {
+                favourite: true,
+                reblog: true,
+                mention: true,
+                following: true
+            }
+        },
         status: {},
     }
 }
@@ -254,8 +263,15 @@ $(function() {
         }
         var id = $(this).data('sid');
         if (e.shiftKey) {
+            var reply = '@' + $(this).data('acct').toString();
+            var re = /((?:@([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
+            var mul_reply = $(this).find('.status_contents')[0].textContent.replace(new RegExp(reply, 'g'), '').match(re);
+            var box = reply + ' ';
+            for (var i = 0; i < mul_reply.length; i++) {
+                box += mul_reply[i] + ' ';
+            }
+            $('#toot_box').focus().val(box);
             $('#toot').slideDown('first');
-            $('#toot_box').focus().val('@' + $(this).data('acct').toString() + ' ');
             $('#reply').show();
             $('#sid').text($(this).data('sid'));
             $('#reply_head').text('reply to: ' + $(this).data('dispname'));
@@ -301,7 +317,15 @@ $(function() {
             img.src = elem.data('url');
         }
     })
-    .on('keydown.img_background', (event) => {
+    .on('click', '[name=cmd_followers]', (e) => {
+        console.log(this);
+        console.log(e);
+        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' followers');
+    })
+    .on('click', '[name=cmd_following]', (e) => {
+        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' following');
+    })
+    .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
             $('.img_background').trigger('click');
         }
@@ -541,12 +565,16 @@ function makeStatus(payload){
 
 function make_notification(payload) {
     var is_fav = (payload.type === 'favourite') &&
+                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
     var is_reb = (payload.type === 'reblog') &&
+                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
     var is_fol = (payload.type === 'follow') &&
+                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
     var is_men = (payload.type === 'mention') &&
+                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
     console.log(payload);
 
@@ -617,6 +645,14 @@ function post_status() {
         $.terminal.active().error('Toot post error.(' + jqxhr.status + ')');
         console.log(jqxhr);
     });
+}
+
+function reduce_status() {
+    var statuses = $('.status').parent().parent();
+    var old_stats = statuses.length - 200;
+    for (var i = 0; i < old_stats; i++) {
+        $(statuses[i]).remove();
+    }
 }
 
 function callAPI(path, opts = {}) {

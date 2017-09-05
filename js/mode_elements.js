@@ -361,7 +361,7 @@ var regist_instance = (input, term) => {
             data:{
                 client_name: config.application.name,
                 redirect_uris: config.application.uris,
-                website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
+                website: config.application.website,
                 scopes:
                       (config.application.scopes.read   ? 'read '  : '')
                     + (config.application.scopes.write  ? 'write ' : '')
@@ -415,8 +415,20 @@ var ConfigurationModeElement = (function () {
                         "children": [
                             {
                                 "type": "paramater",
-                                "name": "app_name",
+                                "name": "string",
                                 "description": "アプリケーション名",
+                                "execute": this.set_paramater
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "website",
+                        "description": "アプリケーションWebページを設定します。",
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "string",
+                                "description": "URL",
                                 "execute": this.set_paramater
                             }
                         ]
@@ -649,7 +661,7 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "logging",
                                         "description": "ストリーミングに表示する通知の設定をします。",
-                                        "execute": this.set_default,
+                                        "execute": this.set_false,
                                         "children": [
                                             {
                                                 "type": "command",
@@ -756,7 +768,15 @@ var ConfigurationModeElement = (function () {
         configurable: true
     });
     ConfigurationModeElement.prototype.set_paramater = function (term, analyzer) {
-        config.application.name = analyzer.paramaters.app_name;
+        var index = analyzer.line_parsed.length - 1;
+        var t_conf = config;
+        for (var i = 0; i < index-1; i++) {
+            if (typeof t_conf[analyzer.line_parsed[i].name] === 'undefined') {
+                t_conf[analyzer.line_parsed[i].name] = {};
+            }
+            t_conf = t_conf[analyzer.line_parsed[i].name];
+        }
+        t_conf[analyzer.line_parsed[index-1].name] = analyzer.paramaters.string;
         return true;
     };
     ConfigurationModeElement.prototype.set_default = function (term, analyzer) {
@@ -919,6 +939,16 @@ var InstanceModeElement = (function () {
                                                         ]
                                                     }
                                                 ]
+                                            }, {
+                                                "type": "command",
+                                                "name": "following",
+                                                "description": 'フォローアカウントを表示します。',
+                                                "execute": this.show_follows
+                                            }, {
+                                                "type": "command",
+                                                "name": "followers",
+                                                "description": 'フォロワーアカウントを表示します。',
+                                                "execute": this.show_follows,
                                             }
                                         ]
                                     }
@@ -951,6 +981,16 @@ var InstanceModeElement = (function () {
                                                 ]
                                             }
                                         ]
+                                    }, {
+                                        "type": "command",
+                                        "name": "following",
+                                        "description": 'フォローアカウントを表示します。',
+                                        "execute": this.show_follows
+                                    }, {
+                                        "type": "command",
+                                        "name": "followers",
+                                        "description": 'フォロワーアカウントを表示します。',
+                                        "execute": this.show_follows,
                                     }
                                 ]
                             }, /*{
@@ -1094,70 +1134,6 @@ var InstanceModeElement = (function () {
                                     }
                                 ]
                             }
-                        ]
-                    }, {
-                        "type": "command",
-                        "name": "following",
-                        "description": 'フォローアカウントを表示します。',
-                        "execute": this.show_follows,
-                        "children": [
-                            {
-                                "type": "command",
-                                "name": "id",
-                                "description": 'ユーザーIDを指定',
-                                "children": [
-                                    {
-                                        "type": "number",
-                                        "name": "userid",
-                                        "min": 1,
-                                        "max": 9999999,
-                                        "description": 'ユーザID',
-                                        "execute": this.show_follows
-                                    }
-                                ]
-                            }, {
-                                "type": "command",
-                                "name": "self",
-                                "description": 'ログインユーザー',
-                                "execute": this.show_follows
-                            },/* {
-                                "type": "command",
-                                "name": "select",
-                                "description": 'トゥートから選択',
-                                "execute": this.show_follows
-                            }*/
-                        ]
-                    }, {
-                        "type": "command",
-                        "name": "followers",
-                        "description": 'フォロワーアカウントを表示します。',
-                        "execute": this.show_follows,
-                        "children": [
-                            {
-                                "type": "command",
-                                "name": "id",
-                                "description": 'ユーザーIDを指定',
-                                "children": [
-                                    {
-                                        "type": "number",
-                                        "name": "userid",
-                                        "min": 1,
-                                        "max": 9999999,
-                                        "description": 'ユーザID',
-                                        "execute": this.show_follows
-                                    }
-                                ]
-                            }, {
-                                "type": "command",
-                                "name": "self",
-                                "description": 'ログインユーザー',
-                                "execute": this.show_follows
-                            }, /*{
-                                "type": "command",
-                                "name": "select",
-                                "description": 'トゥートから選択',
-                                "execute": this.show_follows
-                            }*/
                         ]
                     }, {
                         "type": "command",
@@ -1433,6 +1409,7 @@ var InstanceModeElement = (function () {
                         var status = makeStatus(payload);
                         term.echo(status, { raw: true });
                     }
+                    reduce_status();
                     //console.log(payload);
                 };
 
@@ -1504,6 +1481,7 @@ var InstanceModeElement = (function () {
                         var status = makeStatus(payload);
                         term.echo(status, { raw: true });
                     }
+                    reduce_status();
                 };
 
                 ws_t.onopen = () => {
@@ -1579,8 +1557,17 @@ var InstanceModeElement = (function () {
                     + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
                     + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
             term.echo(data.statuses_count  + ' statuses posted, '
-                    + data.following_count + ' accounts are following, '
-                    + data.followers_count + ' accounts are followed', {flush: false});
+                    + $('<a />')
+                        .attr('name', 'cmd_following')
+                        .attr('data-uid', data.id)
+                        .text(data.following_count + ' accounts are following')
+                        .prop('outerHTML') + ', '
+                    + $('<a />')
+                        .attr('name', 'cmd_followers')
+                        .attr('data-uid', data.id)
+                        .text(data.followers_count + ' accounts are followed')
+                        .prop('outerHTML')
+            , {raw: true, flush: false});
             term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
             term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
             term.echo('URL: ' + data.url, {raw: false, flush: false});
@@ -1603,18 +1590,31 @@ var InstanceModeElement = (function () {
                 q: analyzer.paramaters['query']
             }
         }).then((data, status, jqxhr) => {
+            var max_len = 15;
+            for (var i = 0; i < data.accounts.length; i++) {
+                if (max_len < data.accounts[i].acct.length) {
+                    max_len = data.accounts[i].acct.length;
+                }
+            }
+            max_len += 7;
+
+            var sep;
+            for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
+            sep += '----------------------------';
             var lines = [
-                'User Accounts:',
-                'id       | account name                | display name',
-                '----------------------------------------------------------'
+                'Accounts:',
+                ('| display name').addTab('| account name', max_len).addTab('id', 9),
+                sep
             ];
             for (var i = 0; i < data.accounts.length; i++) {
                 lines.push(
                     ('| ' + data.accounts[i].display_name)
-                        .addTab('| ' + data.accounts[i].acct, 30)
+                        .addTab('| @' + data.accounts[i].acct, max_len)
                         .addTab(data.accounts[i].id, 9)
                 );
             }
+
+
             lines.push('----------------------------------------------------------');
             lines.push('  該当件数：' + data.accounts.length + '件');
             lines.push('');
@@ -1766,13 +1766,16 @@ var InstanceModeElement = (function () {
         term.pause();
         var api;
         var userid;
+        var type;
         if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
             userid = instances[instance_name].user.id;
+            type = analyzer.line_parsed[3].name;
         }
         else {
             userid = analyzer.paramaters.userid;
+            type = analyzer.line_parsed[4].name;
         }
-        api = '/api/v1/accounts/' + userid + '/' + analyzer.line_parsed[1].name
+        api = '/api/v1/accounts/' + userid + '/' + type;
         callAPI(api, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
@@ -1783,7 +1786,6 @@ var InstanceModeElement = (function () {
                 }
             }
             max_len += 7;
-            console.log(max_len);
 
             var sep;
             for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
@@ -1796,7 +1798,7 @@ var InstanceModeElement = (function () {
             for (var i = 0; i < data.length; i++) {
                 lines.push(
                     ('| ' + data[i].display_name)
-                        .addTab('| @' + data[i].acct, 35)
+                        .addTab('| @' + data[i].acct, max_len)
                         .addTab(data[i].id, 9)
                 );
             }
@@ -1810,7 +1812,7 @@ var InstanceModeElement = (function () {
             console.log(jqxhr);
             term.resume();
         });
-    };
+    };/*
     InstanceModeElement.prototype.show_followers = function (term, analyzer) {
         term.pause();
         callAPI('/api/v1/accounts/' + analyzer.paramaters.userid + '/followers', {
@@ -1824,7 +1826,7 @@ var InstanceModeElement = (function () {
             console.log(jqxhr);
             term.resume();
         });
-    };
+    };*/
     InstanceModeElement.prototype.show_notifications = function (term, analyzer) {
         term.pause();
         var data = {};
