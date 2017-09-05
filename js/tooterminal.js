@@ -274,7 +274,7 @@ $(function() {
             $('#sid').text($(this).data('sid'));
             $('#reply_head').text('reply to: ' + $(this).data('dispname'));
             $('#reply_body').text($(this).find('#status_contents')[0].textContent);
-            $('#toot_box').focus().val($(this).data('reply'));
+            $('#toot_box').focus().val($(this).data('acct') + ' ' + $(this).data('reply'));
             if ($($(this).find('.status_head i')[2]).hasClass('fa-envelope')) {
                 $('#toot_visibility').val('direct');
             }
@@ -421,7 +421,6 @@ function makeStatus(payload){
 
     var reply = '';
     if (contents.mentions.length > 0) {
-        reply = '@' + contents.account.acct + ' ';
         for (var i = 0; i < contents.mentions.length; i++) {
             reply += '@' + contents.mentions[i].acct + ' ';
         }
