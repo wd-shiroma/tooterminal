@@ -138,7 +138,7 @@ $(function() {
         if (event.keyCode === 27) {
             $('#sid').text('');
             $('#reply').hide();
-            $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
+            $('#toot_box').val('');
             $('#toot').slideUp('first');
             $.terminal.active().enable();
         }
@@ -267,18 +267,14 @@ $(function() {
             var reply = '@' + $(this).data('acct').toString();
             var re = /((?:@([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
             var mul_reply = $(this).find('.status_contents')[0].textContent.replace(new RegExp(reply, 'g'), '').match(re);
-            var box = reply + ' ';
-            if (mul_reply) {
-                for (var i = 0; i < mul_reply.length; i++) {
-                    box += mul_reply[i] + ' ';
-                }
-            }
-            $('#toot_box').focus().val(box);
+
+            $.terminal.active().disable();
             $('#toot').slideDown('first');
             $('#reply').show();
             $('#sid').text($(this).data('sid'));
             $('#reply_head').text('reply to: ' + $(this).data('dispname'));
             $('#reply_body').text($(this).find('#status_contents')[0].textContent);
+            $('#toot_box').focus().val($(this).data('reply'));
             if ($($(this).find('.status_head i')[2]).hasClass('fa-envelope')) {
                 $('#toot_visibility').val('direct');
             }
@@ -421,6 +417,11 @@ function makeStatus(payload){
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
 
+    var reply = '';
+    for (var i = 0; i < contents.mentions.length; i++) {
+        reply += '@' + contents.mentions[i].acct + ' ';
+    }
+
     var avatar = $('<td />').addClass('status_avatar');
     var cfg = getConfig(config, 'instances.status.avatar', def_conf);
     if (typeof cfg !== 'undefined') {
@@ -560,6 +561,7 @@ function makeStatus(payload){
         .attr('data-acct', contents.account.acct)
         .attr('data-fav', contents.favorited ? '1' : '0')
         .attr('data-reb', contents.reblogged ? '1' : '0')
+        .attr('data-reply', reply)
         .addClass('status')
         .append(avatar)
         .append(main);
@@ -579,6 +581,8 @@ function make_notification(payload) {
     var is_men = (payload.type === 'mention') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
+
+                 console.log(payload);
 
     var msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
