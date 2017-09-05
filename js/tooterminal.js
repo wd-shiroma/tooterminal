@@ -267,8 +267,10 @@ $(function() {
             var re = /((?:@([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
             var mul_reply = $(this).find('.status_contents')[0].textContent.replace(new RegExp(reply, 'g'), '').match(re);
             var box = reply + ' ';
-            for (var i = 0; i < mul_reply.length; i++) {
-                box += mul_reply[i] + ' ';
+            if (mul_reply) {
+                for (var i = 0; i < mul_reply.length; i++) {
+                    box += mul_reply[i] + ' ';
+                }
             }
             $('#toot_box').focus().val(box);
             $('#toot').slideDown('first');
@@ -576,7 +578,6 @@ function make_notification(payload) {
     var is_men = (payload.type === 'mention') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
-    console.log(payload);
 
     var msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
