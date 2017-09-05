@@ -140,6 +140,7 @@ $(function() {
             $('#reply').hide();
             $('#toot_box').val($('#toot_box').val().replace(/^@[a-zA-Z0-9_]+\s?/, ''));
             $('#toot').slideUp('first');
+            $.terminal.active().enable();
         }
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
