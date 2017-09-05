@@ -279,6 +279,7 @@ $(function() {
                 $('#toot_visibility').val('direct');
             }
         }
+
         if (e.ctrlKey) {
             favorite(this);
         }
