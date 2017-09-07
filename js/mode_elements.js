@@ -179,11 +179,6 @@ var GlobalModeElement = (function () {
         return true;
     };
 
-    /*
-    instances['jp'] = {domain:'mstdn.jp', scopes:{read:true,write:true,follow:false}, application: {name: 'tootle'}}
-    instances['nico'] = {domain:'friends.nico', scopes:{read:true,write:false,follow:true}, application: {name: 'friends.nico for iOS'}}
-    instances['pawoo'] = {domain:'pawoo.net', scopes:{read:false,write:false,follow:true}, application: {name: 'Pawoo for iOS'}}
-    */
     GlobalModeElement.prototype.show_instance_statistics = function (term, analyzer) {
         var lines = [
             '',
@@ -241,13 +236,108 @@ var GlobalModeElement = (function () {
                 prompt: 'Input instance domain: ',
             });
         }
-        else{
-            var prompt = '';
-            if (typeof instances[instance_name].user !== 'undefined') {
-                prompt = '' + instances[instance_name].user.username + '';
-            }
-            prompt += '@' + instances[instance_name].domain + '# '
+        else if (instances[instance_name].hasOwnProperty('auth_code')){
+            console.log(instances[instance_name]);
+            term.pause();
+            $.ajax({
+                url: 'https://' + instances[instance_name].domain + '/oauth/token',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    grant_type: 'authorization_code',
+                    redirect_uri: instances[instance_name].application.redirect_uri,
+                    client_id: instances[instance_name].client_id,
+                    client_secret: instances[instance_name].client_secret,
+                    code: instances[instance_name].auth_code,
+                    redirect_uri: instances[instance_name].application.uris
+                }
+            }).then((data, status, jqxhr) => {
+                instances[instance_name].access_token = data.access_token;
+                instances[instance_name].token_type = data.token_type;
+                var store = localStorage;
+                store.setItem('instances', JSON.stringify(instances));
+                delete(instances[instance_name].auth_code);
+                return callAPI('/api/v1/accounts/verify_credentials');
+            }, (jqxhr, status, error) => {
+                term.error('User token updating error.(' + jqxhr.status + ')');
+                delete(instances[instance_name].auth_code);
+                console.log(jqxhr);
+            }).then((data2, status, jqxhr) => {
+                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
+                instances[instance_name].user = data2;
 
+                var store = localStorage;
+                store.setItem('instances', JSON.stringify(instances));
+                term.resume();
+
+                var prompt = instances[instance_name].user.username;
+                prompt += '@' + instances[instance_name].domain + '# ';
+
+                term.push(enterCommand, {
+                    name:   'instance',
+                    prompt:  prompt,
+                    onStart: function() { term_mode = mode_instance; },
+                    onExit:  function() { term_mode = mode_global; },
+                    exit:    false
+                });
+
+            }, (jqxhr, status, error) => {
+                var prompt = '@' + instances[instance_name].domain + '# '
+                console.log(jqxhr);
+                term.error('Getting user status failed.(' + jqxhr.status + ')');
+                term.echo('Enter \'login\' and reflesh your access_token');
+                term.resume();
+                term.push(enterCommand, {
+                    name:   'instance',
+                    prompt:  prompt,
+                    onStart: function() { term_mode = mode_instance; },
+                    onExit:  function() { term_mode = mode_global; },
+                    exit:    false
+                });
+            });
+        }
+        else if (instances[instance_name].hasOwnProperty('access_token')){
+            term.pause();
+            callAPI('/api/v1/accounts/verify_credentials')
+            .then((data2, status, jqxhr) => {
+                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
+                instances[instance_name].user = data2;
+
+                var store = localStorage;
+                store.setItem('instances', JSON.stringify(instances));
+                term.resume();
+
+                var prompt = instances[instance_name].user.username;
+                prompt += '@' + instances[instance_name].domain + '# ';
+
+                delete(instances[instance_name].auth_code);
+                term.push(enterCommand, {
+                    name:   'instance',
+                    prompt:  prompt,
+                    onStart: function() { term_mode = mode_instance; },
+                    onExit:  function() { term_mode = mode_global; },
+                    exit:    false
+                });
+
+            }, (jqxhr, status, error) => {
+                var prompt = '@' + instances[instance_name].domain + '# '
+                console.log(jqxhr);
+                term.error('Getting user status failed.(' + jqxhr.status + ')');
+                term.echo('Enter \'login\' and reflesh your access_token');
+                term.resume();
+                term.push(enterCommand, {
+                    name:   'instance',
+                    prompt:  prompt,
+                    onStart: function() { term_mode = mode_instance; },
+                    onExit:  function() { term_mode = mode_global; },
+                    exit:    false
+                });
+            });
+        }
+        else {
+            var prompt = '@' + instances[instance_name].domain + '# '
+            term.echo('Enter \'login\' and regist your access_token');
+            term.resume();
             term.push(enterCommand, {
                 name:   'instance',
                 prompt:  prompt,
@@ -354,13 +444,15 @@ var regist_instance = (input, term) => {
     }
     else if (input.length > 0) {
         term.pause();
+        var uri = location.origin + location.pathname;
+        console.log(uri);
         $.ajax({
             url: 'https://' + input + '/api/v1/apps',
             dataType: 'json',
             type: 'POST',
             data:{
                 client_name: config.application.name,
-                redirect_uris: config.application.uris,
+                redirect_uris: uri,
                 website: config.application.website,
                 scopes:
                       (config.application.scopes.read   ? 'read '  : '')
@@ -369,11 +461,13 @@ var regist_instance = (input, term) => {
             }
         })
         .then((data, status, jqxhr) => {
+            var redirect_uri = data.redirect_uri + '?instance_name=' + instance_name;
             instances[instance_name]               = config.instances
             instances[instance_name].client_id     = data.client_id;
             instances[instance_name].client_secret = data.client_secret;
             instances[instance_name].domain        = input;
             instances[instance_name].application   = config.application;
+            instances[instance_name].application.uris = redirect_uri;
 
             var prompt = '@' + instances[instance_name].domain + '# ';
             term.echo('New instance registed. enter \'login\' and regist your access_token');
@@ -384,7 +478,10 @@ var regist_instance = (input, term) => {
             term.push(enterCommand, {
                 name:   'instance',
                 prompt:  prompt,
-                onStart: function() { term_mode = mode_instance; },
+                onStart: function(term) {
+                    term_mode = mode_instance;
+                    term.exec('login');
+                },
                 onExit:  function() { term_mode = mode_global; },
                 exit:    false
             });
@@ -1313,58 +1410,11 @@ var InstanceModeElement = (function () {
             'https://'         + instances[instance_name].domain
             + '/oauth/authorize?response_type=code'
             + '&client_id='    + instances[instance_name].client_id
-            + '&redirect_uri=' + instances[instance_name].application.uris
+            + '&redirect_uri=' + encodeURIComponent(instances[instance_name].application.uris)
             + '&scope='        + (instances[instance_name].application.scopes.read   ? 'read '  : '')
                                + (instances[instance_name].application.scopes.write  ? 'write ' : '')
                                + (instances[instance_name].application.scopes.follow ? 'follow' : '');
-        window.open(url, '_blank');
-        term.push((input, term) => {
-            if (input.trim().length == 0) {
-                term.pop()
-            }
-            term.pause();
-            term.prompt = '';
-            $.ajax({
-                url: 'https://' + instances[instance_name].domain + '/oauth/token',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    grant_type: 'authorization_code',
-                    redirect_uri: instances[instance_name].application.uris,
-                    client_id: instances[instance_name].client_id,
-                    client_secret: instances[instance_name].client_secret,
-                    code: input.trim()
-                }
-            }).then((data, status, jqxhr) => {
-                instances[instance_name].access_token = data.access_token;
-                instances[instance_name].token_type = data.token_type;
-                var store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
-
-                return callAPI('/api/v1/accounts/verify_credentials');
-            }, (jqxhr, status, error) => {
-                term.error('User token updating error.(' + jqxhr.status + ')');
-                console.log(jqxhr);
-            }).then((data2, status, jqxhr) => {
-                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                instances[instance_name].user = data2;
-
-                var store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
-                term.resume();
-                term.pop();
-
-                var prompt = instances[instance_name].user.username;
-                prompt += '@' + instances[instance_name].domain + '# ';
-                $.terminal.active().set_prompt(prompt);
-            }, (jqxhr, status, error) => {
-                term.error('Getting user status failed.(' + jqxhr.status + ')');
-                term.resume();
-                term.pop();
-            });
-        }, {
-            prompt: 'Input Authentication Code: ',
-        });
+        location.href = url;
         return true;
     };
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {

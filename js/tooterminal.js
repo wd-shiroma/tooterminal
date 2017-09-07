@@ -86,6 +86,20 @@ var initConfig = (term) => {
     else {
         instances = {};
     }
+    if (!location.search.match(/^\?instance_name=.+?&code=/)) {
+        return;
+    }
+    var params_org = location.search.replace(/^\?/, '').split(/[=&]/);
+    var params = {};
+    for (var i = 0; i < params_org.length; i += 2) {
+        params[params_org[i]] = params_org[i+1];
+    }
+    if (instances.hasOwnProperty(params.instance_name)) {
+        instance_name = params.instance_name;
+        instances[instance_name].auth_code = params.code;
+        term.exec('instance ' + instance_name);
+    }
+    history.replaceState('','',location.pathname);
 };
 
 var filterKey = (event, term) => {

@@ -239,34 +239,14 @@ Tooterminal# sh run
 Tooterminal# ins jp
 Input instance domain: mstdn.jp
 New instance registed. enter 'login' and regist your access_token
-@mstdn.jp#
+@mstdn.jp# login
 @mstdn.jp#
 ```
 
 この時点ではインスタンスにアプリケーション登録をしただけの状態です。
-
-別途ユーザー登録をする必要があります。
-
-```
-@mstdn.jp# login
-```
-
-ログインするとアプリケーションを利用するか確認されるので、承認ボタンを押します。
+アプリケーションの登録が正常に完了すると、各インスタンスの認証画面に遷移します。
 
 ![ユーザー認証(承認画面)](./img/regist_instance_1.png "ユーザー認証(承認画面)")
-
-認証コードが表示されるので、コピーして、Tooterminal画面に戻ります。
-
-![ユーザー認証(認証コード表示画面)](./img/regist_instance_2.png "ユーザー認証(認証コード表示画面)")
-
-プロンプトが「Input Authentication Code: 」になっているので、先ほどコピーした認証コードを貼り付けます。
-
-```
-Input Authentication Code: d5a2143be96fb946fc0fc9f5a574be8ba5270e8efe5...
-Hello! ぐすくま ✅ @shiroma
-shiroma@mstdn.jp#
-shiroma@mstdn.jp#
-```
 
 認証が成功したら、プロンプトが「(ユーザ名)@(ドメイン)#」に変わりインスタンスモードに遷移します。
 
