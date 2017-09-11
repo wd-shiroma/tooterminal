@@ -38,6 +38,7 @@ var term_mode;
 var mode_global;
 var mode_configuration;
 var mode_instance;
+var instance_name;
 
 /*****************************
  * 本処理
@@ -158,10 +159,10 @@ $(function() {
         }
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
-        }
+        }/*
         else if ($('#toot_box').val().match(/^@[0-9a-zA-Z_]+/) && $('.reply #sid').text() === '') {
             $('#toot_visibility').val('unlisted');
-        }
+        }*/
     })
     .on('paste', (elem) => {
 
@@ -332,12 +333,13 @@ $(function() {
         }
     })
     .on('click', '[name=cmd_followers]', (e) => {
-        console.log(this);
-        console.log(e);
         $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' followers');
     })
     .on('click', '[name=cmd_following]', (e) => {
         $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' following');
+    })
+    .on('click', '[name=cmd_status_pinned]', (e) => {
+        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' statuses pinned');
     })
     .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
@@ -431,8 +433,6 @@ function makeStatus(payload){
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
-
-        console.log(contents);
 
     var reply = '';
     if (contents.mentions.length > 0) {
@@ -585,6 +585,11 @@ function makeStatus(payload){
         .addClass('status')
         .append(avatar)
         .append(main);
+    if (getConfig(config, 'instances.status.separator', def_conf)) {
+        status.append(
+            '<tr><td colspan="2"><span>----------------------------------------</span></td></tr>'
+        );
+    }
     return status.prop('outerHTML');
 }
 
@@ -602,14 +607,18 @@ function make_notification(payload) {
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
 
-                 console.log(payload);
-
     var msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
-        msg = '[[;goldenrod;]Notification! : ' + payload.type + ' << '
-            + payload.account.display_name + ' @' + payload.account.acct
-            + "<br />" + (payload.status ? $(payload.status.content).text() : '') + ']';
-        msg = $.terminal.format(msg);
+        var content = $.terminal.escape_brackets($(payload.status.content).text());
+        if (content.length > 100) {
+            content = content.slice(0,100) + ' ...';
+        }
+
+        msg = 'Notification! : ' + payload.type
+            + ' << ' + payload.account.display_name + ' '
+            + $.terminal.format('[[!;;]@' + payload.account.acct + ']') + "<br />"
+            + (payload.status ? content : '');
+        msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
         if (payload.type === 'mention') {
             msg += makeStatus(payload);
         }
@@ -661,12 +670,11 @@ function post_status() {
             visibility = 'public';
         }
         $('#toot_cw').val('');
-        $('#toot_box').val('').trigger('keyup');
         $('#toot_visibility').val(visibility);
         $('#reply_close').trigger('click');
         $('#toot_media').html('');
+        $('#toot_box').val('').trigger('keyup').focus();
         autosize.update($('#toot_box'));
-        $('#timeline').focus();
     }, (jqxhr, status, error) => {
         $.terminal.active().error('Toot post error.(' + jqxhr.status + ')');
         console.log(jqxhr);
@@ -705,7 +713,8 @@ function callAPI(path, opts = {}) {
                 Authorization: ins.token_type + ' ' + ins.access_token
             },
             data: typeof opts.data ? opts.data : '',
-            dataType: 'json'
+            dataType: 'json',
+            timeout: 5000
         });
     }
     return def;
@@ -719,20 +728,25 @@ function favorite(status, term) {
     if (typeof term === 'undefined') {
         term = $.terminal.active();
     }
+
+    $($(status).find('i')[0]).removeClass().addClass('fa fa-spinner');
+
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            var fav = $(elem).find('i')[0];
-            $(fav).removeClass().addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'));
-            $(status).data('fav', data.favourited ? '1' : '0');
+            $($(elem).find('i')[0])
+                .removeClass()
+                .addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'))
+            $(elem).data('fav', data.favourited ? '1' : '0');
         });
         if (isFav === data.favourited) {
             term.error('favourited missed...');
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Favorite failed.(' + jqxhr.status + ')');
+        $($(status).find('i')[0]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
         console.log(jqxhr);
     });
 }
@@ -745,20 +759,25 @@ function boost(status) {
     if (typeof term === 'undefined') {
         term = $.terminal.active();
     }
+
+    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner');
+
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            var reb = $(elem).find('i')[1];
-            $(reb).removeClass().addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'));
-            $(status).data('reb', data.reblogged ? '1' : '0');
+            $($(elem).find('i')[1])
+                .removeClass()
+                .addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'))
+            $(elem).data('reb', data.reblogged ? '1' : '0');
         });
         if (isReb === data.reblogged) {
             term.error('reblogged missed...');
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Reblogged failed.(' + jqxhr.status + ')');
+        $($(status).find('i')[1]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
         console.log(jqxhr);
     });
 }
