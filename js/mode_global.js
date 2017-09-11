@@ -249,7 +249,7 @@ var GlobalModeElement = (function () {
                     client_id: instances[instance_name].client_id,
                     client_secret: instances[instance_name].client_secret,
                     code: instances[instance_name].auth_code,
-                    redirect_uri: instances[instance_name].application.uris
+                    "redirect_uri": instances[instance_name].application.uris
                 }
             }).then((data, status, jqxhr) => {
                 instances[instance_name].access_token = data.access_token;
