@@ -200,6 +200,14 @@ td.status_main{
     word-break: break-all;
 }
 
+.status_notify {
+    color: goldenrod !important;
+}
+.status_notify * {
+    color: goldenrod !important;
+}
+
+
 .status_enquete span{
     border-radius: 5px;
     border: 1px solid #353535;
