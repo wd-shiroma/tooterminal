@@ -10,6 +10,9 @@ var ModeManager = (function () {
             console.log("AnalyzeError: " + parsed.message);
             return parsed.code;
         }
+        if (parsed.code == '1001') {
+            return true;
+        }
         if (this.func_name === "") {
             console.log("AnalyzeError: Undefined execution function name.");
             return 0x2F01;
@@ -19,7 +22,6 @@ var ModeManager = (function () {
             return 0x2F02;
         }
         return parsed.cmd_list[0].execute(term, this);
-        //return eval("this.element." + this.func_name + "();");
     };
     ModeManager.prototype.getCompletion = function (line) {
         var cmd_list = this.result.cmd_list;
@@ -99,6 +101,7 @@ var ModeManager = (function () {
         this.completion = "";
         this.cmd_list = this.dataset;
         this.paramaters = {};
+        this.optional = {};
         var i  = 0;
         var i2 = 0;
         var p  = "";
@@ -107,8 +110,8 @@ var ModeManager = (function () {
         if (line.length <= 0) {
             return this.result;
         }
-        else if (line.match(/^!/)) {
-            this.is_parsed = false;
+        else if (line.match(/^\s*!/)) {
+            this.is_parsed = true;
             this.err_code = 0x1001;
             this.err_msg = "comment";
             return this.result;
@@ -213,6 +216,9 @@ var ModeManager = (function () {
                     || this.line_parsed[i].type === 'number'
                 ){
                     this.paramaters[this.line_parsed[i].name] = this.line_split[i];
+                }
+                if (this.line_parsed[i].hasOwnProperty('optional')) {
+                    this.optional[this.line_parsed[i].optional] = true;
                 }
             }
         }
