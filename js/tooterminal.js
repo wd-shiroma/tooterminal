@@ -609,7 +609,9 @@ function make_notification(payload) {
 
     var msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
-        var content = $.terminal.escape_brackets($(payload.status.content).text());
+        var content = payload.status
+                ? $.terminal.escape_brackets($(payload.status.content).text())
+                : '(Status was deleted)';
         if (content.length > 100) {
             content = content.slice(0,100) + ' ...';
         }
