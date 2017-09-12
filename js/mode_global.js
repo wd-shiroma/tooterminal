@@ -171,7 +171,7 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        term.echo('version 0.3.2 (updated at 2017-09-11)');
+        term.echo('version 0.3.3 (updated at 2017-09-12)');
         return true;
     };
     GlobalModeElement.prototype.reset_display_size = function (term, analyzer) {
