@@ -498,6 +498,13 @@ var InstanceModeElement = (function () {
                     else if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
                         term.echo(make_notification(payload), {raw: true});
+
+                        if(beep_buf) {
+                            let source = context.createBufferSource();
+                            source.buffer = beep_buf;
+                            source.connect(context.destination);
+                            source.start(0);
+                        }
                     }
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);

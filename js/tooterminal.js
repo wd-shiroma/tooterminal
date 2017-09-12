@@ -39,6 +39,10 @@ var mode_global;
 var mode_configuration;
 var mode_instance;
 var instance_name;
+var beep_buf;
+
+var context = new AudioContext();
+
 
 /*****************************
  * 本処理
@@ -125,6 +129,30 @@ var filterKey = (event, term) => {
 var parseCommand = (command, term) => {
     term_mode.parse(command.replace(/\?$/, ''));
 };
+
+var load_beep = function() {
+    let src_url = 'https://' + instances[instance_name].domain + '/sounds/boop.ogg';
+    let req = new XMLHttpRequest();
+    req.responseType = 'arraybuffer';
+    req.onreadystatechange = function() {
+        if (req.readyState === 4) {
+            if (req.status === 0 || req.status === 200) {
+                if (req.response) {
+                    context.decodeAudioData(req.response, function(buffer) {
+                        beep_buf = buffer;
+                    });
+                }
+                else {
+                    $.terminal.active().error('Error: ポコポコできません');
+                    console.log('error');
+                    beep_buf = undefined;
+                }
+            }
+        }
+    };
+    req.open('GET', src_url, true);
+    req.send('')
+}
 
 var tl;
 $(function() {
@@ -665,7 +693,8 @@ function post_status() {
         headers: {
             Authorization: instances[instance_name].token_type + ' ' + instances[instance_name].access_token
         },
-        data: data
+        data: data,
+        timeout: 5000
     }).then((data, status, jqxhr) => {
         var visibility = getConfig(config, 'instances.visibility', def_conf);
         if (typeof visibility === 'undefined') {
