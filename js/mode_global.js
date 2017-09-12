@@ -277,7 +277,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: function() { term_mode = mode_instance; load_beep(); },
-                    onExit:  function() { term_mode = mode_global; },
+                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
 
@@ -291,7 +291,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: function() { term_mode = mode_instance; load_beep(); },
-                    onExit:  function() { term_mode = mode_global; },
+                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
             });
@@ -315,7 +315,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: function() { term_mode = mode_instance; load_beep(); },
-                    onExit:  function() { term_mode = mode_global; },
+                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
 
@@ -329,7 +329,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: function() { term_mode = mode_instance; load_beep(); },
-                    onExit:  function() { term_mode = mode_global; },
+                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
             });
@@ -342,7 +342,7 @@ var GlobalModeElement = (function () {
                 name:   'instance',
                 prompt:  prompt,
                 onStart: function() { term_mode = mode_instance; load_beep(); },
-                onExit:  function() { term_mode = mode_global; },
+                onExit:  function() { term_mode = mode_global; closeTootbox(); },
                 exit:    false
             });
         }

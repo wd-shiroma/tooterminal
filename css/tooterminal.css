@@ -44,6 +44,7 @@ body {
     overflow: none;
 }
 .toot textarea,select,button,input{
+    font-family: monospace;
     display: block;
     margin: 2px;
     background-color: #000;
@@ -78,6 +79,13 @@ body {
     height: 4em;
     border: solid 1px #333;
     object-fit: cover;
+}
+
+.toot_imghover {
+    background: #666 !important;
+    content: "Drop Files...";
+    border: 5px dashed #222;
+    color: #000;
 }
 
 #toot_size {

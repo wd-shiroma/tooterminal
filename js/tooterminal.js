@@ -55,7 +55,7 @@ var enterCommand = (command, term) => {
         return;
     }
 
-    var result = term_mode.execute(command, term);
+    let result = term_mode.execute(command, term);
     if (result !== true) {
         term.error(term_mode.result.message);
     }
@@ -64,7 +64,7 @@ var enterCommand = (command, term) => {
 };
 
 var completion = (line, callback) => {
-    var cmd_list = term_mode.getCompletion(line);
+    let cmd_list = term_mode.getCompletion(line);
     if (cmd_list.length === 1) {
         $.terminal.active().set_command(term_mode.completion);
     }
@@ -74,8 +74,8 @@ var completion = (line, callback) => {
 };
 
 var initConfig = (term) => {
-    var store = localStorage;
-    var str = store.getItem('configuration');
+    let store = localStorage;
+    let str = store.getItem('configuration');
     if (str) {
         config = JSON.parse(str);
     }
@@ -94,9 +94,9 @@ var initConfig = (term) => {
     if (!location.search.match(/^\?instance_name=.+?&code=/)) {
         return;
     }
-    var params_org = location.search.replace(/^\?/, '').split(/[=&]/);
-    var params = {};
-    for (var i = 0; i < params_org.length; i += 2) {
+    let params_org = location.search.replace(/^\?/, '').split(/[=&]/);
+    let params = {};
+    for (let i = 0; i < params_org.length; i += 2) {
         params[params_org[i]] = params_org[i+1];
     }
     if (instances.hasOwnProperty(params.instance_name)) {
@@ -109,16 +109,16 @@ var initConfig = (term) => {
 
 var filterKey = (event, term) => {
     if(event.charCode === 63){
-        var info = term_mode.information(term.get_command());
+        let info = term_mode.information(term.get_command());
 
-        var lines = info.map((cmd) => {
+        let lines = info.map((cmd) => {
             return (typeof cmd.command === 'undefined')
                 ? cmd : ('  ' + tab(cmd.command, cmd.description, 22));
         });
         lines.unshift(term.get_prompt() + term.get_command() + '?');
         lines.push('');
         more(term, lines, true);
-        var cmd = term.get_command();
+        let cmd = term.get_command();
         term.set_command('');
         setTimeout(() => {
             term.set_command(cmd);
@@ -131,6 +131,7 @@ var parseCommand = (command, term) => {
 };
 
 var load_beep = function() {
+    return;
     let src_url = 'https://' + instances[instance_name].domain + '/sounds/boop.ogg';
     let req = new XMLHttpRequest();
     req.responseType = 'arraybuffer';
@@ -152,6 +153,47 @@ var load_beep = function() {
     };
     req.open('GET', src_url, true);
     req.send('')
+}
+
+var count_toot_size = () => {
+    let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
+    $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
+}
+
+function upload_img(imageFile) {
+    let formData = new FormData();
+    let ins = instances[instance_name];
+    let len = $('.toot_media img').length;
+    $('#toot_media').append($('<img />').attr('id', 'media_' + len));
+    formData.append('file', imageFile);
+    $.ajax('https://' + ins.domain + '/api/v1/media' , {
+        type: 'POST',
+        contentType: false,
+        processData: false,
+        headers: {
+            Authorization: ins.token_type + ' ' + ins.access_token
+        },
+        data: formData
+    }).then((data, status, jqxhr) => {
+        $('#media_' + len)
+            .attr('data-id', data.id)
+            .attr('data-url', data.text_url);
+        let img = new Image();
+        img.onload = () => {
+            $('#media_' + len).attr('src', data.preview_url);
+            $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
+            autosize.update($('#toot_box'));
+            count_toot_size();
+        };
+        img.onerror = (e) => {
+            console.log(e);
+        };
+        img.src = data.preview_url;
+    }, (jqxhr, status, error) => {
+        $.terminal.active().error('Media upload error.(' + jqxhr.status + ')');
+        $('#media_' + len).remove();
+        console.log(jqxhr);
+    });
 }
 
 var tl;
@@ -179,11 +221,7 @@ $(function() {
     });
     $('#toot').on('keydown', (event) => {
         if (event.keyCode === 27) {
-            $('#sid').text('');
-            $('#reply').hide();
-            $('#toot_box').val('');
-            $('#toot').slideUp('first');
-            $.terminal.active().enable();
+            closeTootbox();
         }
         else if(event.keyCode === 13 && event.ctrlKey) {
             post_status();
@@ -203,49 +241,34 @@ $(function() {
             && elem.originalEvent.clipboardData.types.length === 1
             && elem.originalEvent.clipboardData.types[0] === "Files"
         ) {
-            var imageFile = elem.originalEvent.clipboardData.items[0].getAsFile();
-            var formData = new FormData();
-            var ins = instances[instance_name];
-            var len = $('.toot_media img').length;
-            $('#toot_media').append($('<img />').attr('id', 'media_' + len));
-            formData.append('file', imageFile);
-            $.ajax('https://' + ins.domain + '/api/v1/media' , {
-                type: 'POST',
-                contentType: false,
-                processData: false,
-                headers: {
-                    Authorization: ins.token_type + ' ' + ins.access_token
-                },
-                data: formData
-            }).then((data, status, jqxhr) => {
-                $('#media_' + len)
-                    .attr('data-id', data.id)
-                    .attr('data-url', data.text_url);
-                var img = new Image();
-                img.onload = () => {
-                    $('#media_' + len).attr('src', data.preview_url);
-                    $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
-                    autosize.update($('#toot_box'));
-                    count_toot_size();
-                };
-                img.onerror = (e) => {
-                    console.log(e);
-                };
-                img.src = data.preview_url;
-            }, (jqxhr, status, error) => {
-                $.terminal.active().error('Media upload error.(' + jqxhr.status + ')');
-                $('#media_' + len).remove();
-                console.log(jqxhr);
-            });
+            let imageFile = elem.originalEvent.clipboardData.items[0].getAsFile();
+            upload_img(imageFile);
         }
     });
-    $('#toot').on('dragenter', (e) => {
-        //
+    $('#toot_box').on('dragenter', (e) => {
+        e.preventDefault();
+        $('#toot_box').addClass('toot_imghover');
+
+    })/*
+    .on('dragover', (e) => {
+        console.log(e);
+    })*/
+    .on('dragleave', (e) => {
+        $('#toot_box').removeClass('toot_imghover');
+    })
+    .on('drop', (e) => {
+        e.preventDefault();
+        $('#toot_box').removeClass('toot_imghover');
+        let files = e.originalEvent.dataTransfer.files;
+        let f_max = 4 - $('#toot_media img').length;
+        let f_uploadable = f_max < files.length ? f_max : files.length;
+        for (let i = 0; i < f_uploadable; i++) {
+            if (!files[i].type.match(/^(video|image)\//)) {
+                continue;
+            }
+            upload_img(files[i]);
+        }
     });
-    var count_toot_size = () => {
-        var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
-        $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
-    }
     $('#toot_cw').on('keyup', count_toot_size);
     $('#toot_box').on('keyup', count_toot_size);
     $('#toot_post').on('click', () => {
@@ -275,7 +298,7 @@ $(function() {
             return;
         }
 
-        var acct = $(this).text().match(/((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+))|(?:@([a-zA-Z0-9_]+)))/);
+        let acct = $(this).text().match(/((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+))|(?:@([a-zA-Z0-9_]+)))/);
         callAPI('/api/v1/accounts/search', {
             data: {
                 q: acct[0],
@@ -290,13 +313,13 @@ $(function() {
         })
     })
     .on('mouseover', '.status', function() {
-        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
         if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').show();
         }
     })
     .on('mouseout', '.status', function() {
-        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
         if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').hide();
         }
@@ -305,11 +328,11 @@ $(function() {
         if ($(this).hasClass('status_deleted')) {
             return;
         }
-        var id = $(this).data('sid');
+        let id = $(this).data('sid');
         if (e.shiftKey) {
-            var reply = '@' + $(this).data('acct').toString();
-            var re = /((?:@([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
-            var mul_reply = $(this).find('.status_contents')[0].textContent.replace(new RegExp(reply, 'g'), '').match(re);
+            let reply = '@' + $(this).data('acct').toString();
+            let re = /((?:@([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
+            let mul_reply = $(this).find('.status_contents')[0].textContent.replace(new RegExp(reply, 'g'), '').match(re);
 
             $.terminal.active().disable();
             $('#toot').slideDown('first');
@@ -334,21 +357,24 @@ $(function() {
         $.terminal.active().exec('show status id ' + $(this).data('sid'));
     })
     .on('click', '.status_contents img', function(e) {
-        var elem = $(this);
+        let elem = $(this);
 
         $('#img_view').attr('src', elem.attr('src')).fadeIn('first');
         if (elem.data('type') === 'gifv') {
-            var video = $('#video_view')[0];
+            let video = $('#video_view')[0];
             video.src = elem.data('url');
             video.loop = true;
             video.autoplay = true;
             video.muted = true;
             video.controls = true;
+            video.oncanplay = () => {
+                $('#img_view').fadeOut('first');
+            };
             $('#video_view').fadeIn('first');
             $('.img_background').fadeIn('first');
         }
         else {
-            var img = new Image();
+            let img = new Image();
             img.onload = () => {
                 $('#img_view').attr('src', elem.data('url'));
             };
@@ -395,9 +421,9 @@ $(function() {
 
 
 function getConfig(config, index, d_conf) {
-    var idxs = index.split('.');
-    var cf = config;
-    for (var i = 0; i < idxs.length; i++) {
+    let idxs = index.split('.');
+    let cf = config;
+    for (let i = 0; i < idxs.length; i++) {
         if (typeof cf[idxs[i]] !== 'undefined') {
             cf = cf[idxs[i]];
         }
@@ -411,7 +437,7 @@ function getConfig(config, index, d_conf) {
     }
 
     cf = (typeof d_conf !== 'undefined' ? d_conf : def_conf);
-    for (var i = 0; i < idxs.length; i++) {
+    for (let i = 0; i < idxs.length; i++) {
         cf = cf[idxs[i]];
         if (typeof cf === 'undefined') {
             break;
@@ -421,14 +447,14 @@ function getConfig(config, index, d_conf) {
 }
 
 function makeStatus(payload){
-    var date = new Date(payload.created_at);
-    var is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
-    var is_mention = (payload.type === 'mention');
-    var contents = is_reblog  ? payload.reblog
+    let date = new Date(payload.created_at);
+    let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
+    let is_mention = (payload.type === 'mention');
+    let contents = is_reblog  ? payload.reblog
                  : is_mention ? payload.status
                  : payload;
 
-    var app;
+    let app;
     if (contents.application === null) {
         app = '';
     }
@@ -444,7 +470,7 @@ function makeStatus(payload){
         app = ' via ' + app;
     }
 
-    var head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
+    let head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
@@ -462,24 +488,24 @@ function makeStatus(payload){
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
 
-    var reply = '';
+    let reply = '';
     if (contents.mentions.length > 0) {
-        for (var i = 0; i < contents.mentions.length; i++) {
+        for (let i = 0; i < contents.mentions.length; i++) {
             reply += '@' + contents.mentions[i].acct + ' ';
         }
         reply = reply.replace('@' + instances[instance_name].user.acct + ' ', '');
     }
 
-    var avatar = $('<td />').addClass('status_avatar');
-    var cfg = getConfig(config, 'instances.status.avatar', def_conf);
+    let avatar = $('<td />').addClass('status_avatar');
+    let cfg = getConfig(config, 'instances.status.avatar', def_conf);
     if (typeof cfg !== 'undefined') {
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
-        var url = contents.account.avatar_static;
+        let url = contents.account.avatar_static;
         if (!url.match(/^http/)) {
             url = 'https://' + instances[instance_name].domain + url;
         }
 
-        var img = new Image();
+        let img = new Image();
         img.onload = () => {
             $('[name=img_' + contents.account.id + ']').attr('src', url);
         };
@@ -492,15 +518,15 @@ function makeStatus(payload){
         avatar.hide();
     }
 
-    var content;
-    var enquete;
+    let content;
+    let enquete;
 
     if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
         enquete = JSON.parse(contents.enquete);
         content = $('<div />').append(enquete.question
             .replace(/<p>(.*?)<\/p>/g, '<p><span>$1' + (enquete.type === 'enquete' ? '(回答枠)' : '(結果)') + '</span></p>'));
-        var enquete_items = $('<div />').addClass('status_' + enquete.type);
-        for (var i = 0; i < enquete.items.length; i++) {
+        let enquete_items = $('<div />').addClass('status_' + enquete.type);
+        for (let i = 0; i < enquete.items.length; i++) {
             if (enquete.type === 'enquete') {
                 enquete_items.append($('<span />')
                     .html(enquete.items[i]));
@@ -525,20 +551,20 @@ function makeStatus(payload){
         }
     }
 
-    var thumb;
+    let thumb;
     if (contents.media_attachments.length > 0) {
         thumb = $('<div />').addClass('status_thumbnail');
         contents.media_attachments.forEach((media, index, arr) => {
-            var preview_url = (!media.preview_url.match(/^https?:\/\//)
+            let preview_url = (!media.preview_url.match(/^https?:\/\//)
                     ? 'https://' + instances[instance_name].domain + media.preview_url
                     : media.preview_url);
-            var url = media.remote_url ? media.remote_url : media.url;
-            var id = 'media_' + media.id;
+            let url = media.remote_url ? media.remote_url : media.url;
+            let id = 'media_' + media.id;
             thumb.append($('<img />')
                 .attr('id', id)
                 .attr('data-url', url)
                 .attr('data-type', media.type));
-            var img = new Image();
+            let img = new Image();
             img.onload = () => {
                 $('#' + id).attr('src', preview_url);
             };
@@ -547,16 +573,16 @@ function makeStatus(payload){
             };
             img.src = preview_url;
         });
-        var cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
         if (typeof cfg === 'undefined') {
             thumb.hide();
         }
     }
 
-    var content_visible = $('<div />')
+    let content_visible = $('<div />')
         .addClass('status_contents')
         .attr('id', 'status_contents');
-    var content_more;
+    let content_more;
 
     if (contents.sensitive) {
         content_more = $('<div />');
@@ -594,13 +620,13 @@ function makeStatus(payload){
             .append(content_more.hide());
     }
 
-    var main = $('<td />')
+    let main = $('<td />')
         .addClass('status_main')
             .append($('<div />').addClass('status_head').html($.terminal.format(head)))
             .append(content_visible);
 
 
-    var status = $('<table />')
+    let status = $('<table />')
         .attr('name', 'id_' + contents.id)
         .attr('data-sid', contents.id)
         .attr('data-instance', instance_name)
@@ -614,30 +640,33 @@ function makeStatus(payload){
         .append(avatar)
         .append(main);
     if (getConfig(config, 'instances.status.separator', def_conf)) {
+
         status.append(
-            '<tr><td colspan="2"><span>----------------------------------------</span></td></tr>'
+            '<tr><td colspan="2"><span>'
+            + Array($.terminal.active().cols() - 3).join('-')
+            + '</span></td></tr>'
         );
     }
     return status.prop('outerHTML');
 }
 
 function make_notification(payload) {
-    var is_fav = (payload.type === 'favourite') &&
+    let is_fav = (payload.type === 'favourite') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
-    var is_reb = (payload.type === 'reblog') &&
+    let is_reb = (payload.type === 'reblog') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
-    var is_fol = (payload.type === 'follow') &&
+    let is_fol = (payload.type === 'follow') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
-    var is_men = (payload.type === 'mention') &&
+    let is_men = (payload.type === 'mention') &&
                  (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
                  (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
 
-    var msg = '';
+    let msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
-        var content = payload.status
+        let content = payload.status
                 ? $.terminal.escape_brackets($(payload.status.content).text())
                 : '(Status was deleted)';
         if (content.length > 100) {
@@ -657,14 +686,14 @@ function make_notification(payload) {
 }
 
 function post_status() {
-    var status = $('#toot_box').val().trim();
-    var cw = $('#toot_cw').val().trim();
-    var visibility = $('#toot_visibility').val();
-    var data = {
+    let status = $('#toot_box').val().trim();
+    let cw = $('#toot_cw').val().trim();
+    let visibility = $('#toot_visibility').val();
+    let data = {
         status: status,
         visibility: visibility
     };
-    var msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
+    let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
     if (status.length === 0 || msg_size < 0) {
         return false;
     }
@@ -676,14 +705,14 @@ function post_status() {
         data.spoiler_text = cw;
     }
 
-    var reply_id = $('.reply #sid').text();
+    let reply_id = $('.reply #sid').text();
     if (reply_id !== '') {
         data.in_reply_to_id = reply_id;
     }
 
     data.media_ids = [];
-    var imgs = $('#toot_media img');
-    for (var i = 0; i < imgs.length; i++) {
+    let imgs = $('#toot_media img');
+    for (let i = 0; i < imgs.length; i++) {
         data.media_ids.push($(imgs[i]).data('id'));
     }
 
@@ -696,7 +725,7 @@ function post_status() {
         data: data,
         timeout: 5000
     }).then((data, status, jqxhr) => {
-        var visibility = getConfig(config, 'instances.visibility', def_conf);
+        let visibility = getConfig(config, 'instances.visibility', def_conf);
         if (typeof visibility === 'undefined') {
             visibility = 'public';
         }
@@ -713,16 +742,16 @@ function post_status() {
 }
 
 function reduce_status() {
-    var statuses = $('.status').parent().parent();
-    var old_stats = statuses.length - 200;
-    for (var i = 0; i < old_stats; i++) {
+    let statuses = $('.status').parent().parent();
+    let old_stats = statuses.length - 200;
+    for (let i = 0; i < old_stats; i++) {
         $(statuses[i]).remove();
     }
 }
 
 function callAPI(path, opts = {}) {
-    var def;
-    var ins = typeof opts.instance_name === 'undefined'
+    let def;
+    let ins = typeof opts.instance_name === 'undefined'
             ? instances[instance_name] : instances[opts.instance_name];
     if (typeof path === 'undefined') {
         def = new $.Deffered;
@@ -752,8 +781,8 @@ function callAPI(path, opts = {}) {
 }
 
 function favorite(status, term) {
-    var isFav = ($(status).data('fav') == 1);
-    var api = '/api/v1/statuses/'
+    let isFav = ($(status).data('fav') == 1);
+    let api = '/api/v1/statuses/'
             + $(status).data('sid').toString()
             + (isFav ? '/unfavourite' : '/favourite' );
     if (typeof term === 'undefined') {
@@ -782,9 +811,17 @@ function favorite(status, term) {
     });
 }
 
+function closeTootbox() {
+    $('#sid').text('');
+    $('#reply').hide();
+    $('#toot_box').val('');
+    $('#toot').slideUp('first');
+    $.terminal.active().enable();
+}
+
 function boost(status) {
-    var isReb = ($(status).data('reb') == 1);
-    var api = '/api/v1/statuses/'
+    let isReb = ($(status).data('reb') == 1);
+    let api = '/api/v1/statuses/'
             + $(status).data('sid').toString()
             + (isReb ? '/unreblog' : '/reblog' );
     if (typeof term === 'undefined') {
@@ -814,18 +851,18 @@ function boost(status) {
 }
 
 function tab(arg1, arg2, indent){
-    var arg1_escape = escape(arg1).replace(/%u[0-9a-f]{2,6}/ig, 'xx').replace(/%[0-9a-f]{2}/ig, 'x');
-    var arg1_length = arg1_escape.length;
+    let arg1_escape = escape(arg1).replace(/%u[0-9a-f]{2,6}/ig, 'xx').replace(/%[0-9a-f]{2}/ig, 'x');
+    let arg1_length = arg1_escape.length;
 
-    var result = (indent <= arg1_length)
+    let result = (indent <= arg1_length)
         ? arg1.substr(0, indent - 4) + '... ' : arg1;
 
-    for(var i = arg1_length; i < indent; i++, result += ' ');
+    for(let i = arg1_length; i < indent; i++, result += ' ');
     return result + arg2;
 }
 
 function status_recursive(sid, status_) {
-    var pr = new Primrose();
+    let pr = new Primrose();
     ins
 }
 
@@ -835,9 +872,9 @@ String.prototype.addTab = function(arg1, indent){
 
 
 function more(term, lines, reverse){
-    var rows = term.rows();
-    var command = term.get_command();
-    var i = 0;
+    let rows = term.rows();
+    let command = term.get_command();
+    let i = 0;
     term.push(function(command,term){},{
         name: 'more',
         //prompt: '[[;#111111;#DDDDDD]-- More --]',
@@ -880,7 +917,7 @@ function more(term, lines, reverse){
     });
 }
 function begin(term, lines, reverse, search){
-    var i = 0;
+    let i = 0;
     //console.log(search);
     //var re = new RegExp('\\s*' + search.name + '\\s+', '');
     //var keyword = search.command.replace(re, '');
@@ -895,8 +932,8 @@ function begin(term, lines, reverse, search){
 }
 
 function include(term, lines, reverse, search){
-    var result = [];
-    for(var i = 0; i < lines.length; i++){
+    let result = [];
+    for(let i = 0; i < lines.length; i++){
         if(lines[i].match(search)){
             result.push(lines[i]);
         }
@@ -904,8 +941,8 @@ function include(term, lines, reverse, search){
     more(term, result, reverse);
 }
 function exclude(term, lines, reverse, search){
-    var result = [];
-    for(var i = 0; i < lines.length; i++){
+    let result = [];
+    for(let i = 0; i < lines.length; i++){
         if(!lines[i].match(search)){
             result.push(lines[i]);
         }
