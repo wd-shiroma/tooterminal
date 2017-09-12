@@ -246,17 +246,20 @@ $(function() {
         }
     });
     $('#toot_box').on('dragenter', (e) => {
+        console.log(e);
         e.preventDefault();
         $('#toot_box').addClass('toot_imghover');
 
-    })/*
+    })
     .on('dragover', (e) => {
         console.log(e);
-    })*/
+    })
     .on('dragleave', (e) => {
+        console.log(e);
         $('#toot_box').removeClass('toot_imghover');
     })
     .on('drop', (e) => {
+        console.log(e);
         e.preventDefault();
         $('#toot_box').removeClass('toot_imghover');
         let files = e.originalEvent.dataTransfer.files;
