@@ -152,7 +152,7 @@ var GlobalModeElement = (function () {
         configurable: true
     });
     GlobalModeElement.prototype.show_running_config = function (term, analyzer) {
-        var strconfig = JSON.stringify(config, null, '    ');
+        var strconfig = JSON.stringify(config.config, null, '    ');
         term.echo(strconfig);
         return true;
     };
@@ -171,7 +171,24 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        term.echo('version 0.3.3 (updated at 2017-09-12)');
+        let date = new Date('2017-9-13');
+        term.echo('Mastodon Client Tooterminal, Version 0.3.4, RELEASE SERVICE(Beta)');
+        term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
+        term.echo('Copyright (c) 2017- by shiroma@mstdn.jp');
+        term.echo('Updated ' + date.toDateString() + ' by shiroma@mstdn.jp');
+        term.echo('<br>', {raw: true});
+        term.echo('Powered by:');
+        term.echo('jQuery (' + $.fn.jquery + ')');
+        term.echo('https://jquery.org');
+        term.echo('jQuery Terminal Emulator Plugin (' + $.terminal.version + ')');
+        term.echo('http://terminal.jcubic.pl');
+        term.echo('autosize (4.0.0)');
+        term.echo('http://www.jacklmoore.com/autosize');
+        term.echo('<br>', {raw: true});
+        term.echo('License info:');
+        term.echo('Tooterminal, jQuery, jQuery Terminal Emulator Plugin, autosize is licensed by MIT LICENSE');
+        term.echo('https://tldrlegal.com/license/mit-license');
+
         return true;
     };
     GlobalModeElement.prototype.reset_display_size = function (term, analyzer) {
@@ -387,7 +404,7 @@ var GlobalModeElement = (function () {
     GlobalModeElement.prototype.write_memory = function (term, analyzer) {
         var store = localStorage;
         term.echo('Building configuration...');
-        store.setItem('configuration', JSON.stringify(config));
+        store.setItem('configuration', JSON.stringify(config.config));
         term.echo('[OK]');
         return true;
     };
@@ -450,22 +467,22 @@ var regist_instance = (input, term) => {
             dataType: 'json',
             type: 'POST',
             data:{
-                client_name: config.application.name,
+                client_name: config.find('application.name'),
                 redirect_uris: uri,
-                website: config.application.website,
+                website: config.find('application.website'),
                 scopes:
-                      (config.application.scopes.read   ? 'read '  : '')
-                    + (config.application.scopes.write  ? 'write ' : '')
-                    + (config.application.scopes.follow ? 'follow' : '')
+                      (config.find('application.scopes.read')   ? 'read '  : '')
+                    + (config.find('application.scopes.write')  ? 'write ' : '')
+                    + (config.find('application.scopes.follow') ? 'follow' : '')
             }
         })
         .then((data, status, jqxhr) => {
             var redirect_uri = data.redirect_uri + '?instance_name=' + instance_name;
-            instances[instance_name]               = config.instances
+            instances[instance_name]               = config.find('instances')
             instances[instance_name].client_id     = data.client_id;
             instances[instance_name].client_secret = data.client_secret;
             instances[instance_name].domain        = input;
-            instances[instance_name].application   = config.application;
+            instances[instance_name].application   = config.find('application');
             instances[instance_name].application.uris = redirect_uri;
 
             var prompt = '@' + instances[instance_name].domain + '# ';

@@ -151,7 +151,7 @@ var ConfigurationModeElement = (function () {
                                 "type": "command",
                                 "name": "avatar",
                                 "description": "アイコンを表示します。",
-                                "execute": this.set_command,
+                                "execute": this.set_object,
                                 "children": [
                                     {
                                         "type": "command",
@@ -377,7 +377,8 @@ var ConfigurationModeElement = (function () {
         configurable: true
     });
     ConfigurationModeElement.prototype.set_paramater = function (term, analyzer) {
-        var index = analyzer.line_parsed.length - 1;
+        let index = analyzer.line_parsed.length - 1;
+        /*
         var t_conf = config;
         for (var i = 0; i < index-1; i++) {
             if (typeof t_conf[analyzer.line_parsed[i].name] === 'undefined') {
@@ -385,36 +386,45 @@ var ConfigurationModeElement = (function () {
             }
             t_conf = t_conf[analyzer.line_parsed[i].name];
         }
-        t_conf[analyzer.line_parsed[index-1].name] = analyzer.paramaters.string;
-        return true;
+        t_conf[analyzer.line_parsed[index-1].name] = analyzer.paramaters.string;*/
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+
+        return config.write(nodes, analyzer.paramaters.string);
     };
     ConfigurationModeElement.prototype.set_default = function (term, analyzer) {
-        var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
-        var index = analyzer.line_parsed.length - 1;
 
+        /*
         for (var i = 0; i < index; i++) {
             t_conf = t_conf[analyzer.line_parsed[i].name];
             if (typeof t_conf === 'undefined') {
                 return true;
             }
-        }
-        delete(t_conf[analyzer.line_parsed[index].name]);
+        }*/
 
-        return true;
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+
+        return config.erase(nodes);
     };
     ConfigurationModeElement.prototype.set_number = function (term, analyzer) {
         term.echo('executed!');
         return true;
     };
     ConfigurationModeElement.prototype.set_true = function (term, analyzer) {
-        var t_conf = config;
+        //var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
 
+        /*
         var cmd = 'config';
         for (var i = 0; i < analyzer.line_parsed.length; i++) {
             cmd += '.' + analyzer.line_parsed[i].name;
@@ -424,15 +434,21 @@ var ConfigurationModeElement = (function () {
             t_conf = t_conf[analyzer.line_parsed[i].name];
         }
         cmd += ' = true';
-        eval(cmd);
-        return true;
+        eval(cmd);*/
+
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+        return config.write(nodes, true);
     };
     ConfigurationModeElement.prototype.set_false = function (term, analyzer) {
-        var t_conf = config;
+        //var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
 
+        /*
         var cmd = 'config';
         for (var i = 0; i < analyzer.line_parsed.length; i++) {
             cmd += '.' + analyzer.line_parsed[i].name;
@@ -442,10 +458,17 @@ var ConfigurationModeElement = (function () {
             t_conf = t_conf[analyzer.line_parsed[i].name];
         }
         cmd += ' = false';
-        eval(cmd);
-        return true;
+        eval(cmd);*/
+
+
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+        return config.write(nodes, false);
     };
     ConfigurationModeElement.prototype.set_command = function (term, analyzer) {
+        /*
         var index = analyzer.line_parsed.length - 1;
         var t_conf = config;
         for (var i = 0; i < index-1; i++) {
@@ -460,8 +483,23 @@ var ConfigurationModeElement = (function () {
         else {
             t_conf[analyzer.line_parsed[index-1].name] = {};
             t_conf[analyzer.line_parsed[index-1].name][analyzer.line_parsed[index].name] = {}
+        }*/
+
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
         }
-        return true;
+        return config.write(nodes, analyzer.line_parsed.pop().name);
+    };
+    ConfigurationModeElement.prototype.set_object = function (term, analyzer) {
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+        if (typeof config.find(nodes) === 'object') {
+            return true;
+        }
+        return config.write(nodes, {});
     };
     ConfigurationModeElement.prototype.set_broadcast = function (term, analyzer) {
         term.echo('executed!');

@@ -24,7 +24,8 @@ var def_conf = {
                 reblog: true,
                 mention: true,
                 following: true
-            }
+            },
+            monitor: 'local'
         },
         status: {},
     }
@@ -50,6 +51,7 @@ var context = new AudioContext();
 
 var enterCommand = (command, term) => {
     command = command.trim();
+    term.resize(window.innerWidth - 36, window.innerHeight - 36);
 
     if (command.length === 0) {
         return;
@@ -75,36 +77,42 @@ var completion = (line, callback) => {
 
 var initConfig = (term) => {
     let store = localStorage;
-    let str = store.getItem('configuration');
-    if (str) {
-        config = JSON.parse(str);
+    let st_conf = store.getItem('configuration');
+    /*
+    if (st_conf) {
+        config = new ConfigManager(JSON.parse(str);
     }
     else {
         console.log('Initialization: read default config')
         config = def_conf;
-    }
+    }*/
 
-    str = store.getItem('instances');
-    if (str) {
-        instances = JSON.parse(str);
+    config = new ConfigManager(def_conf, st_conf ? JSON.parse(st_conf) : {});
+
+    let ins = store.getItem('instances');
+    if (ins) {
+        instances = JSON.parse(ins);
     }
     else {
         instances = {};
     }
-    if (!location.search.match(/^\?instance_name=.+?&code=/)) {
+    if (!location.search.match(/^\?.+=.+/)) {
         return;
     }
     let params_org = location.search.replace(/^\?/, '').split(/[=&]/);
     let params = {};
+    history.replaceState('', '', location.pathname);
     for (let i = 0; i < params_org.length; i += 2) {
         params[params_org[i]] = params_org[i+1];
     }
-    if (instances.hasOwnProperty(params.instance_name)) {
+    if (params.hasOwnProperty('code') && instances.hasOwnProperty(params.instance_name)) {
         instance_name = params.instance_name;
         instances[instance_name].auth_code = params.code;
         term.exec('instance ' + instance_name);
     }
-    history.replaceState('','',location.pathname);
+    else if (params.hasOwnProperty('instance') && instances.hasOwnProperty(params.instance)) {
+        term.exec('instance ' + params.instance);
+    }
 };
 
 var filterKey = (event, term) => {
@@ -316,13 +324,13 @@ $(function() {
         })
     })
     .on('mouseover', '.status', function() {
-        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = config.find('instances.status.thumbnail');
         if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').show();
         }
     })
     .on('mouseout', '.status', function() {
-        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = config.find('instances.status.thumbnail');
         if (typeof cfg === 'undefined'){
             $(this).find('.status_thumbnail').hide();
         }
@@ -422,7 +430,7 @@ $(function() {
  * その他処理
  *****************************/
 
-
+/*
 function getConfig(config, index, d_conf) {
     let idxs = index.split('.');
     let cf = config;
@@ -447,7 +455,7 @@ function getConfig(config, index, d_conf) {
         }
     }
     return cf;
-}
+}*/
 
 function makeStatus(payload){
     let date = new Date(payload.created_at);
@@ -500,7 +508,7 @@ function makeStatus(payload){
     }
 
     let avatar = $('<td />').addClass('status_avatar');
-    let cfg = getConfig(config, 'instances.status.avatar', def_conf);
+    let cfg = config.find('instances.status.avatar');
     if (typeof cfg !== 'undefined') {
         avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
         let url = contents.account.avatar_static;
@@ -576,7 +584,7 @@ function makeStatus(payload){
             };
             img.src = preview_url;
         });
-        let cfg = getConfig(config, 'instances.status.thumbnail', def_conf);
+        let cfg = config.find('instances.status.thumbnail');
         if (typeof cfg === 'undefined') {
             thumb.hide();
         }
@@ -642,7 +650,7 @@ function makeStatus(payload){
         .addClass('status')
         .append(avatar)
         .append(main);
-    if (getConfig(config, 'instances.status.separator', def_conf)) {
+    if (config.find('instances.status.separator')) {
 
         status.append(
             '<tr><td colspan="2"><span>'
@@ -655,17 +663,17 @@ function makeStatus(payload){
 
 function make_notification(payload) {
     let is_fav = (payload.type === 'favourite') &&
-                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
-                 (getConfig(config, 'instances.terminal.logging.favourite', def_conf) !== false);
+                 (config.find('instances.terminal.logging') !== false) &&
+                 (config.find('instances.terminal.logging.favourite') !== false);
     let is_reb = (payload.type === 'reblog') &&
-                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
-                 (getConfig(config, 'instances.terminal.logging.reblog', def_conf) !== false);
+                 (config.find('instances.terminal.logging') !== false) &&
+                 (config.find('instances.terminal.logging.reblog') !== false);
     let is_fol = (payload.type === 'follow') &&
-                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
-                 (getConfig(config, 'instances.terminal.logging.following', def_conf) !== false);
+                 (config.find('instances.terminal.logging') !== false) &&
+                 (config.find('instances.terminal.logging.following') !== false);
     let is_men = (payload.type === 'mention') &&
-                 (getConfig(config, 'instances.terminal.logging', def_conf) !== false) &&
-                 (getConfig(config, 'instances.terminal.logging.mention', def_conf) !== false);
+                 (config.find('instances.terminal.logging') !== false) &&
+                 (config.find('instances.terminal.logging.mention') !== false);
 
     let msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
@@ -728,7 +736,7 @@ function post_status() {
         data: data,
         timeout: 5000
     }).then((data, status, jqxhr) => {
-        let visibility = getConfig(config, 'instances.visibility', def_conf);
+        let visibility = config.find('instances.visibility');
         if (typeof visibility === 'undefined') {
             visibility = 'public';
         }

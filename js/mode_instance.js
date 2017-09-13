@@ -468,7 +468,7 @@ var InstanceModeElement = (function () {
             && (ws.length === 0 || ws[0].readyStatus >= WebSocket.CLOSING)
         ) {
             if (typeof analyzer.line_parsed[2] === 'undefined') {
-                monitor = getConfig(instances[instance_name], 'monitor', def_conf.instances)
+                monitor = config.find('instances.terminal.monitor');
             }
             else if (analyzer.line_parsed[2].name === 'tag') {
                 monitor = analyzer.paramaters.hashtag;
@@ -488,7 +488,7 @@ var InstanceModeElement = (function () {
                     var payload;
 
                     var is_del = (data.event === 'delete') &&
-                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) === true);
+                                 (config.find('instances.terminal.logging.delete') === true);
 
                     if (is_del) {
                         payload = data.payload;
@@ -571,7 +571,7 @@ var InstanceModeElement = (function () {
                     var payload;
 
                     var is_del = (data.event === 'delete') &&
-                                 (getConfig(config, 'instances.terminal.logging.delete', def_conf) === true);
+                                 (config.find('instances.terminal.logging.delete') === true);
 
                     if (is_del) {
                         payload = data.payload;
@@ -614,7 +614,7 @@ var InstanceModeElement = (function () {
             visibility = analyzer.line_parsed[1].name;
         }
         else {
-            visibility = getConfig(config, 'instances.visibility', def_conf);
+            visibility = config.find('instances.visibility');
         }
         if (typeof visibility === 'undefined') {
             visibility = 'public';

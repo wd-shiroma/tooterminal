@@ -287,22 +287,84 @@ var ModeManager = (function () {
 
 
 var ConfigManager = (function () {
-    function ConfigManager(conf) {
-        this.config = conf;
+    function ConfigManager(def, start) {
+        this.default = JSON.parse(JSON.stringify(def));
+        this.config = !start ? def : start;
+        this.config = Object.assign(def, this.config);
     }
 
-    ConfigManager.prototype.getConfig = function (line) {
-        var cmd_list = this.result.cmd_list;
-        var completion = [];
-        for (var i = 0; i < cmd_list.length; i++) {
-            completion.push(
-                  cmd_list[i].type == 'paramater' ? ('<' + cmd_list[i].name + '>')
-                : cmd_list[i].type == 'number'    ? ('[' + cmd_list[i].name + ']')
-                : (cmd_list[i].name)
-            );
+    ConfigManager.prototype.find = function (nodes) {
+        if (typeof nodes === 'string') {
+            nodes = nodes.split('.');
         }
-        //this.debug();
-        return completion;
+        if (!Array.isArray(nodes)) {
+            return undefined;
+        }
+        let cf = this.config;
+        for (let i = 0; i < nodes.length; i++) {
+            if (typeof cf[nodes[i]] !== 'undefined') {
+                cf = cf[nodes[i]];
+            }
+            else {
+                cf = undefined;
+                break;
+            }
+        }
+        if (typeof cf !== 'undefined') {
+            return cf;
+        }
+
+        cf = this.default;
+        for (let i = 0; i < nodes.length; i++) {
+            cf = cf[nodes[i]];
+            if (typeof cf === 'undefined') {
+                break;
+            }
+        }
+        return cf;
     };
-    return ModeManager;
+
+    ConfigManager.prototype.write = function(nodes, param) {
+        if (typeof nodes === 'string') {
+            nodes = nodes.split('.');
+        }
+        if (!Array.isArray(nodes)) {
+            return false;
+        }
+        let cf = this.config;
+        let child;
+        for (let i = 0; i < nodes.length - 1; i++) {
+            child = nodes[i];
+            if (typeof cf[child] === 'undefined') {
+                cf[child] = {};
+            }
+            cf = cf[child];
+        }
+        child = nodes.pop();
+        cf[child] = param;
+        return true;
+    }
+
+    ConfigManager.prototype.erase = function(nodes) {
+        if (typeof nodes === 'string') {
+            nodes = nodes.split('.');
+        }
+        if (!Array.isArray(nodes)) {
+            return false;
+        }
+        let cf = this.config;
+        let child;
+        for (let i = 0; i < nodes.length - 1; i++) {
+            child = nodes[i];
+            if (typeof cf[child] === 'undefined') {
+                return true;
+            }
+            cf = cf[child];
+        }
+        child = nodes.pop();
+        delete(cf[child]);
+        return true;
+    }
+
+    return ConfigManager;
 }());
