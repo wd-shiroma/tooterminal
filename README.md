@@ -334,6 +334,18 @@ Building configuration...
 Tooterminal#
 ```
 
+## アクセス時に自動でインスタンスモードに入ってterminal monitorを打つ
+
+URLの末尾にパラメータを設定することでインスタンスモードへの自動遷移＆terminal monitorコマンドの自動発行ができます。
+
+`https://wd-shiroma.github.io/tooterminal?instance=インスタンス名&terminal=取得ストリーミング`
+
+* インスタンス名
+`Tooterminal# instance インスタンス名`で指定した名称
+* 取得ストリーミング
+home, local, publicを選択できます。
+それ以外の文字列が指定された場合はrunning-configの設定値が適用されます。
+
 ## ショートカットキー
 
 TooterminalではCtrl、Alt、Shiftを駆使した様々なショートカットが利用できます。

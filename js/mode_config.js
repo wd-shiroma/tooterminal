@@ -140,6 +140,25 @@ var ConfigurationModeElement = (function () {
                                         "execute": this.set_default
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "length",
+                                "description": "トゥートの取得数について設定します。",
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "number",
+                                        "max": 100,
+                                        "min": 0,
+                                        "description": "取得数(初期値20)",
+                                        "execute": this.set_number
+                                    }
+                                ]
+                            }, {
+                                "type": "command",
+                                "name": "auto",
+                                "description": "ログイン後、terminal monitorを自動発行します。",
+                                "execute": this.set_true
                             }
                         ]
                     }, {
@@ -415,8 +434,8 @@ var ConfigurationModeElement = (function () {
         return config.erase(nodes);
     };
     ConfigurationModeElement.prototype.set_number = function (term, analyzer) {
-        term.echo('executed!');
-        return true;
+        let limit = parseInt(analyzer.paramaters.number);
+        return config.write(['instances', 'terminal', 'length'], limit);
     };
     ConfigurationModeElement.prototype.set_true = function (term, analyzer) {
         //var t_conf = config;

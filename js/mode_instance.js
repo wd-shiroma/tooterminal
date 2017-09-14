@@ -1,5 +1,5 @@
 var ws = [];
-var InstanceModeElement = (function () {
+let InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
         this._dataset = [
@@ -451,7 +451,8 @@ var InstanceModeElement = (function () {
         configurable: true
     });
     InstanceModeElement.prototype.login = function (term, analyzer) {
-        var url =
+        term.pause();
+        let url =
             'https://'         + instances[instance_name].domain
             + '/oauth/authorize?response_type=code'
             + '&client_id='    + instances[instance_name].client_id
@@ -476,18 +477,43 @@ var InstanceModeElement = (function () {
             else {
                 monitor = analyzer.line_parsed[2].name;
             }
-            var api = 'wss://' + instances[instance_name].domain
+            let api = 'wss://' + instances[instance_name].domain
                                     + '/api/v1/streaming?access_token='
                                     + instances[instance_name].access_token
                                     + '&stream=user';
+
+            let type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
+            let path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
+            let limit = config.find(['instances', 'terminal', 'length']);
+            limit = (limit > 0) ? limit : 20;
+            params = { limit: limit };
+            if (type === 'local') {
+                params.local = true;
+            }
+            else if (type === 'tag') {
+                path += '/' + analyzer.paramaters.tag_name;
+            }
+            term.pause();
+            callAPI(path, { data: params })
+            .then((data, status, jqxhr) => {
+                for (let i = data.length - 1; i >= 0; i--) {
+                    if (analyzer.optional.pinned && !data[i].pinned) {
+                        continue;
+                    }
+                    term.echo(makeStatus(data[i]), {raw: true, flush: false});
+                }
+                term.resume();
+                term.flush();
+            })
+
             if (monitor === 'home') {
-                var ws_t = new WebSocket(api);
+                let ws_t = new WebSocket(api);
 
                 ws_t.onmessage = (e) => {
-                    var data = JSON.parse(e.data);
-                    var payload;
+                    let data = JSON.parse(e.data);
+                    let payload;
 
-                    var is_del = (data.event === 'delete') &&
+                    let is_del = (data.event === 'delete') &&
                                  (config.find('instances.terminal.logging.delete') === true);
 
                     if (is_del) {
@@ -508,7 +534,7 @@ var InstanceModeElement = (function () {
                     }
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);
-                        var status = makeStatus(payload);
+                        let status = makeStatus(payload);
                         term.echo(status, { raw: true });
                     }
                     reduce_status();
@@ -530,11 +556,11 @@ var InstanceModeElement = (function () {
                 ws.push(ws_t);
             }
             else {
-                var ws_t = new WebSocket(api);
+                let ws_t = new WebSocket(api);
 
                 ws_t.onmessage = (e) => {
-                    var data = JSON.parse(e.data);
-                    var payload;
+                    let data = JSON.parse(e.data);
+                    let payload;
 
                     if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
@@ -567,10 +593,10 @@ var InstanceModeElement = (function () {
                 ws_t = new WebSocket(api);
 
                 ws_t.onmessage = (e) => {
-                    var data = JSON.parse(e.data);
-                    var payload;
+                    let data = JSON.parse(e.data);
+                    let payload;
 
-                    var is_del = (data.event === 'delete') &&
+                    let is_del = (data.event === 'delete') &&
                                  (config.find('instances.terminal.logging.delete') === true);
 
                     if (is_del) {
@@ -580,7 +606,7 @@ var InstanceModeElement = (function () {
                     }
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);
-                        var status = makeStatus(payload);
+                        let status = makeStatus(payload);
                         term.echo(status, { raw: true });
                     }
                     reduce_status();
@@ -601,7 +627,7 @@ var InstanceModeElement = (function () {
             }
         }
         else if(analyzer.optional.no_monitor === true){
-            for (var i = 0; i < ws.length; i++) {
+            for (let i = 0; i < ws.length; i++) {
                 ws[i].close();
                 ws[i] = undefined;
             }
@@ -609,7 +635,7 @@ var InstanceModeElement = (function () {
         }
     };
     InstanceModeElement.prototype.toot = function (term, analyzer) {
-        var visibility;
+        let visibility;
         if (typeof analyzer.line_parsed[1] !== 'undefined') {
             visibility = analyzer.line_parsed[1].name;
         }
@@ -632,7 +658,7 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
         term.pause();
-        var api;
+        let api;
         if (typeof analyzer.line_parsed[2] === 'undefined' || analyzer.line_parsed[2].name === 'self') {
             api = callAPI('/api/v1/accounts/verify_credentials', {
                 type: 'GET',
@@ -645,12 +671,12 @@ var InstanceModeElement = (function () {
         }
 
         api.then((data, status, jqxhr) => {
-            var created = new Date(data.created_at);
-            var passing = parseInt((Date.now() - created.getTime()) / 60000);
-            var minutes = passing % 60;
-            var hours   = (passing = (passing - minutes) / 60) % 24;
-            var days    = (passing = (passing - hours) / 24) % 7;
-            var weeks   = (passing - days) / 7;
+            let created = new Date(data.created_at);
+            let passing = parseInt((Date.now() - created.getTime()) / 60000);
+            let minutes = passing % 60;
+            let hours   = (passing = (passing - minutes) / 60) % 24;
+            let days    = (passing = (passing - hours) / 24) % 7;
+            let weeks   = (passing - days) / 7;
             term.echo(data.display_name + ' ID:' + data.id
                 + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
             term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
@@ -679,7 +705,7 @@ var InstanceModeElement = (function () {
             });
         }, (jqxhr, status, error) => {
             console.log(jqxhr);
-            var response = JSON.parse(jqxhr.responseText);
+            let response = JSON.parse(jqxhr.responseText);
             term.echo('Getting user data failed.(' + jqxhr + ')');
             term.resume();
         })
@@ -687,9 +713,9 @@ var InstanceModeElement = (function () {
             if (data.length > 0 && data[0].pinned) {
                 term.echo('<br />', {raw: true, flush: false})
                 term.echo('[[ub;;]Pinned statuses]', {flush: false});
-                for (var i = 0; i < data.length; i++) {
+                for (let i = 0; i < data.length; i++) {
                     if (i > 2) {
-                        var more = $('<a />')
+                        let more = $('<a />')
                             .attr('name', 'cmd_status_pinned')
                             .attr('data-uid', data[i].account.id)
                             .text('... and more pinned status');
@@ -706,7 +732,7 @@ var InstanceModeElement = (function () {
             term.resume();
         }, (jqxhr, status, error) => {
             console.log(jqxhr);
-            var response = JSON.parse(jqxhr.responseText);
+            let response = JSON.parse(jqxhr.responseText);
             //term.echo('Getting user data failed.(' + jqxhr + ')');
             term.resume();
         });
@@ -720,23 +746,23 @@ var InstanceModeElement = (function () {
                 q: analyzer.paramaters['query']
             }
         }).then((data, status, jqxhr) => {
-            var max_len = 15;
-            for (var i = 0; i < data.accounts.length; i++) {
+            let max_len = 15;
+            for (let i = 0; i < data.accounts.length; i++) {
                 if (max_len < data.accounts[i].acct.length) {
                     max_len = data.accounts[i].acct.length;
                 }
             }
             max_len += 7;
 
-            var sep;
+            let sep;
             for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
             sep += '----------------------------';
-            var lines = [
+            let lines = [
                 'Accounts:',
                 ('| display name').addTab('| account name', max_len).addTab('id', 9),
                 sep
             ];
-            for (var i = 0; i < data.accounts.length; i++) {
+            for (let i = 0; i < data.accounts.length; i++) {
                 lines.push(
                     ('| ' + data.accounts[i].display_name)
                         .addTab('| @' + data.accounts[i].acct, max_len)
@@ -750,7 +776,7 @@ var InstanceModeElement = (function () {
             lines.push('');
             lines.push('Hash tags:');
             lines.push('-----------------------------------');
-            for (var i = 0; i < data.hashtags.length; i++) {
+            for (let i = 0; i < data.hashtags.length; i++) {
                 lines.push('#' + data.hashtags[i]);
             }
             lines.push('-----------------------------------');
@@ -788,7 +814,7 @@ var InstanceModeElement = (function () {
         callAPI('/api/v1/instance', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            var json_str = JSON.stringify(data, null, '    ');
+            let json_str = JSON.stringify(data, null, '    ');
             term.echo(json_str);
             term.resume();
         }, (jqxhr, status, error) => {
@@ -801,66 +827,173 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_statuses = function (term, analyzer) {
         term.pause();
-        var api;
+        let api;
+        let path;
+        let params;
 
-        var limit = (
+        let limit = (
             typeof analyzer.paramaters.post_limits !== 'undefined'
             && analyzer.paramaters.post_limits > 0
-            && analyzer.paramaters.post_limits <= 40
-        ) ? analyzer.paramaters.post_limits : 20;
-
+        ) ? analyzer.paramaters.post_limits : config.find(['instances', 'terminal', 'length']);
+        limit = (limit > 0) ? limit : 20;
 
         if (analyzer.line_parsed[1].name === 'timeline') {
-            var type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
-            var path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
-            var data = { limit: limit };
+            let type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
+            path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
+            params = { limit: limit };
             if (type === 'local') {
-                data.local = true;
+                params.local = true;
             }
             else if (type === 'tag') {
                 path += '/' + analyzer.paramaters.tag_name;
             }
-            api = callAPI(path, {
-                type: 'GET',
-                data: data
-            });
         }
         else if (analyzer.line_parsed[1].name === 'user'){
-            var userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
+            let userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
                        ? instances[instance_name].user.id
                        : analyzer.line_parsed[2].name === 'id' ? analyzer.paramaters.userid
                        : -1;
             if (userid > 0) {
-                var params = {
+                params = {
                     limit: limit,
                 }
                 if (analyzer.optional.hasOwnProperty('pinned')) {
                     params.pinned = true;
                 }
-                api = callAPI('/api/v1/accounts/' + userid + '/statuses', {
-                    type: 'GET',
-                    data: params
-                });
+                path = '/api/v1/accounts/' + userid + '/statuses'
             }
             else {
                 term.error('no login.');
                 return;
             }
         }
-        else {
-            api = callAPI('/api/v1/statuses', {
-                type: 'GET',
-                data: { limit: limit }
-            });
+
+        if (typeof path === 'undefined') {
+            term.error('show status error.');
+            return;
         }
+        let statuses = [];
+        let current_sid = 0;
+        term.push(function(command, moreterm){},{
+            name: 'more',
+            //prompt: '[[;#111111;#DDDDDD]-- More --]',
+            prompt: '--More-- ',
+            onStart: function(moreterm){
+                moreterm.pause();
+                callAPI(path, {
+                    type: 'GET',
+                    data: params
+                })
+                .then((data, status, jqxhr) => {
+                    statuses = [];
+                    for (let i = 0; i < data.length; i++) {
+                        if (analyzer.optional.pinned && !data[i].pinned) {
+                            continue;
+                        }
+                        moreterm.echo(makeStatus(data[i]), {raw: true, flush: false});
+                        current_sid = data[i].id;
+                    }
+                    moreterm.resume();
+                    moreterm.flush();
+                    if (data.length < limit) {
+                        moreterm.pop();
+                    }
+                }, (jqxhr, status, error) => {
+                    moreterm.error('Failed to getting statsues.');
+                    moreterm.resume();
+                })
+            },
+            onExit: function(term) {
+                setTimeout(function() {
+                    term.set_command('');
+                }, 10);
+            },
+            keydown: function(event, term){
+                switch(event.keyCode){
+                    case 27:
+                    case 81:
+                        term.pop();
+                        term.set_command('');
+                        break;
+                    case 13:
+                        if (statuses.length > 0) {
+                            term.echo(statuses.shift(), { raw: true });
+                            return;
+                        }
+                        if (current_sid > 0) {
+                            params.max_id = current_sid - 1;
+                        }
+                        callAPI(path, {
+                            type: 'GET',
+                            data: params
+                        })
+                        .then((data, status, jqxhr) => {
+                            if (data.length === 0) {
+                                term.pop();
+                                return;
+                            }
+                            statuses = [];
+                            for (let i = 0; i < data.length; i++) {
+                                if (analyzer.optional.pinned && !data[i].pinned) {
+                                    continue;
+                                }
+                                statuses.push(makeStatus(data[i]));
+                                current_sid = data[i].id;
+                            }
+                            term.echo(statuses.shift(), { raw: true });
+                        }, (jqxhr, status, error) => {
+                            term.error('Failed to getting statsues.');
+                        });
+                        break;
+                    default:
+                        term.pause();
+                        if (statuses.length > 0) {
+                            for (let i = 0; i < statuses.length; i++) {
+                                if (analyzer.optional.pinned && !data[i].pinned) {
+                                    continue;
+                                }
+                                term.echo(statuses[i], {raw: true, flush: false});
+                            }
+                            term.resume();
+                        }
+                        if (current_sid > 0) {
+                            params.max_id = current_sid - 1;
+                        }
+                        callAPI(path, {
+                            type: 'GET',
+                            data: params
+                        })
+                        .then((data, status, jqxhr) => {
+                            statuses = [];
+                            for (let i = 0; i < data.length; i++) {
+                                if (analyzer.optional.pinned && !data[i].pinned) {
+                                    continue;
+                                }
+                                term.echo(makeStatus(data[i]), {raw: true, flush: false});
+                                current_sid = data[i].id;
+                            }
+                            term.resume();
+                            term.flush();
+                            if (data.length < limit) {
+                                term.pop();
+                            }
+                        }, (jqxhr, status, error) => {
+                            term.error('Failed to getting statsues.');
+                            term.resume();
+                        })
+                }
+                return true;
+            }
+        });
+        return;
         api.then((data, status, jqxhr) => {
             //var json_str = JSON.stringify(data, null, '    ');
             //term.echo(json_str);
-            for (var i = data.length-1; i >= 0; i--) {
+            for (let i = data.length-1; i >= 0; i--) {
                 if (analyzer.optional.pinned && !data[i].pinned) {
                     continue;
                 }
-                var s = makeStatus(data[i]);
+                let s = makeStatus(data[i]);
                 term.echo(s, { raw: true, flush: false });
             }
             term.flush();
@@ -873,8 +1006,8 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
         term.pause();
-        var sid = analyzer.paramaters.status_id;
-        var cur_status;
+        let sid = analyzer.paramaters.status_id;
+        let cur_status;
         callAPI('/api/v1/statuses/' + sid, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
@@ -886,13 +1019,13 @@ var InstanceModeElement = (function () {
                 type: 'GET',
             })
         }).then((data, status, jqxhr) => {
-            var s;
-            for (var i = 0; i < data.ancestors.length; i++) {
+            let s;
+            for (let i = 0; i < data.ancestors.length; i++) {
                 s = makeStatus(data.ancestors[i]);
                 term.echo(s, { raw: true, flush: false });
             }
             term.echo(cur_status, { raw: true, flush: false });
-            for (var i = 0; i < data.descendants.length; i++) {
+            for (let i = 0; i < data.descendants.length; i++) {
                 s = makeStatus(data.descendants[i]);
                 term.echo(s, { raw: true, flush: false });
             }
@@ -906,9 +1039,9 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_follows = function (term, analyzer) {
         term.pause();
-        var api;
-        var userid;
-        var type;
+        let api;
+        let userid;
+        let type;
         if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
             userid = instances[instance_name].user.id;
             type = analyzer.line_parsed[3].name;
@@ -921,23 +1054,23 @@ var InstanceModeElement = (function () {
         callAPI(api, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            var max_len = 15;
-            for (var i = 0; i < data.length; i++) {
+            let max_len = 15;
+            for (let i = 0; i < data.length; i++) {
                 if (max_len < data[i].acct.length) {
                     max_len = data[i].acct.length;
                 }
             }
             max_len += 7;
 
-            var sep;
+            let sep;
             for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
             sep += '----------------------------';
-            var lines = [
+            let lines = [
                 'Accounts:',
                 ('| display name').addTab('| account name', max_len).addTab('id', 9),
                 sep
             ];
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 lines.push(
                     ('| ' + data[i].display_name)
                         .addTab('| @' + data[i].acct, max_len)
@@ -957,7 +1090,7 @@ var InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_notifications = function (term, analyzer) {
         term.pause();
-        var data = {};
+        let data = {};
         if (analyzer.paramaters.post_limits) {
             data.limit = analyzer.paramaters.post_limits;
         }
@@ -965,7 +1098,7 @@ var InstanceModeElement = (function () {
             type: 'GET',
             data: data
         }).then((data, status, jqxhr) => {
-            for (var i = data.length-1; i >= 0; i--) {
+            for (let i = data.length-1; i >= 0; i--) {
                 term.echo(make_notification(data[i]), {raw: true});
             }
             term.resume();
@@ -981,7 +1114,7 @@ var InstanceModeElement = (function () {
         callAPI('/api/v1/instance', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            var json_str = JSON.stringify(data, null, '    ');
+            let json_str = JSON.stringify(data, null, '    ');
             term.echo(json_str);
             term.resume();
         }, (jqxhr, status, error) => {

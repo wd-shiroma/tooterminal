@@ -17,7 +17,6 @@ var def_conf = {
         length: 0
     },
     instances: {
-        monitor: 'local',
         terminal: {
             logging: {
                 favourite: true,
@@ -34,6 +33,7 @@ var def_conf = {
 var config;
 var instances;
 var prompt;
+var url_params;
 
 var term_mode;
 var mode_global;
@@ -88,6 +88,7 @@ var initConfig = (term) => {
     }*/
 
     config = new ConfigManager(def_conf, st_conf ? JSON.parse(st_conf) : {});
+    url_params = {};
 
     let ins = store.getItem('instances');
     if (ins) {
@@ -100,18 +101,17 @@ var initConfig = (term) => {
         return;
     }
     let params_org = location.search.replace(/^\?/, '').split(/[=&]/);
-    let params = {};
-    history.replaceState('', '', location.pathname);
     for (let i = 0; i < params_org.length; i += 2) {
-        params[params_org[i]] = params_org[i+1];
+        url_params[params_org[i]] = params_org[i+1];
     }
-    if (params.hasOwnProperty('code') && instances.hasOwnProperty(params.instance_name)) {
-        instance_name = params.instance_name;
-        instances[instance_name].auth_code = params.code;
+    if (url_params.hasOwnProperty('code') && instances.hasOwnProperty(url_params.instance_name)) {
+        instance_name = url_params.instance_name;
+        instances[instance_name].auth_code = url_params.code;
         term.exec('instance ' + instance_name);
+        history.replaceState('', '', location.pathname);
     }
-    else if (params.hasOwnProperty('instance') && instances.hasOwnProperty(params.instance)) {
-        term.exec('instance ' + params.instance);
+    else if (url_params.hasOwnProperty('instance') && instances.hasOwnProperty(url_params.instance)) {
+        term.exec('instance ' + url_params.instance);
     }
 };
 
@@ -138,7 +138,19 @@ var parseCommand = (command, term) => {
     term_mode.parse(command.replace(/\?$/, ''));
 };
 
-var load_beep = function() {
+var init_instance = function(term) {
+    term_mode = mode_instance;
+
+    let auto_term;
+    if (config.find(['instances', 'terminal', 'auto'])){
+        auto_term = config.find(['instances', 'terminal', 'monitor']);
+    }
+    if (url_params.hasOwnProperty('terminal')) {
+        auto_term = (url_params.terminal.match(/^(home|local|public)$/ ? url_params.terminal : ''));
+    }
+    if (typeof auto_term !== 'undefined' && instances[instance_name].hasOwnProperty('access_token')) {
+        term.exec('terminal monitor ' + auto_term);
+    }
     return;
     let src_url = 'https://' + instances[instance_name].domain + '/sounds/boop.ogg';
     let req = new XMLHttpRequest();
@@ -161,7 +173,7 @@ var load_beep = function() {
     };
     req.open('GET', src_url, true);
     req.send('')
-}
+};
 
 var count_toot_size = () => {
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;

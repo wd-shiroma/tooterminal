@@ -171,8 +171,9 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-13');
-        term.echo('Mastodon Client Tooterminal, Version 0.3.4, RELEASE SERVICE(Beta)');
+        let date = new Date('2017-9-14');
+        let ver = '0.3.4';
+        term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
         term.echo('Copyright (c) 2017- by shiroma@mstdn.jp');
         term.echo('Updated ' + date.toDateString() + ' by shiroma@mstdn.jp');
@@ -293,7 +294,7 @@ var GlobalModeElement = (function () {
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
-                    onStart: function() { term_mode = mode_instance; load_beep(); },
+                    onStart: init_instance,
                     onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
@@ -302,12 +303,15 @@ var GlobalModeElement = (function () {
                 let prompt = '@' + ins.domain + '# '
                 console.log(jqxhr);
                 term.error('Getting user status failed.(' + jqxhr.status + ')');
-                term.echo('Enter \'login\' and reflesh your access_token');
+                //term.echo('Enter \'login\' and reflesh your access_token');
                 term.resume();
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
-                    onStart: function() { term_mode = mode_instance; load_beep(); },
+                    onStart: function(term) {
+                        term_mode = mode_instance;
+                        term.exec('login');
+                    },
                     onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
@@ -331,7 +335,7 @@ var GlobalModeElement = (function () {
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
-                    onStart: function() { term_mode = mode_instance; load_beep(); },
+                    onStart: init_instance,
                     onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
@@ -345,7 +349,7 @@ var GlobalModeElement = (function () {
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
-                    onStart: function() { term_mode = mode_instance; load_beep(); },
+                    onStart: init_instance,
                     onExit:  function() { term_mode = mode_global; closeTootbox(); },
                     exit:    false
                 });
@@ -358,7 +362,10 @@ var GlobalModeElement = (function () {
             term.push(enterCommand, {
                 name:   'instance',
                 prompt:  prompt,
-                onStart: function() { term_mode = mode_instance; load_beep(); },
+                onStart:  function(term) {
+                    term_mode = mode_instance;
+                    term.exec('login');
+                },
                 onExit:  function() { term_mode = mode_global; closeTootbox(); },
                 exit:    false
             });
