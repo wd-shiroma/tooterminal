@@ -323,7 +323,7 @@ let InstanceModeElement = (function () {
             }, {
                 "type": "command",
                 "name": "login",
-                "description": 'クライアントにログインします。',
+                "description": 'インスタンスにログインをし、アクセストークンを更新します',
                 "execute": this.login,
             }, {
                 "type": "command",
@@ -425,6 +425,30 @@ let InstanceModeElement = (function () {
                 ]
             }, {
                 "type": "command",
+                "name": "filter",
+                "description": '正規表現フィルタを設定します。',
+                "children": [
+                    {
+                        "type": "paramater",
+                        "name": "regular_expression",
+                        "description": '正規表現文字列',
+                        "execute": this.set_filter
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "no",
+                "description": '設定を削除します。',
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "filter",
+                        "description": '正規表現フィルタを削除します。',
+                        "execute": this.set_filter
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "clear",
                 "description": "画面を消去します。",
                 "execute": this.clear
@@ -477,6 +501,42 @@ let InstanceModeElement = (function () {
             else {
                 monitor = analyzer.line_parsed[2].name;
             }
+            let notifies = {};
+            let noti_src = config.find(['instances', 'terminal', 'logging']);
+            if (url_params.hasOwnProperty('notification')) {
+                noti_src = url_params.notification.split(',');
+                notifies = {
+                    delete: noti_src.indexOf('del') >= 0,
+                    favourite: noti_src.indexOf('fav') >= 0,
+                    reblog: noti_src.indexOf('reb') >= 0,
+                    mention: noti_src.indexOf('men') >= 0,
+                    following: noti_src.indexOf('fol') >= 0,
+                };
+            }
+            else if (typeof noti_src === 'object') {
+                notifies = {
+                    delete: (noti_src !== false && noti_src.delete === true),
+                    favourite: (noti_src !== false && noti_src.favourite !== false),
+                    reblog: (noti_src !== false && noti_src.reblog !== false),
+                    mention: (noti_src !== false && noti_src.mention !== false),
+                    following: (noti_src !== false && noti_src.following !== false)
+                };
+            }
+            else {
+                notifies = {
+                    delete: false,
+                    favourite: true,
+                    reblog: true,
+                    mention: true,
+                    following: true
+                }
+            }
+
+            let is_noti = false;
+            for (let noti in notifies) {
+                is_noti = (is_noti || noti);
+            }
+
             let api = 'wss://' + instances[instance_name].domain
                                     + '/api/v1/streaming?access_token='
                                     + instances[instance_name].access_token
@@ -513,8 +573,7 @@ let InstanceModeElement = (function () {
                     let data = JSON.parse(e.data);
                     let payload;
 
-                    let is_del = (data.event === 'delete') &&
-                                 (config.find('instances.terminal.logging.delete') === true);
+                    let is_del = (data.event === 'delete') && notifies.delete;
 
                     if (is_del) {
                         payload = data.payload;
@@ -523,7 +582,7 @@ let InstanceModeElement = (function () {
                     }
                     else if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
-                        term.echo(make_notification(payload), {raw: true});
+                        term.echo(make_notification(payload, notifies), {raw: true});
 
                         if(beep_buf) {
                             let source = context.createBufferSource();
@@ -558,30 +617,31 @@ let InstanceModeElement = (function () {
             else {
                 let ws_t = new WebSocket(api);
 
-                ws_t.onmessage = (e) => {
-                    let data = JSON.parse(e.data);
-                    let payload;
+                if (is_noti) {
+                    ws_t.onmessage = (e) => {
+                        let data = JSON.parse(e.data);
+                        let payload;
 
-                    if(data.event === 'notification') {
-                        payload = JSON.parse(data.payload);
-                        term.echo(make_notification(payload), {raw: true});
-                    }
-                };
+                        if(data.event === 'notification') {
+                            payload = JSON.parse(data.payload);
+                            term.echo(make_notification(payload, notifies), {raw: true});
+                        }
+                    };
 
-                ws_t.onopen = () => {
-                    term.echo("Notification Streaming start.");
-                };
+                    ws_t.onopen = () => {
+                        term.echo("Notification Streaming start.");
+                    };
 
-                ws_t.onerror = (e) => {
-                    console.warn(e);
-                };
+                    ws_t.onerror = (e) => {
+                        console.warn(e);
+                    };
 
-                ws_t.onclose = () => {
-                    term.echo("Notification Streaming closed.");
-                };
+                    ws_t.onclose = () => {
+                        term.echo("Notification Streaming closed.");
+                    };
 
-                ws.push(ws_t);
-
+                    ws.push(ws_t);
+                }
                 api = 'wss://'
                         + instances[instance_name].domain
                         + '/api/v1/streaming?access_token='
@@ -596,8 +656,7 @@ let InstanceModeElement = (function () {
                     let data = JSON.parse(e.data);
                     let payload;
 
-                    let is_del = (data.event === 'delete') &&
-                                 (config.find('instances.terminal.logging.delete') === true);
+                    let is_del = (data.event === 'delete') && notifies.delete;
 
                     if (is_del) {
                         payload = data.payload;
@@ -794,13 +853,26 @@ let InstanceModeElement = (function () {
         callAPI('/api/v1/instance', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            //var json_str = JSON.stringify(data, null, '    ');
-            //term.echo(json_str);
+            console.log(data);
+            term.echo('======== API Information ========', {flush: false});
             term.echo('Instance name: ' + data.title, {flush: false});
             term.echo('Version: ' + data.version, {flush: false});
             term.echo('Description: ' + data.description, {flush: false});
             term.echo('E-mail: ' + data.email, {flush: false});
             term.echo('URI: ' + data.uri, {flush: false});
+            if (data.hasOwnProperty('stats')) {
+                term.echo('Connection instances: ' + data.stats.domain_count, {flush: false});
+                term.echo('Posted toots: ' + data.stats.status_count, {flush: false});
+                term.echo('Registed users: ' + data.stats.user_count, {flush: false});
+            }
+            term.echo('Streaming uri: ' + data.urls.streaming_api, {flush: false});
+            term.echo('[OK]', {flush: false});/*
+            term.echo('<br >======== User Information ========', { raw: true, flush: false});
+            term.echo('Instance name: ' + data.title, {flush: false});
+            term.echo('Version: ' + data.version, {flush: false});
+            term.echo('Description: ' + data.description, {flush: false});
+            term.echo('E-mail: ' + data.email, {flush: false});
+            term.echo('URI: ' + data.uri, {flush: false});*/
             term.flush();
             term.resume();
         }, (jqxhr, status, error) => {
@@ -840,7 +912,7 @@ let InstanceModeElement = (function () {
         if (analyzer.line_parsed[1].name === 'timeline') {
             let type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
             path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
-            params = { limit: limit };
+            params = {};
             if (type === 'local') {
                 params.local = true;
             }
@@ -909,6 +981,18 @@ let InstanceModeElement = (function () {
                 }, 10);
             },
             keydown: function(event, term){
+                function echo_statuses(size) {
+                    if (!(size > 0)) {
+                        return;
+                    }
+                    size = statuses.length < size ? statuses.length : size;
+                    let updated = [];
+                    for (let i = 0; i < size; i++) {
+                        let stats = statuses.shift();
+                        term.echo(stats, {raw: true, flush: false});
+                    }
+                    term.flush();
+                }
                 switch(event.keyCode){
                     case 27:
                     case 81:
@@ -916,93 +1000,47 @@ let InstanceModeElement = (function () {
                         term.set_command('');
                         break;
                     case 13:
-                        if (statuses.length > 0) {
-                            term.echo(statuses.shift(), { raw: true });
-                            return;
-                        }
-                        if (current_sid > 0) {
-                            params.max_id = current_sid - 1;
-                        }
-                        callAPI(path, {
-                            type: 'GET',
-                            data: params
-                        })
-                        .then((data, status, jqxhr) => {
-                            if (data.length === 0) {
-                                term.pop();
-                                return;
-                            }
-                            statuses = [];
-                            for (let i = 0; i < data.length; i++) {
-                                if (analyzer.optional.pinned && !data[i].pinned) {
-                                    continue;
-                                }
-                                statuses.push(makeStatus(data[i]));
-                                current_sid = data[i].id;
-                            }
-                            term.echo(statuses.shift(), { raw: true });
-                        }, (jqxhr, status, error) => {
-                            term.error('Failed to getting statsues.');
-                        });
-                        break;
                     default:
                         term.pause();
-                        if (statuses.length > 0) {
-                            for (let i = 0; i < statuses.length; i++) {
-                                if (analyzer.optional.pinned && !data[i].pinned) {
-                                    continue;
-                                }
-                                term.echo(statuses[i], {raw: true, flush: false});
-                            }
-                            term.resume();
-                        }
+                        let echo_size = (event.keyCode === 13) ? 1 : limit;
+                        params.limit = 100;
                         if (current_sid > 0) {
                             params.max_id = current_sid - 1;
                         }
-                        callAPI(path, {
-                            type: 'GET',
-                            data: params
-                        })
-                        .then((data, status, jqxhr) => {
-                            statuses = [];
-                            for (let i = 0; i < data.length; i++) {
-                                if (analyzer.optional.pinned && !data[i].pinned) {
-                                    continue;
+                        if (!(statuses.length > 0)) {
+                            callAPI(path, {
+                                type: 'GET',
+                                data: params
+                            })
+                            .then((data, status, jqxhr) => {
+                                if (data.length === 0) {
+                                    term.pop();
+                                    return;
                                 }
-                                term.echo(makeStatus(data[i]), {raw: true, flush: false});
-                                current_sid = data[i].id;
-                            }
+                                statuses = [];
+                                for (let i = 0; i < data.length; i++) {
+                                    if (analyzer.optional.pinned && !data[i].pinned) {
+                                        continue;
+                                    }
+                                    statuses.push(makeStatus(data[i]));
+                                    current_sid = data[i].id;
+                                }
+                                echo_statuses(echo_size);
+                                term.resume();
+                            }, (jqxhr, status, error) => {
+                                term.error('Failed to getting statsues.');
+                            });
+                        }
+                        else {
+                            echo_statuses(echo_size);
                             term.resume();
-                            term.flush();
-                            if (data.length < limit) {
-                                term.pop();
-                            }
-                        }, (jqxhr, status, error) => {
-                            term.error('Failed to getting statsues.');
-                            term.resume();
-                        })
+                        }
                 }
+                setTimeout(() => { term.set_command(''); }, 10);
                 return true;
             }
         });
         return;
-        api.then((data, status, jqxhr) => {
-            //var json_str = JSON.stringify(data, null, '    ');
-            //term.echo(json_str);
-            for (let i = data.length-1; i >= 0; i--) {
-                if (analyzer.optional.pinned && !data[i].pinned) {
-                    continue;
-                }
-                let s = makeStatus(data[i]);
-                term.echo(s, { raw: true, flush: false });
-            }
-            term.flush();
-            term.resume();
-        }, (jqxhr, status, error) => {
-            term.error('Getting timeline posts is failed.(' + jqxhr.status + ')');
-            console.log(jqxhr);
-            term.resume();
-        });
     };
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
         term.pause();
@@ -1107,6 +1145,16 @@ let InstanceModeElement = (function () {
             console.log(jqxhr);
             term.resume();
         });
+    };
+    InstanceModeElement.prototype.set_filter = function (term, analyzer) {
+        if (analyzer.line_parsed[0].name === 'no') {
+            delete(instances[instance_name].filter);
+        }
+        else {
+            instances[instance_name].filter = analyzer.paramaters.regular_expression;
+        }
+        localStorage.setItem('instances', JSON.stringify(instances));
+        return true;
     };
     /* template */
     InstanceModeElement.prototype.template = function (term, analyzer) {

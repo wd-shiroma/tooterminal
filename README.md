@@ -338,13 +338,20 @@ Tooterminal#
 
 URLの末尾にパラメータを設定することでインスタンスモードへの自動遷移＆terminal monitorコマンドの自動発行ができます。
 
-`https://wd-shiroma.github.io/tooterminal?instance=インスタンス名&terminal=取得ストリーミング`
+`https://wd-shiroma.github.io/tooterminal?instance=インスタンス名&terminal=取得ストリーミング&notification=通知種別`
 
 * インスタンス名
 `Tooterminal# instance インスタンス名`で指定した名称
 * 取得ストリーミング
 home, local, publicを選択できます。
 それ以外の文字列が指定された場合はrunning-configの設定値が適用されます。
+* 通知種別
+表示したい通知種別をカンマ区切りで複数選択できます。(初期値：notification=fav,rev,fol,men)
+  * fav: お気に入り
+  * reb: ブースト
+  * fol: フォロー
+  * men: リプライ
+  * del: トゥート削除
 
 ## ショートカットキー
 

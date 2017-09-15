@@ -171,11 +171,11 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-14');
-        let ver = '0.3.4';
+        let date = new Date('2017-9-15');
+        let ver = '0.3.5';
         term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
-        term.echo('Copyright (c) 2017- by shiroma@mstdn.jp');
+        term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
         term.echo('Updated ' + date.toDateString() + ' by shiroma@mstdn.jp');
         term.echo('<br>', {raw: true});
         term.echo('Powered by:');
@@ -239,7 +239,15 @@ var GlobalModeElement = (function () {
             tab('Read:',        ins.application.scopes.read,      15),
             tab('Write:',       ins.application.scopes.write,     15),
             tab('Follow:',      ins.application.scopes.follow,    15),
-            ''
+            '',
+            'Autheorized user',
+            tab('Client ID:', ins.client_id, 20),
+            tab('Client Secret:', ins.client_secret, 20),
+            tab('Access Token:', ins.access_token, 20),
+            tab('Monitor defaults:', ins.monitor, 20),
+            tab('User Account:', '@' + ins.user.acct, 20),
+            tab('User ID:', ins.user.id, 20),
+
         ];
 
         more(term, lines, true);

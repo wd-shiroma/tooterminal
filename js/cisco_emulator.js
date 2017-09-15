@@ -5,7 +5,7 @@ var ModeManager = (function () {
         this.parse('');
     }
     ModeManager.prototype.execute = function (line, term) {
-        var parsed = this.parse(line);
+        let parsed = this.parse(line);
         if (!parsed.is_parsed) {
             console.log("AnalyzeError: " + parsed.message);
             return parsed.code;
@@ -24,9 +24,9 @@ var ModeManager = (function () {
         return parsed.cmd_list[0].execute(term, this);
     };
     ModeManager.prototype.getCompletion = function (line) {
-        var cmd_list = this.result.cmd_list;
-        var completion = [];
-        for (var i = 0; i < cmd_list.length; i++) {
+        let cmd_list = this.result.cmd_list;
+        let completion = [];
+        for (let i = 0; i < cmd_list.length; i++) {
             completion.push(
                   cmd_list[i].type == 'paramater' ? ('<' + cmd_list[i].name + '>')
                 : cmd_list[i].type == 'number'    ? ('[' + cmd_list[i].name + ']')
@@ -38,16 +38,16 @@ var ModeManager = (function () {
     };
     ModeManager.prototype.information = function (line) {
         //?を押された時の一覧を返す
-        var cmd_list = this.parse(line).cmd_list;
-        var information = ['Exec commands:'];
-        var cmd_name;
-        for (var i = 0; i < cmd_list.length; i++) {
+        let cmd_list = this.parse(line).cmd_list;
+        let information = ['Exec commands:'];
+        let cmd_name;
+        for (let i = 0; i < cmd_list.length; i++) {
             if (cmd_list[i].type == 'paramater') {
                 cmd_name = ('<' + cmd_list[i].name + '>');
             }
             else if (cmd_list[i].type == 'number') {
-                var max = parseInt(cmd_list[i].max);
-                var min = parseInt(cmd_list[i].min);
+                let max = parseInt(cmd_list[i].max);
+                let min = parseInt(cmd_list[i].min);
                 cmd_name = ('<' + (isNaN(min) ? '' : min) + '-' + (isNaN(max) ? '' : max) + '>');
             }
             else {
@@ -58,7 +58,7 @@ var ModeManager = (function () {
                 description: cmd_list[i].description
             });
         }
-        var cur_cmd = this.line_parsed[this.line_parsed.length - 1];
+        let cur_cmd = this.line_parsed[this.line_parsed.length - 1];
         if (typeof cur_cmd !== 'undefined'
             && typeof cur_cmd.execute === 'function'
             && cur_cmd.type !== 'paramater'
@@ -92,7 +92,6 @@ var ModeManager = (function () {
         if (position === void 0) { position = 0; }
         /* 初期化 */
         this.line = line;
-        this.line_split = line.replace(/ +/g, ' ',).split(' ')
         this.line_parsed = [];
         this.is_parsed = true;
         this.err_code = 0x0000;
@@ -102,10 +101,11 @@ var ModeManager = (function () {
         this.cmd_list = this.dataset;
         this.paramaters = {};
         this.optional = {};
-        var i  = 0;
-        var i2 = 0;
-        var p  = "";
-        var stored = "";
+        let i  = 0;
+        let i2 = 0;
+        let p  = "";
+        let stored = "";
+        let quate = '';
         /* 解析前処理 */
         if (line.length <= 0) {
             return this.result;
@@ -119,8 +119,9 @@ var ModeManager = (function () {
         /* 解析メイン */
         for (i = this.position; i <= line.length; i++) {
             p = line.charAt(i);
-            if (p === " ") {
+            if (p === " " && quate === '') {
                 stored = "";
+                quate = "";
                 while (1) {
                     p = line.charAt(++i);
                     if (p !== " " || p === "")
@@ -139,25 +140,28 @@ var ModeManager = (function () {
                     break;
                 }
             }
-            if (p === "") {
-                break;
-            }
             stored += p;
-            /*ここら辺にクォーテーションで囲まれたものをパラメータとする処理を書く*/
-            var filter = [];
+            let is_quate = stored.match(/^(?:(')[^']*|(")[^"]*)$/);
+            if (is_quate) {
+                quate =
+                    is_quate[1] ? '\'' :
+                    is_quate[2] ? '"' : '';
+            }
+            let filter = [];
             for (var j = 0; j < this.cmd_list.length; j++) {
                 if (this.cmd_list[j].type === "command") {
-                    var reg = new RegExp("^" + stored, "i");
+                    let reg = new RegExp("^" + stored, "i");
                     if (this.cmd_list[j].name.match(reg)) {
                         filter.push(this.cmd_list[j]);
                     }
                 }
                 else if (this.cmd_list[j].type === "number") {
-                    var num = parseInt(stored);
-                    var max = parseInt(this.cmd_list[j].max);
-                    var min = parseInt(this.cmd_list[j].min);
+                    let num = parseInt(stored);
+                    let max = parseInt(this.cmd_list[j].max);
+                    let min = parseInt(this.cmd_list[j].min);
 
                     if (stored.length === 0) {
+                        this.cmd_list[j].param = parseInt(stored);
                         filter.push(this.cmd_list[j]);
                     }
                     else if (isNaN(num)) {
@@ -170,11 +174,14 @@ var ModeManager = (function () {
                         continue;
                     }
                     else {
+                        this.cmd_list[j].param = parseInt(stored);
                         filter.push(this.cmd_list[j]);
                     }
                 }
                 else if (this.cmd_list[j].type === "paramater") {
                     //1ブロックまたはクォーテーションで囲まれた範囲をパラメータとして処理する。
+                    let re = new RegExp('^' + quate + '(.*)' + quate + '$');
+                    this.cmd_list[j].param = stored.replace(re, '$1');
                     filter.push(this.cmd_list[j]);
                 }
                 else if (this.cmd_list[j].type === "description") {
@@ -194,7 +201,7 @@ var ModeManager = (function () {
             if (this.cmd_list.length === 0) {
                 this.is_parsed = false;
                 this.err_code = 0x1F01;
-                var spacer;
+                let spacer;
                 for (spacer = ''; spacer.length < i; spacer += ' ');
                 spacer += $.terminal.active().get_prompt().replace(/\S/g, ' ');
                 this.err_msg = spacer + "^\n% Invalid input detected at '^' marker.";
@@ -211,11 +218,11 @@ var ModeManager = (function () {
                 this.err_code = 0x1101;
                 this.err_msg = "% Incomplete command.";
             }
-            for (var i = 0; i < this.line_parsed.length; i++) {
+            for (let i = 0; i < this.line_parsed.length; i++) {
                 if (this.line_parsed[i].type === 'paramater'
                     || this.line_parsed[i].type === 'number'
                 ){
-                    this.paramaters[this.line_parsed[i].name] = this.line_split[i];
+                    this.paramaters[this.line_parsed[i].name] = this.line_parsed[i].param;
                 }
                 if (this.line_parsed[i].hasOwnProperty('optional')) {
                     this.optional[this.line_parsed[i].optional] = true;
@@ -236,7 +243,7 @@ var ModeManager = (function () {
                 return "";
             }
             else {
-                var last = this.line_parsed[this.line_parsed.length - 1];
+                let last = this.line_parsed[this.line_parsed.length - 1];
                 return (typeof last.execute === "undefined")
                     ? ""
                     : last.execute;
@@ -286,7 +293,7 @@ var ModeManager = (function () {
 }());
 
 
-var ConfigManager = (function () {
+let ConfigManager = (function () {
     function ConfigManager(def, start) {
         this.default = JSON.parse(JSON.stringify(def));
         this.config = !start ? def : start;

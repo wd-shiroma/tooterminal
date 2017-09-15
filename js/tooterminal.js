@@ -329,9 +329,9 @@ $(function() {
             }
         })
         .then((data, status, jqxhr) => {
-            $.terminal.active().exec('show user id ' + data[0].id + ' statuses limit 3')
+            $.terminal.active().exec('show user id ' + data[0].id)
             .done(() => {
-                $.terminal.active().exec('show user id ' + data[0].id);
+                $.terminal.active().exec('show user id ' + data[0].id + ' statuses limit 3');
             })
         })
     })
@@ -522,8 +522,10 @@ function makeStatus(payload){
     let avatar = $('<td />').addClass('status_avatar');
     let cfg = config.find('instances.status.avatar');
     if (typeof cfg !== 'undefined') {
-        avatar.append($('<img />').attr('name', 'img_' + contents.account.id));
         let url = contents.account.avatar_static;
+        avatar.append($('<img />')
+            .attr('name', 'img_' + contents.account.id)
+            .attr('src', url));
         if (!url.match(/^http/)) {
             url = 'https://' + instances[instance_name].domain + url;
         }
@@ -585,6 +587,7 @@ function makeStatus(payload){
             let id = 'media_' + media.id;
             thumb.append($('<img />')
                 .attr('id', id)
+                .attr('src', preview_url)
                 .attr('data-url', url)
                 .attr('data-type', media.type));
             let img = new Image();
@@ -648,7 +651,6 @@ function makeStatus(payload){
             .append($('<div />').addClass('status_head').html($.terminal.format(head)))
             .append(content_visible);
 
-
     let status = $('<table />')
         .attr('name', 'id_' + contents.id)
         .attr('data-sid', contents.id)
@@ -662,8 +664,21 @@ function makeStatus(payload){
         .addClass('status')
         .append(avatar)
         .append(main);
+    if (instances[instance_name].hasOwnProperty('filter')) {
+        let filter = instances[instance_name].filter;
+        let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
+        let re;
+        if (filter_r) {
+            re = new RegExp(filter_r[1], filter_r[2])
+        }
+        else {
+            re = new RegExp(filter);
+        }
+        if (status.text().match(re)) {
+            return '';
+        }
+    }
     if (config.find('instances.status.separator')) {
-
         status.append(
             '<tr><td colspan="2"><span>'
             + Array($.terminal.active().cols() - 3).join('-')
@@ -673,19 +688,11 @@ function makeStatus(payload){
     return status.prop('outerHTML');
 }
 
-function make_notification(payload) {
-    let is_fav = (payload.type === 'favourite') &&
-                 (config.find('instances.terminal.logging') !== false) &&
-                 (config.find('instances.terminal.logging.favourite') !== false);
-    let is_reb = (payload.type === 'reblog') &&
-                 (config.find('instances.terminal.logging') !== false) &&
-                 (config.find('instances.terminal.logging.reblog') !== false);
-    let is_fol = (payload.type === 'follow') &&
-                 (config.find('instances.terminal.logging') !== false) &&
-                 (config.find('instances.terminal.logging.following') !== false);
-    let is_men = (payload.type === 'mention') &&
-                 (config.find('instances.terminal.logging') !== false) &&
-                 (config.find('instances.terminal.logging.mention') !== false);
+function make_notification(payload, notifies) {
+    let is_fav = (payload.type === 'favourite') && notifies.favourite;
+    let is_reb = (payload.type === 'reblog') && notifies.reblog;
+    let is_fol = (payload.type === 'follow') && notifies.following;
+    let is_men = (payload.type === 'mention') && notifies.mention;
 
     let msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
