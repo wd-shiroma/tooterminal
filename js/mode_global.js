@@ -45,6 +45,20 @@ var GlobalModeElement = (function () {
                         "name": "clock",
                         "description": "現在時刻を表示します。",
                         "execute": this.show_clock
+                    }, {
+                        "type": "command",
+                        "name": "tech-support",
+                        "description": "サポート問い合わせ用レポートファイルを出力します。",
+                        "execute": this.show_tech,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "encrypt",
+                                "optional": "encrypt",
+                                "description": "ファイルを暗号化します。",
+                                "execute": this.show_tech
+                            }
+                        ]
                     }
                 ]
             }, {
@@ -171,8 +185,8 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-15');
-        let ver = '0.3.5';
+        let date = new Date('2017-9-16');
+        let ver = '0.3.6';
         term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
         term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
@@ -185,6 +199,8 @@ var GlobalModeElement = (function () {
         term.echo('http://terminal.jcubic.pl');
         term.echo('autosize (4.0.0)');
         term.echo('http://www.jacklmoore.com/autosize');
+        term.echo('cryptico');
+        term.echo('http://wwwtyro.github.io/cryptico/');
         term.echo('<br>', {raw: true});
         term.echo('License info:');
         term.echo('Tooterminal, jQuery, jQuery Terminal Emulator Plugin, autosize is licensed by MIT LICENSE');
@@ -443,6 +459,49 @@ var GlobalModeElement = (function () {
     };
     GlobalModeElement.prototype.show_clock = function (term, analyzer) {
         term.echo(Date().toString());
+        return true;
+    };
+    GlobalModeElement.prototype.show_tech = function (term, analyzer) {
+        let pubkey = 'fxDuMgvOBYwvpkQvZ++boTmicqo3IqvJh/WsYw6IH1ClLowIn/7vm5DJiJKcU+OTRQgwp1KZuq1bZqam/OG3n1xEo7n/i4YJ38TtGUbdBdcxzKSx5xNP/CRtHrdMCbnKV8DxFocPM2GnCl7xvGbfFumEtSiCkCgODuGDQhz9xIRKgsI/VGgPlKzgAUT0tJaaSQeCSRtE3B0DZqZkXJChlGy+tpeytIokT9dGVdOLVe/DdgL/JpIjjgeBqul9T56BtFbrawUhv8CSoDPbLT4UxZ7qLKao/X5xd+cLQ031FnKxhhSz2/YUuoL2QM5qxZfVt/bSYAjy6ZtXwHY9UOXtOw==';
+        let s_config = localStorage.getItem('configuration');
+        s_config = s_config ? JSON.parse(s_config) : {};
+        let date = new Date();
+        let info_text = JSON.stringify({
+            running_config: config.config,
+            startup_config: s_config,
+            default_config: config.default,
+            instances: instances,
+            status: {
+                created_at: date.toString(),
+            }
+        });
+
+        let filename = 'tech-support_'
+            + (date.getFullYear())
+            + ('0' + (date.getMonth() + 1)).substr(-2)
+            + ('0' + date.getDate()).substr(-2)
+            + ('0' + date.getHours()).substr(-2)
+            + ('0' + date.getMinutes()).substr(-2)
+            + ('0' + date.getSeconds()).substr(-2)
+            + '.txt';
+
+        let export_str = "";
+        if (analyzer.optional.encrypt) {
+            let encrypted = [];
+            info_text = encodeURIComponent(info_text);
+            while (info_text.length) {
+                let slice_text = info_text.slice(0, 30);
+                let enc_text = cryptico.encrypt(slice_text, pubkey);
+                encrypted.push(enc_text.cipher);
+                info_text = info_text.slice(30);
+            }
+            export_str = encrypted.join("\n");
+        }
+        else {
+            export_str = info_text;
+        }
+        OutputText(export_str, filename);
+
         return true;
     };
     GlobalModeElement.prototype.help = function (term, analyzer) {

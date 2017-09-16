@@ -901,6 +901,20 @@ String.prototype.addTab = function(arg1, indent){
     return tab(arg1, this, indent);
 };
 
+function OutputText(text, fileName) {
+    let b = new Blob(["\uFEFF", text]);
+    if (navigator.msSaveBlob) {
+        navigator.msSaveOrOpenBlob(b, fileName);
+    } else {
+        let a = $('<a />')
+            .attr('href', URL.createObjectURL(b))
+            .attr('download', fileName)
+            .attr('target', '_blank')
+        $('body').append(a);
+        a[0].click();
+        a.remove();
+    }
+}
 
 function more(term, lines, reverse){
     let rows = term.rows();
