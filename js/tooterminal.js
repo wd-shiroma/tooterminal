@@ -689,6 +689,7 @@ function makeStatus(payload){
 }
 
 function make_notification(payload, notifies) {
+    console.log(payload);
     let is_fav = (payload.type === 'favourite') && notifies.favourite;
     let is_reb = (payload.type === 'reblog') && notifies.reblog;
     let is_fol = (payload.type === 'follow') && notifies.following;

@@ -349,18 +349,9 @@ var GlobalModeElement = (function () {
                 });
 
             }, (jqxhr, status, error) => {
-                let prompt = '@' + ins.domain + '# '
                 console.log(jqxhr);
                 term.error('Getting user status failed.(' + jqxhr.status + ')');
-                term.echo('Enter \'login\' and reflesh your access_token');
                 term.resume();
-                term.push(enterCommand, {
-                    name:   'instance',
-                    prompt:  prompt,
-                    onStart: init_instance,
-                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
-                    exit:    false
-                });
             });
         }
         else {

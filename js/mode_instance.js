@@ -501,36 +501,7 @@ let InstanceModeElement = (function () {
             else {
                 monitor = analyzer.line_parsed[2].name;
             }
-            let notifies = {};
-            let noti_src = config.find(['instances', 'terminal', 'logging']);
-            if (url_params.hasOwnProperty('notification')) {
-                noti_src = url_params.notification.split(',');
-                notifies = {
-                    delete: noti_src.indexOf('del') >= 0,
-                    favourite: noti_src.indexOf('fav') >= 0,
-                    reblog: noti_src.indexOf('reb') >= 0,
-                    mention: noti_src.indexOf('men') >= 0,
-                    following: noti_src.indexOf('fol') >= 0,
-                };
-            }
-            else if (typeof noti_src === 'object') {
-                notifies = {
-                    delete: (noti_src !== false && noti_src.delete === true),
-                    favourite: (noti_src !== false && noti_src.favourite !== false),
-                    reblog: (noti_src !== false && noti_src.reblog !== false),
-                    mention: (noti_src !== false && noti_src.mention !== false),
-                    following: (noti_src !== false && noti_src.following !== false)
-                };
-            }
-            else {
-                notifies = {
-                    delete: false,
-                    favourite: true,
-                    reblog: true,
-                    mention: true,
-                    following: true
-                }
-            }
+            let notifies = config_notify();
 
             let is_noti = false;
             for (let noti in notifies) {
@@ -1129,6 +1100,7 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_notifications = function (term, analyzer) {
         term.pause();
         let data = {};
+        let notifies = config_notify();
         if (analyzer.paramaters.post_limits) {
             data.limit = analyzer.paramaters.post_limits;
         }
@@ -1137,7 +1109,7 @@ let InstanceModeElement = (function () {
             data: data
         }).then((data, status, jqxhr) => {
             for (let i = data.length-1; i >= 0; i--) {
-                term.echo(make_notification(data[i]), {raw: true});
+                term.echo(make_notification(data[i], notifies), {raw: true});
             }
             term.resume();
         }, (jqxhr, status, error) => {
@@ -1177,3 +1149,37 @@ let InstanceModeElement = (function () {
     };
     return InstanceModeElement;
 }());
+
+function config_notify() {
+    let notifies = {};
+    let noti_src = config.find(['instances', 'terminal', 'logging']);
+    if (url_params.hasOwnProperty('notification')) {
+        noti_src = url_params.notification.split(',');
+        notifies = {
+            delete: noti_src.indexOf('del') >= 0,
+            favourite: noti_src.indexOf('fav') >= 0,
+            reblog: noti_src.indexOf('reb') >= 0,
+            mention: noti_src.indexOf('men') >= 0,
+            following: noti_src.indexOf('fol') >= 0,
+        };
+    }
+    else if (typeof noti_src === 'object') {
+        notifies = {
+            delete: (noti_src !== false && noti_src.delete === true),
+            favourite: (noti_src !== false && noti_src.favourite !== false),
+            reblog: (noti_src !== false && noti_src.reblog !== false),
+            mention: (noti_src !== false && noti_src.mention !== false),
+            following: (noti_src !== false && noti_src.following !== false)
+        };
+    }
+    else {
+        notifies = {
+            delete: false,
+            favourite: true,
+            reblog: true,
+            mention: true,
+            following: true
+        }
+    }
+    return notifies;
+}
