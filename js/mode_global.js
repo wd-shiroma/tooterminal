@@ -166,14 +166,14 @@ var GlobalModeElement = (function () {
         configurable: true
     });
     GlobalModeElement.prototype.show_running_config = function (term, analyzer) {
-        var strconfig = JSON.stringify(config.config, null, '    ');
+        let strconfig = JSON.stringify(config.config, null, '    ');
         term.echo(strconfig);
         return true;
     };
     GlobalModeElement.prototype.show_startup_config = function (term, analyzer) {
-        var strconfig;
-        var store = localStorage;
-        var str = store.getItem('configuration');
+        let strconfig;
+        let store = localStorage;
+        let str = store.getItem('configuration');
         if (str) {
             strconfig = JSON.parse(str);
             strconfig = JSON.stringify(strconfig, null, '    ');
@@ -214,12 +214,12 @@ var GlobalModeElement = (function () {
     };
 
     GlobalModeElement.prototype.show_instance_statistics = function (term, analyzer) {
-        var lines = [
+        let lines = [
             '',
             'name      | domain                      | scope | username',
             '--------------------------------------------------------------------',
         ];
-        var cnt = 0;
+        let cnt = 0;
         for (ins in instances) {
             lines.push(
                 ('| ' + (typeof instances[ins].user !== 'undefined' ? '@' + instances[ins].user.username : ''))
@@ -249,16 +249,18 @@ var GlobalModeElement = (function () {
             'Instance',
             tab('Name:',        name,                 15),
             tab('Domain:',      ins.domain,           15),
-            tab('Application:', ins.application.name, 15),
             '',
-            'Scopes',
-            tab('Read:',        ins.application.scopes.read,      15),
-            tab('Write:',       ins.application.scopes.write,     15),
-            tab('Follow:',      ins.application.scopes.follow,    15),
+            'Application',
+            tab('Client Name:', ins.application.name, 17),
+            tab('Client ID:', ins.client_id, 17),
+            tab('Client Secret:', ins.client_secret, 17),
+            tab('Website:', ins.application.website, 17),
+            tab('Redirect URI:', ins.application.uris, 17),
+            tab('Read:',        ins.application.scopes.read,      17),
+            tab('Write:',       ins.application.scopes.write,     17),
+            tab('Follow:',      ins.application.scopes.follow,    17),
             '',
             'Autheorized user',
-            tab('Client ID:', ins.client_id, 20),
-            tab('Client Secret:', ins.client_secret, 20),
             tab('Access Token:', ins.access_token, 20),
             tab('Monitor defaults:', ins.monitor, 20),
             tab('User Account:', '@' + ins.user.acct, 20),
@@ -388,14 +390,14 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.delete_instance = function (term, analyzer) {
-        var name = analyzer.paramaters.instance_name;
-        var prompt = 'Instance "' + name + '" registration will delete! Continue? [confirm]';
+        let name = analyzer.paramaters.instance_name;
+        let prompt = 'Instance "' + name + '" registration will delete! Continue? [confirm]';
         if (typeof instances[name] === 'undefined') {
             term.error('no instance registration.');
             return false;
         }
         term.push((input) => {
-                var store = localStorage;
+                let store = localStorage;
                 delete(instances[name]);
                 store.setItem('instances', JSON.stringify(instances));
                 term.echo('[OK]');
@@ -424,16 +426,16 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.write_memory = function (term, analyzer) {
-        var store = localStorage;
+        let store = localStorage;
         term.echo('Building configuration...');
         store.setItem('configuration', JSON.stringify(config.config));
         term.echo('[OK]');
         return true;
     };
     GlobalModeElement.prototype.write_erase = function (term, analyzer) {
-        var prompt = 'Erasing the localStorage will remove all configuration files! Continue? [confirm]';
+        let prompt = 'Erasing the localStorage will remove all configuration files! Continue? [confirm]';
         term.push((input) => {
-                var store = localStorage;
+                let store = localStorage;
                 store.removeItem('configuration');
                 term.echo('[OK]');
                 term.echo('Erase of nvram: complete');
@@ -466,14 +468,18 @@ var GlobalModeElement = (function () {
         let s_config = localStorage.getItem('configuration');
         s_config = s_config ? JSON.parse(s_config) : {};
         let date = new Date();
+        let errors = localStorage.getItem('term_error');
+        errors = errors ? JSON.parse(errors) : [];
         let info_text = JSON.stringify({
             running_config: config.config,
             startup_config: s_config,
             default_config: config.default,
             instances: instances,
             status: {
-                created_at: date.toString(),
-            }
+                created_at: date.getTime(),
+                location: location.href
+            },
+            errors: errors
         });
 
         let filename = 'tech-support_'
@@ -517,7 +523,7 @@ var GlobalModeElement = (function () {
     return GlobalModeElement;
 }());
 
-var cnt;
+let cnt;
 var regist_instance = (input, term) => {
     input = input.trim();
     if (!input.match(/^([A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+$/)) {
@@ -525,24 +531,26 @@ var regist_instance = (input, term) => {
     }
     else if (input.length > 0) {
         term.pause();
-        var uri = location.origin + location.pathname;
-        console.log(uri);
+        let path = 'https://' + input + '/api/v1/apps';
+        let uri = location.origin + location.pathname;
+        let data = {
+            client_name: config.find('application.name'),
+            redirect_uris: uri,
+            website: config.find('application.website'),
+            scopes:
+                  (config.find('application.scopes.read')   ? 'read '  : '')
+                + (config.find('application.scopes.write')  ? 'write ' : '')
+                + (config.find('application.scopes.follow') ? 'follow' : '')
+        };
         $.ajax({
-            url: 'https://' + input + '/api/v1/apps',
+            url: path,
             dataType: 'json',
             type: 'POST',
-            data:{
-                client_name: config.find('application.name'),
-                redirect_uris: uri,
-                website: config.find('application.website'),
-                scopes:
-                      (config.find('application.scopes.read')   ? 'read '  : '')
-                    + (config.find('application.scopes.write')  ? 'write ' : '')
-                    + (config.find('application.scopes.follow') ? 'follow' : '')
-            }
+            data: data
         })
         .then((data, status, jqxhr) => {
-            var redirect_uri = data.redirect_uri + '?instance_name=' + instance_name;
+            let redirect_uri = data.redirect_uri + '?instance_name=' + instance_name;
+            console.log(data);
             instances[instance_name]               = config.find('instances')
             instances[instance_name].client_id     = data.client_id;
             instances[instance_name].client_secret = data.client_secret;
@@ -550,10 +558,10 @@ var regist_instance = (input, term) => {
             instances[instance_name].application   = config.find('application');
             instances[instance_name].application.uris = redirect_uri;
 
-            var prompt = '@' + instances[instance_name].domain + '# ';
+            let prompt = '@' + instances[instance_name].domain + '# ';
             term.echo('New instance registed. enter \'login\' and regist your access_token');
 
-            var store = localStorage;
+            let store = localStorage;
             store.setItem('instances', JSON.stringify(instances));
             term.resume();
             term.push(enterCommand, {
@@ -567,9 +575,14 @@ var regist_instance = (input, term) => {
                 exit:    false
             });
         }, (jqxhr, status, error) => {
-            term.error('Failed to connect the instance "' + input + '"');
+            let msg = 'Failed to connect the instance "' + input + '"';
+            term.error(msg);
+            term_error(msg, {
+                path: path,
+                opts: data,
+                jqxhr: jqxhr
+            })
             term.resume();
-            console.log(jqxhr);
         });
     }
     term.pop();

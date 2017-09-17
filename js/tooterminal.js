@@ -308,6 +308,7 @@ $(function() {
     });
     $('.img_background').on('click', function(){
         $('#img_view').fadeOut('first');
+        $('#pre_view').fadeOut('first');
         $('#video_view').fadeOut('first');
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
@@ -382,7 +383,7 @@ $(function() {
     .on('click', '.status_contents img', function(e) {
         let elem = $(this);
 
-        $('#img_view').attr('src', elem.attr('src')).fadeIn('first');
+        $('#pre_view').attr('src', elem.attr('src')).fadeIn('first');
         if (elem.data('type') === 'gifv') {
             let video = $('#video_view')[0];
             video.src = elem.data('url');
@@ -391,7 +392,7 @@ $(function() {
             video.muted = true;
             video.controls = true;
             video.oncanplay = () => {
-                $('#img_view').fadeOut('first');
+                $('#pre_view').fadeOut('first');
             };
             $('#video_view').fadeIn('first');
             $('.img_background').fadeIn('first');
@@ -435,6 +436,9 @@ $(function() {
             $.terminal.active().exec('toot');
         }
     });
+    window.onerror = function(msg, url, line, col, error) {
+        console.log([msg,url,line,col,error]); // エラーの内容
+    };
     autosize($('#toot_box'));
 });
 
@@ -481,7 +485,7 @@ function makeStatus(payload){
     if (contents.application === null) {
         app = '';
     }
-    else if(contents.application.website === null) {
+    else if(!contents.application.website) {
         app = ' via ' + contents.application.name;
     }
     else{
@@ -785,15 +789,15 @@ function callAPI(path, opts = {}) {
     let ins = typeof opts.instance_name === 'undefined'
             ? instances[instance_name] : instances[opts.instance_name];
     if (typeof path === 'undefined') {
-        def = new $.Deffered;
+        def = new $.Deferred;
         def.reject('Undefined path');
     }
     else if (typeof ins === 'undefined') {
-        def = new $.Deffered;
+        def = new $.Deferred;
         def.reject('No instance');
     }
     else if (typeof ins.access_token === 'undefined') {
-        def = new $.Deffered;
+        def = new $.Deferred;
         def.reject('No login');
     }
     else {
@@ -806,6 +810,16 @@ function callAPI(path, opts = {}) {
             data: typeof opts.data ? opts.data : '',
             dataType: 'json',
             timeout: 5000
+        })
+        .done((data, status, jqxhr) => {
+            return jqxhr;
+        })
+        .fail((jqxhr, status, error) => {
+            term_error('API Request Error', {
+                path: path,
+                opts: opts
+            });
+            return jqxhr;
         });
     }
     return def;
@@ -900,6 +914,41 @@ function status_recursive(sid, status_) {
 String.prototype.addTab = function(arg1, indent){
     return tab(arg1, this, indent);
 };
+
+function term_error(msg, params) {
+    let date = new Date();
+    let _params;
+    let s_config = localStorage.getItem('configuration');
+    let errors = localStorage.getItem('term_error');
+    errors = errors ? JSON.parse(errors) : [];
+
+    s_config = s_config ? s_config : {};
+    if (typeof params === 'object') {
+        _params = JSON.parse(JSON.stringify(params));
+    }
+    else if (!params) {
+        _params = {};
+    }
+    else {
+        _params = params;
+    }
+    let info_text = JSON.stringify({
+        running_config: config.config,
+        startup_config: s_config,
+        default_config: config.default,
+        instances: instances,
+        status: {
+            message: msg,
+            created_at: date.getTime(),
+        },
+        params: _params
+    });
+    errors.push(JSON.parse(info_text));
+    if (errors.length > 5) {
+        errors.shift();
+    }
+    localStorage.setItem('term_error', JSON.stringify(errors));
+}
 
 function OutputText(text, fileName) {
     let b = new Blob(["\uFEFF", text]);
