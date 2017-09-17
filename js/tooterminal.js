@@ -384,6 +384,7 @@ $(function() {
         let elem = $(this);
 
         $('#pre_view').attr('src', elem.attr('src')).fadeIn('first');
+
         if (elem.data('type') === 'gifv') {
             let video = $('#video_view')[0];
             video.src = elem.data('url');

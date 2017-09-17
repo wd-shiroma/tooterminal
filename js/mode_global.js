@@ -282,7 +282,6 @@ var GlobalModeElement = (function () {
             });
         }
         else if (ins.hasOwnProperty('auth_code')){
-            console.log(ins);
             term.pause();
             $.ajax({
                 url: 'https://' + ins.domain + '/oauth/token',
