@@ -903,13 +903,8 @@ function tab(arg1, arg2, indent){
     let result = (indent <= arg1_length)
         ? arg1.substr(0, indent - 4) + '... ' : arg1;
 
-    for(let i = arg1_length; i < indent; i++, result += ' ');
+    for(let i = arg1_length; i < indent; i++, result += ' ') {}
     return result + arg2;
-}
-
-function status_recursive(sid, status_) {
-    let pr = new Primrose();
-    ins
 }
 
 String.prototype.addTab = function(arg1, indent){
