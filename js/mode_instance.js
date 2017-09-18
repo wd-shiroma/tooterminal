@@ -476,15 +476,72 @@ let InstanceModeElement = (function () {
     });
     InstanceModeElement.prototype.login = function (term, analyzer) {
         term.pause();
+        let uri = encodeURIComponent(instances[instance_name].application.uris);
         let url =
             'https://'         + instances[instance_name].domain
             + '/oauth/authorize?response_type=code'
             + '&client_id='    + instances[instance_name].client_id
-            + '&redirect_uri=' + encodeURIComponent(instances[instance_name].application.uris)
+            + '&redirect_uri=' + uri
             + '&scope='        + (instances[instance_name].application.scopes.read   ? 'read '  : '')
                                + (instances[instance_name].application.scopes.write  ? 'write ' : '')
                                + (instances[instance_name].application.scopes.follow ? 'follow' : '');
-        location.href = url;
+        if (uri.match(/^https?:\/\//)) {
+            location.href = url;
+            term.pause();
+            return true;
+        }
+
+        window.open(url, '_blank');
+        term.push((input, term) => {
+            if (input.trim().length == 0) {
+                term.pop()
+            }
+            let ins = instances[instance_name];
+            term.pause();
+            term.prompt = '';
+            $.ajax({
+                url: 'https://' + instances[instance_name].domain + '/oauth/token',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    grant_type: 'authorization_code',
+                    redirect_uri: ins.application.uris,
+                    client_id: ins.client_id,
+                    client_secret: ins.client_secret,
+                    code: input.trim()
+                }
+            }).then((data, status, jqxhr) => {
+                ins.access_token = data.access_token;
+                ins.token_type = data.token_type;
+                var store = localStorage;
+                store.setItem('instances', JSON.stringify(instances));
+
+                return callAPI('/api/v1/accounts/verify_credentials');
+            }, (jqxhr, status, error) => {
+                term.error('User token updating error.(' + jqxhr.status + ')');
+                console.log(jqxhr);
+            }).then((data2, status, jqxhr) => {
+                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
+                ins.user = data2;
+
+                let store = localStorage;
+                store.setItem('instances', JSON.stringify(instances));
+                term.resume();
+
+                let prompt = ins.user.username;
+                prompt += '@' + ins.domain + '# ';
+
+                delete(ins.auth_code);
+                term.pop();
+
+            }, (jqxhr, status, error) => {
+                console.log(jqxhr);
+                term.error('Getting user status failed.(' + jqxhr.status + ')');
+                term.resume();
+            });
+        }, {
+            prompt: 'Input Authentication Code: ',
+        });
         return true;
     };
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {

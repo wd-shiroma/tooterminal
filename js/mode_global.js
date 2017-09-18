@@ -532,6 +532,11 @@ var regist_instance = (input, term) => {
         term.pause();
         let path = 'https://' + input + '/api/v1/apps';
         let uri = location.origin + location.pathname;
+        let matches = uri.match(/^https?:\/\/([^\/:]+)(?::(\d+))?/);
+        let is_redirect = (matches && !matches[1].match(/(?:\d+\.){3}\d+$/));
+        if (!is_redirect) {
+            uri = 'urn:ietf:wg:oauth:2.0:oob';
+        }
         let data = {
             client_name: config.find('application.name'),
             redirect_uris: uri,
@@ -548,8 +553,10 @@ var regist_instance = (input, term) => {
             data: data
         })
         .then((data, status, jqxhr) => {
-            let redirect_uri = data.redirect_uri + '?instance_name=' + instance_name;
-            console.log(data);
+            let redirect_uri = data.redirect_uri;
+            if (is_redirect) {
+                redirect_uri += '?instance_name=' + instance_name;
+            }
             instances[instance_name]               = config.find('instances')
             instances[instance_name].client_id     = data.client_id;
             instances[instance_name].client_secret = data.client_secret;
@@ -568,7 +575,14 @@ var regist_instance = (input, term) => {
                 prompt:  prompt,
                 onStart: function(term) {
                     term_mode = mode_instance;
-                    term.exec('login');
+                    prompt = '@' + instances[instance_name].domain + '# ';
+                    if (instances[instance_name].hasOwnProperty('user')) {
+                        prompt = instances[instance_name].user.username + prompt;
+                        term.set_prompt(prompt);
+                    }
+                    else {
+                        term.exec('login');
+                    }
                 },
                 onExit:  function() { term_mode = mode_global; },
                 exit:    false
