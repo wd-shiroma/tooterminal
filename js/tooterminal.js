@@ -2,7 +2,7 @@
  * 設定
  *****************************/
 
-var def_conf = {
+let def_conf = {
     application: {
         name: 'Tooterminal',
         website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
@@ -30,26 +30,27 @@ var def_conf = {
     }
 }
 
-var config;
-var instances;
-var prompt;
-var url_params;
+let config;
+let ins;
+let prompt;
+let url_params;
+let acls;
 
-var term_mode;
-var mode_global;
-var mode_configuration;
-var mode_instance;
-var instance_name;
-var beep_buf;
+let term_mode;
+let mode_global;
+let mode_configuration;
+let mode_instance;
+let instance_name;
+let beep_buf;
 
-var context = new AudioContext();
+let context = new AudioContext();
 
 
 /*****************************
  * 本処理
  *****************************/
 
-var enterCommand = (command, term) => {
+let enterCommand = (command, term) => {
     command = command.trim();
     term.resize(window.innerWidth - 36, window.innerHeight - 36);
 
@@ -65,7 +66,7 @@ var enterCommand = (command, term) => {
 
 };
 
-var completion = (line, callback) => {
+let completion = (line, callback) => {
     let cmd_list = term_mode.getCompletion(line);
     if (cmd_list.length === 1) {
         $.terminal.active().set_command(term_mode.completion);
@@ -75,7 +76,7 @@ var completion = (line, callback) => {
     }
 };
 
-var initConfig = (term) => {
+let initConfig = (term) => {
     let store = localStorage;
     let st_conf = store.getItem('configuration');
     /*
@@ -90,13 +91,6 @@ var initConfig = (term) => {
     config = new ConfigManager(def_conf, st_conf ? JSON.parse(st_conf) : {});
     url_params = {};
 
-    let ins = store.getItem('instances');
-    if (ins) {
-        instances = JSON.parse(ins);
-    }
-    else {
-        instances = {};
-    }
     if (!location.search.match(/^\?.+=.+/)) {
         return;
     }
@@ -104,18 +98,17 @@ var initConfig = (term) => {
     for (let i = 0; i < params_org.length; i += 2) {
         url_params[params_org[i]] = params_org[i+1];
     }
-    if (url_params.hasOwnProperty('code') && instances.hasOwnProperty(url_params.instance_name)) {
-        instance_name = url_params.instance_name;
-        instances[instance_name].auth_code = url_params.code;
-        term.exec('instance ' + instance_name);
+    if (url_params.hasOwnProperty('code') && ins.name(url_params.instance_name)) {
+        ins.get().auth_code = url_params.code;
+        term.exec('instance ' + ins.name());
         history.replaceState('', '', location.pathname);
     }
-    else if (url_params.hasOwnProperty('instance') && instances.hasOwnProperty(url_params.instance)) {
-        term.exec('instance ' + url_params.instance);
+    else if (url_params.hasOwnProperty('instance') && ins.name(url_params.instance)) {
+        term.exec('instance ' + ins.name());
     }
 };
 
-var filterKey = (event, term) => {
+let filterKey = (event, term) => {
     if(event.charCode === 63){
         let info = term_mode.information(term.get_command());
 
@@ -134,12 +127,13 @@ var filterKey = (event, term) => {
     }
 };
 
-var parseCommand = (command, term) => {
+let parseCommand = (command, term) => {
     term_mode.parse(command.replace(/\?$/, ''));
 };
 
-var init_instance = function(term) {
+let init_instance = function(term) {
     term_mode = mode_instance;
+    let _ins = ins.get();
 
     let auto_term;
     if (config.find(['instances', 'terminal', 'auto'])){
@@ -148,11 +142,11 @@ var init_instance = function(term) {
     if (url_params.hasOwnProperty('terminal')) {
         auto_term = (url_params.terminal.match(/^(home|local|public)$/ ? url_params.terminal : ''));
     }
-    if (typeof auto_term !== 'undefined' && instances[instance_name].hasOwnProperty('access_token')) {
+    if (typeof auto_term !== 'undefined' && _ins.hasOwnProperty('access_token')) {
         term.exec('terminal monitor ' + auto_term);
     }
     return;
-    let src_url = 'https://' + instances[instance_name].domain + '/sounds/boop.ogg';
+    let src_url = 'https://' + _ins.domain + '/sounds/boop.ogg';
     let req = new XMLHttpRequest();
     req.responseType = 'arraybuffer';
     req.onreadystatechange = function() {
@@ -175,23 +169,23 @@ var init_instance = function(term) {
     req.send('')
 };
 
-var count_toot_size = () => {
+let count_toot_size = () => {
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
     $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
 }
 
 function upload_img(imageFile) {
     let formData = new FormData();
-    let ins = instances[instance_name];
+    let _ins = ins.get();
     let len = $('.toot_media img').length;
     $('#toot_media').append($('<img />').attr('id', 'media_' + len));
     formData.append('file', imageFile);
-    $.ajax('https://' + ins.domain + '/api/v1/media' , {
+    $.ajax('https://' + _ins.domain + '/api/v1/media' , {
         type: 'POST',
         contentType: false,
         processData: false,
         headers: {
-            Authorization: ins.token_type + ' ' + ins.access_token
+            Authorization: _ins.token_type + ' ' + _ins.access_token
         },
         data: formData
     }).then((data, status, jqxhr) => {
@@ -216,11 +210,12 @@ function upload_img(imageFile) {
     });
 }
 
-var tl;
+let tl;
 $(function() {
     mode_global        = new ModeManager(new GlobalModeElement);
     mode_configuration = new ModeManager(new ConfigurationModeElement);
     mode_instance      = new ModeManager(new InstanceModeElement);
+    ins = new InstanceManager();
     term_mode          = mode_global;
     tl = $('#timeline').terminal(enterCommand, {
         name:        'global',
@@ -474,13 +469,18 @@ function getConfig(config, index, d_conf) {
     return cf;
 }*/
 
-function makeStatus(payload){
+function makeStatus(payload, ins_name) {
     let date = new Date(payload.created_at);
     let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
     let contents = is_reblog  ? payload.reblog
                  : is_mention ? payload.status
                  : payload;
+
+    if (typeof ins_name === 'undefined') {
+        ins_name = ins.name();
+    }
+    let _ins = ins.get(ins_name);
 
     let app;
     if (contents.application === null) {
@@ -521,7 +521,7 @@ function makeStatus(payload){
         for (let i = 0; i < contents.mentions.length; i++) {
             reply += '@' + contents.mentions[i].acct + ' ';
         }
-        reply = reply.replace('@' + instances[instance_name].user.acct + ' ', '');
+        reply = reply.replace('@' + _ins.user.acct + ' ', '');
     }
 
     let avatar = $('<td />').addClass('status_avatar');
@@ -532,7 +532,7 @@ function makeStatus(payload){
             .attr('name', 'img_' + contents.account.id)
             .attr('src', url));
         if (!url.match(/^http/)) {
-            url = 'https://' + instances[instance_name].domain + url;
+            url = 'https://' + _ins.domain + url;
         }
 
         let img = new Image();
@@ -586,7 +586,7 @@ function makeStatus(payload){
         thumb = $('<div />').addClass('status_thumbnail');
         contents.media_attachments.forEach((media, index, arr) => {
             let preview_url = (!media.preview_url.match(/^https?:\/\//)
-                    ? 'https://' + instances[instance_name].domain + media.preview_url
+                    ? 'https://' + _ins.domain + media.preview_url
                     : media.preview_url);
             let url = media.remote_url ? media.remote_url : media.url;
             let id = 'media_' + media.id;
@@ -659,7 +659,7 @@ function makeStatus(payload){
     let status = $('<table />')
         .attr('name', 'id_' + contents.id)
         .attr('data-sid', contents.id)
-        .attr('data-instance', instance_name)
+        .attr('data-instance', ins_name)
         .attr('data-uid', contents.account.id)
         .attr('data-dispname', contents.account.display_name)
         .attr('data-acct', contents.account.acct)
@@ -669,18 +669,18 @@ function makeStatus(payload){
         .addClass('status')
         .append(avatar)
         .append(main);
-    if (instances[instance_name].hasOwnProperty('filter')) {
-        let filter = instances[instance_name].filter;
-        let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
-        let re;
-        if (filter_r) {
-            re = new RegExp(filter_r[1], filter_r[2])
-        }
-        else {
-            re = new RegExp(filter);
-        }
-        if (status.text().match(re)) {
-            return '';
+    if (ins.acls.hasOwnProperty(ins_name)) {
+        for (let acl_num in ins.acls[ins_name]) {
+            let acl = ins.acls[ins_name][acl_num];
+            if (status.text().match(acl.regexp)) {
+                if (acl.type === 'permit') {
+                    status.addClass('status_permit');
+                }
+                else if(acl.type === 'deny') {
+                    return '';
+                }
+                break;
+            }
         }
     }
     if (config.find('instances.status.separator')) {
@@ -729,12 +729,13 @@ function post_status() {
         status: status,
         visibility: visibility
     };
+    let _ins = ins.get();
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
     if (status.length === 0 || msg_size < 0) {
         return false;
     }
-    else if(typeof instances[instance_name] === 'undefined'
-         && typeof instances[instance_name].access_token === 'undefined') {
+    else if(typeof _ins === 'undefined'
+         && typeof _ins.access_token === 'undefined') {
         return false;
     }
     if (cw.length !== 0) {
@@ -753,10 +754,10 @@ function post_status() {
     }
 
     return $.ajax({
-        url: 'https://' + instances[instance_name].domain + '/api/v1/statuses',
+        url: 'https://' + _ins.domain + '/api/v1/statuses',
         type: 'POST',
         headers: {
-            Authorization: instances[instance_name].token_type + ' ' + instances[instance_name].access_token
+            Authorization: _ins.token_type + ' ' + _ins.access_token
         },
         data: data,
         timeout: 5000
@@ -787,26 +788,26 @@ function reduce_status() {
 
 function callAPI(path, opts = {}) {
     let def;
-    let ins = typeof opts.instance_name === 'undefined'
-            ? instances[instance_name] : instances[opts.instance_name];
+    let _ins = typeof opts.instance_name === 'undefined'
+            ? ins.get() : ins.get(opts.instance_name);
     if (typeof path === 'undefined') {
         def = new $.Deferred;
         def.reject('Undefined path');
     }
-    else if (typeof ins === 'undefined') {
+    else if (typeof _ins === 'undefined') {
         def = new $.Deferred;
         def.reject('No instance');
     }
-    else if (typeof ins.access_token === 'undefined') {
+    else if (typeof _ins.access_token === 'undefined') {
         def = new $.Deferred;
         def.reject('No login');
     }
     else {
         def = $.ajax({
-            url: 'https://' + ins.domain + path,
+            url: 'https://' + _ins.domain + path,
             type: typeof opts.type !== 'undefined' ? opts.type : 'GET',
             headers: {
-                Authorization: ins.token_type + ' ' + ins.access_token
+                Authorization: _ins.token_type + ' ' + _ins.access_token
             },
             data: typeof opts.data ? opts.data : '',
             dataType: 'json',
@@ -932,7 +933,7 @@ function term_error(msg, params) {
         running_config: config.config,
         startup_config: s_config,
         default_config: config.default,
-        instances: instances,
+        instances: ins.instances,
         status: {
             message: msg,
             created_at: date.getTime(),

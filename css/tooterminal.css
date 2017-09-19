@@ -173,6 +173,10 @@ body {
     text-decoration: line-through;
 }
 
+.status_permit *{
+    font-weight: bold;
+}
+
 .status_avatar {
     width: 3em;
     height: auto;

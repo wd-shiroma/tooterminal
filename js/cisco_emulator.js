@@ -1,4 +1,4 @@
-var ModeManager = (function () {
+let ModeManager = (function () {
     function ModeManager(elem) {
         this.element = elem;
         this.dataset = elem.dataset;
@@ -374,4 +374,103 @@ let ConfigManager = (function () {
     }
 
     return ConfigManager;
+}());
+
+let InstanceManager = (function () {
+    function InstanceManager() {
+        let ins_str = localStorage.getItem('instances');
+        if (ins_str) {
+            this.instances = JSON.parse(ins_str);
+            this.parse_acl();
+        }
+        else {
+            this.instances = {};
+        }
+        this.ins = undefined;
+        this._name = '';
+    }
+
+    InstanceManager.prototype.parse_acl = function () {
+        this.acls = {};
+        for (let ins_name in this.instances) {
+            this.acls[ins_name] = {};
+            if (!this.instances[ins_name].hasOwnProperty('acl')) {
+                continue;
+            }
+            for (let acl_num in this.instances[ins_name].acl) {
+                let acl = this.instances[ins_name].acl[acl_num];
+                let filter = acl.regexp;
+                let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
+                let re;
+                if (filter_r) {
+                    re = new RegExp(filter_r[1], filter_r[2])
+                }
+                else {
+                    re = new RegExp(filter);
+                }
+                this.acls[ins_name][acl_num] = {
+                    type: acl.type,
+                    regexp: re
+                };
+            }
+        }
+    }
+
+    InstanceManager.prototype.name = function (name) {
+        if (this.instances.hasOwnProperty(name)) {
+            this._name = name
+            this.ins = this.instances[name];
+        }
+        return this._name;
+    }
+
+    InstanceManager.prototype.save = function () {
+        let ins_str = JSON.stringify(this.instances);
+        localStorage.setItem('instances', ins_str);
+        return true;
+    }
+
+    InstanceManager.prototype.get = function (name) {
+        if (typeof name === 'undefined') {
+            return this.ins;
+        }
+        else {
+            return this.instances[name];
+        }
+    }
+
+    InstanceManager.prototype.set = function (ins, name) {
+        if (typeof name === 'undefined') {
+            name = this.name();
+        }
+        if (!name) {
+            return false;
+        }
+        this.instances[name] = ins;
+        this.ins = ins;
+        this.save();
+    }
+
+    InstanceManager.prototype.delete = function (name) {
+        if (typeof name === 'undefined') {
+            name = this._name;
+        }
+        result = delete(this.instances[name]);
+        if (result) {
+            this._name = '';
+            this.ins = undefined;
+        }
+        this.save();
+        return result;
+    }
+
+    InstanceManager.prototype.create = function (name) {
+        if (!this.instances.hasOwnProperty(name)) {
+            this.instances[name] = {};
+            this.name(name);
+        }
+        return this.instances[name];
+    }
+
+    return InstanceManager;
 }());

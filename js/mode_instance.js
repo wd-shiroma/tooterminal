@@ -33,6 +33,11 @@ let InstanceModeElement = (function () {
                 "children": [
                     {
                         "type": "command",
+                        "name": "access-list",
+                        "description": '正規表現フィルターを表示します。',
+                        "execute": this.show_acl,
+                    }, {
+                        "type": "command",
                         "name": "user",
                         "description": 'ユーザー情報を表示します。',
                         "execute": this.show_user,
@@ -425,14 +430,42 @@ let InstanceModeElement = (function () {
                 ]
             }, {
                 "type": "command",
-                "name": "filter",
+                "name": "access-list",
                 "description": '正規表現フィルタを設定します。',
                 "children": [
                     {
-                        "type": "paramater",
-                        "name": "regular_expression",
-                        "description": '正規表現文字列',
-                        "execute": this.set_filter
+                        "type": "number",
+                        "name": "acl_num",
+                        "description": 'ACL番号',
+                        "min": 1,
+                        "max": 99,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "deny",
+                                "description": '非表示にするトゥート',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "regular_expression",
+                                        "description": '正規表現文字列',
+                                        "execute": this.set_acl
+                                    }
+                                ]
+                            }, {
+                                "type": "command",
+                                "name": "permit",
+                                "description": '強調するトゥート',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "regular_expression",
+                                        "description": '正規表現文字列',
+                                        "execute": this.set_acl
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
             }, {
@@ -442,9 +475,19 @@ let InstanceModeElement = (function () {
                 "children": [
                     {
                         "type": "command",
-                        "name": "filter",
+                        "name": "access-list",
                         "description": '正規表現フィルタを削除します。',
-                        "execute": this.set_filter
+                        "execute": this.set_acl,
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "acl_num",
+                                "description": '正規表現文字列',
+                                "min": 1,
+                                "max": 99,
+                                "execute": this.set_acl
+                            }
+                        ]
                     }
                 ]
             }, {
@@ -476,15 +519,16 @@ let InstanceModeElement = (function () {
     });
     InstanceModeElement.prototype.login = function (term, analyzer) {
         term.pause();
-        let uri = encodeURIComponent(instances[instance_name].application.uris);
+        let _ins = ins.get();
+        let uri = encodeURIComponent(_ins.application.uris);
         let url =
-            'https://'         + instances[instance_name].domain
+            'https://'         + _ins.domain
             + '/oauth/authorize?response_type=code'
-            + '&client_id='    + instances[instance_name].client_id
+            + '&client_id='    + _ins.client_id
             + '&redirect_uri=' + uri
-            + '&scope='        + (instances[instance_name].application.scopes.read   ? 'read '  : '')
-                               + (instances[instance_name].application.scopes.write  ? 'write ' : '')
-                               + (instances[instance_name].application.scopes.follow ? 'follow' : '');
+            + '&scope='        + (_ins.application.scopes.read   ? 'read '  : '')
+                               + (_ins.application.scopes.write  ? 'write ' : '')
+                               + (_ins.application.scopes.follow ? 'follow' : '');
         if (uri.match(/^https?:\/\//)) {
             location.href = url;
             term.pause();
@@ -496,25 +540,23 @@ let InstanceModeElement = (function () {
             if (input.trim().length == 0) {
                 term.pop()
             }
-            let ins = instances[instance_name];
             term.pause();
             term.prompt = '';
             $.ajax({
-                url: 'https://' + instances[instance_name].domain + '/oauth/token',
+                url: 'https://' + _ins.domain + '/oauth/token',
                 type: 'POST',
                 dataType: 'json',
                 data: {
                     grant_type: 'authorization_code',
-                    redirect_uri: ins.application.uris,
-                    client_id: ins.client_id,
-                    client_secret: ins.client_secret,
+                    redirect_uri: _ins.application.uris,
+                    client_id: _ins.client_id,
+                    client_secret: _ins.client_secret,
                     code: input.trim()
                 }
             }).then((data, status, jqxhr) => {
-                ins.access_token = data.access_token;
-                ins.token_type = data.token_type;
-                var store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
+                _ins.access_token = data.access_token;
+                _ins.token_type = data.token_type;
+                ins.save();
 
                 return callAPI('/api/v1/accounts/verify_credentials');
             }, (jqxhr, status, error) => {
@@ -522,16 +564,15 @@ let InstanceModeElement = (function () {
                 console.log(jqxhr);
             }).then((data2, status, jqxhr) => {
                 term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                ins.user = data2;
+                _ins.user = data2;
 
-                let store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
+                ins.save();
                 term.resume();
 
-                let prompt = ins.user.username;
-                prompt += '@' + ins.domain + '# ';
+                let prompt = _ins.user.username;
+                prompt += '@' + _ins.domain + '# ';
 
-                delete(ins.auth_code);
+                delete(_ins.auth_code);
                 term.pop();
 
             }, (jqxhr, status, error) => {
@@ -549,6 +590,7 @@ let InstanceModeElement = (function () {
             (analyzer.optional.on_monitor === true)
             && (ws.length === 0 || ws[0].readyStatus >= WebSocket.CLOSING)
         ) {
+            let _ins = ins.get();
             if (typeof analyzer.line_parsed[2] === 'undefined') {
                 monitor = config.find('instances.terminal.monitor');
             }
@@ -565,10 +607,10 @@ let InstanceModeElement = (function () {
                 is_noti = (is_noti || noti);
             }
 
-            let api = 'wss://' + instances[instance_name].domain
-                                    + '/api/v1/streaming?access_token='
-                                    + instances[instance_name].access_token
-                                    + '&stream=user';
+            let api = 'wss://' + _ins.domain
+                            + '/api/v1/streaming?access_token='
+                            + _ins.access_token
+                            + '&stream=user';
 
             let type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
             let path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
@@ -601,12 +643,12 @@ let InstanceModeElement = (function () {
                     let data = JSON.parse(e.data);
                     let payload;
 
-                    let is_del = (data.event === 'delete') && notifies.delete;
-
-                    if (is_del) {
+                    if (data.event === 'delete') {
                         payload = data.payload;
-                        term.error('deleted ID:' + payload);
                         $('[name=id_' + payload + ']').addClass('status_deleted');
+                        if (notifies.delete) {
+                            term.error('deleted ID:' + payload);
+                        }
                     }
                     else if(data.event === 'notification') {
                         payload = JSON.parse(data.payload);
@@ -671,9 +713,9 @@ let InstanceModeElement = (function () {
                     ws.push(ws_t);
                 }
                 api = 'wss://'
-                        + instances[instance_name].domain
+                        + _ins.domain
                         + '/api/v1/streaming?access_token='
-                        + instances[instance_name].access_token
+                        + _ins.access_token
                         + ((monitor === 'local')  ? '&stream=public:local'
                          : (monitor === 'public') ? '&stream=public'
                          : ('&stream=hashtag&tag=' + monitor));
@@ -684,12 +726,12 @@ let InstanceModeElement = (function () {
                     let data = JSON.parse(e.data);
                     let payload;
 
-                    let is_del = (data.event === 'delete') && notifies.delete;
-
-                    if (is_del) {
+                    if (data.event === 'delete') {
                         payload = data.payload;
-                        term.error('deleted ID:' + payload);
                         $('[name=id_' + payload + ']').addClass('status_deleted');
+                        if (notifies.delete) {
+                            term.error('deleted ID:' + payload);
+                        }
                     }
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);
@@ -738,10 +780,10 @@ let InstanceModeElement = (function () {
         term.focus(false);
     };
     InstanceModeElement.prototype.monitor = function (term, analyzer) {
-        instances[instance_name].monitor = (analyzer.line_parsed[1].name === 'tag')
+        ins.get().monitor = (analyzer.line_parsed[1].name === 'tag')
                     ? analyzer.paramaters.hashtag
                     : analyzer.line_parsed[1].name;
-        localStorage.setItem('instances', JSON.stringify(instances));
+        ins.save();
     };
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
         term.pause();
@@ -950,7 +992,7 @@ let InstanceModeElement = (function () {
         }
         else if (analyzer.line_parsed[1].name === 'user'){
             let userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
-                       ? instances[instance_name].user.id
+                       ? ins.get().user.id
                        : analyzer.line_parsed[2].name === 'id' ? analyzer.paramaters.userid
                        : -1;
             if (userid > 0) {
@@ -1109,7 +1151,7 @@ let InstanceModeElement = (function () {
         let userid;
         let type;
         if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
-            userid = instances[instance_name].user.id;
+            userid = ins.get().user.id;
             type = analyzer.line_parsed[3].name;
         }
         else {
@@ -1175,14 +1217,38 @@ let InstanceModeElement = (function () {
             term.resume();
         });
     };
-    InstanceModeElement.prototype.set_filter = function (term, analyzer) {
+    InstanceModeElement.prototype.show_acl = function (term, analyzer) {
+        let acls = ins.acls[ins.name()];
+        if (!acls) {
+            return;
+        }
+        for (let acl_num in acls) {
+            term.echo('Standard Status access list ' + acl_num);
+            term.echo('    ' + acls[acl_num].type + ' regexp ' + acls[acl_num].regexp.toString());
+        }
+        return true;
+    };
+    InstanceModeElement.prototype.set_acl = function (term, analyzer) {
+        let _ins = ins.get();
         if (analyzer.line_parsed[0].name === 'no') {
-            delete(instances[instance_name].filter);
+            if (analyzer.paramaters.hasOwnProperty('acl_num')) {
+                delete(_ins.acl[analyzer.paramaters.acl_num]);
+            }
+            else {
+                delete(_ins.acl);
+            }
         }
         else {
-            instances[instance_name].filter = analyzer.paramaters.regular_expression;
+            if (!_ins.hasOwnProperty('acl')) {
+                _ins.acl = {};
+            }
+            _ins.acl[analyzer.paramaters.acl_num] = {
+                type: analyzer.line_parsed[2].name,
+                regexp: analyzer.paramaters.regular_expression
+            };
         }
-        localStorage.setItem('instances', JSON.stringify(instances));
+        ins.parse_acl();
+        ins.save();
         return true;
     };
     /* template */

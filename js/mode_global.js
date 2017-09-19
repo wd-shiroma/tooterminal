@@ -185,8 +185,8 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-18');
-        let ver = '0.3.7';
+        let date = new Date('2017-9-19');
+        let ver = '0.3.8';
         term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
         term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
@@ -220,13 +220,14 @@ var GlobalModeElement = (function () {
             '--------------------------------------------------------------------',
         ];
         let cnt = 0;
-        for (ins in instances) {
+        for (let name in ins.instances) {
+            let _ins = ins.get(name);
             lines.push(
-                ('| ' + (typeof instances[ins].user !== 'undefined' ? '@' + instances[ins].user.username : ''))
-                    .addTab('|  ' + (instances[ins].application.scopes.read   ? 'r' : '-')
-                        + (instances[ins].application.scopes.write  ? 'w' : '-')
-                        + (instances[ins].application.scopes.follow ? 'f' : '-'), 8)
-                    .addTab('| ' + instances[ins].domain, 30).addTab(ins, 10)
+                ('| ' + (typeof _ins.user !== 'undefined' ? '@' + _ins.user.username : ''))
+                    .addTab('|  ' + (_ins.application.scopes.read   ? 'r' : '-')
+                        + (_ins.application.scopes.write  ? 'w' : '-')
+                        + (_ins.application.scopes.follow ? 'f' : '-'), 8)
+                    .addTab('| ' + _ins.domain, 30).addTab(name, 10)
             );
             cnt++;
         }
@@ -237,34 +238,32 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_instance_detail = function (term, analyzer) {
-        let name = analyzer.paramaters.instance_name;
-
-        if (typeof instances[name] === 'undefined') {
+        let name = ins.name(analyzer.paramaters.instance_name);
+        let _ins = ins.get();
+        if (!_ins) {
             term.error('instance has no regist');
             return false;
         }
-        let ins = instances[name];
-
         let lines = [
             'Instance',
             tab('Name:',        name,                 15),
-            tab('Domain:',      ins.domain,           15),
+            tab('Domain:',      _ins.domain,           15),
             '',
             'Application',
-            tab('Client Name:', ins.application.name, 17),
-            tab('Client ID:', ins.client_id, 17),
-            tab('Client Secret:', ins.client_secret, 17),
-            tab('Website:', ins.application.website, 17),
-            tab('Redirect URI:', ins.application.uris, 17),
-            tab('Read:',        ins.application.scopes.read,      17),
-            tab('Write:',       ins.application.scopes.write,     17),
-            tab('Follow:',      ins.application.scopes.follow,    17),
+            tab('Client Name:', _ins.application.name, 17),
+            tab('Client ID:', _ins.client_id, 17),
+            tab('Client Secret:', _ins.client_secret, 17),
+            tab('Website:', _ins.application.website, 17),
+            tab('Redirect URI:', _ins.application.uris, 17),
+            tab('Read:',        _ins.application.scopes.read,      17),
+            tab('Write:',       _ins.application.scopes.write,     17),
+            tab('Follow:',      _ins.application.scopes.follow,    17),
             '',
             'Autheorized user',
-            tab('Access Token:', ins.access_token, 20),
-            tab('Monitor defaults:', ins.monitor, 20),
-            tab('User Account:', '@' + ins.user.acct, 20),
-            tab('User ID:', ins.user.id, 20),
+            tab('Access Token:', _ins.access_token, 20),
+            tab('Monitor defaults:', _ins.monitor, 20),
+            tab('User Account:', '@' + _ins.user.acct, 20),
+            tab('User ID:', _ins.user.id, 20),
 
         ];
 
@@ -273,48 +272,47 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.entry_instance = function (term, analyzer) {
-        instance_name = analyzer.paramaters.instance_name;
-        let ins = instances[instance_name];
+        ins.name(analyzer.paramaters.instance_name);
+        let _ins = ins.get();
         let domain = '';
-        if (typeof ins === 'undefined') {
+        if (typeof _ins === 'undefined') {
+            ins.create(analyzer.paramaters.instance_name);
             term.push(regist_instance, {
                 prompt: 'Input instance domain: ',
             });
         }
-        else if (ins.hasOwnProperty('auth_code')){
+        else if (_ins.hasOwnProperty('auth_code')){
             term.pause();
             $.ajax({
-                url: 'https://' + ins.domain + '/oauth/token',
+                url: 'https://' + _ins.domain + '/oauth/token',
                 type: 'POST',
                 dataType: 'json',
                 data: {
                     grant_type: 'authorization_code',
-                    client_id: ins.client_id,
-                    client_secret: ins.client_secret,
-                    code: ins.auth_code,
-                    redirect_uri: ins.application.uris
+                    client_id: _ins.client_id,
+                    client_secret: _ins.client_secret,
+                    code: _ins.auth_code,
+                    redirect_uri: _ins.application.uris
                 }
             }).then((data, status, jqxhr) => {
-                ins.access_token = data.access_token;
-                ins.token_type = data.token_type;
-                let store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
-                delete(ins.auth_code);
+                _ins.access_token = data.access_token;
+                _ins.token_type = data.token_type;
+                delete(_ins.auth_code);
+                ins.save();
                 return callAPI('/api/v1/accounts/verify_credentials');
             }, (jqxhr, status, error) => {
                 term.error('User token updating error.(' + jqxhr.status + ')');
-                delete(ins.auth_code);
+                delete(_ins.auth_code);
                 console.log(jqxhr);
             }).then((data2, status, jqxhr) => {
                 term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                ins.user = data2;
+                _ins.user = data2;
 
-                let store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
+                ins.save();
                 term.resume();
 
-                let prompt = ins.user.username;
-                prompt += '@' + ins.domain + '# ';
+                let prompt = _ins.user.username;
+                prompt += '@' + _ins.domain + '# ';
 
                 term.push(enterCommand, {
                     name:   'instance',
@@ -325,7 +323,7 @@ var GlobalModeElement = (function () {
                 });
 
             }, (jqxhr, status, error) => {
-                let prompt = '@' + ins.domain + '# '
+                let prompt = '@' + _ins.domain + '# '
                 console.log(jqxhr);
                 term.error('Getting user status failed.(' + jqxhr.status + ')');
                 //term.echo('Enter \'login\' and reflesh your access_token');
@@ -342,21 +340,20 @@ var GlobalModeElement = (function () {
                 });
             });
         }
-        else if (ins.hasOwnProperty('access_token')){
+        else if (_ins.hasOwnProperty('access_token')){
             term.pause();
             callAPI('/api/v1/accounts/verify_credentials')
             .then((data2, status, jqxhr) => {
                 term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                ins.user = data2;
+                _ins.user = data2;
 
-                let store = localStorage;
-                store.setItem('instances', JSON.stringify(instances));
+                ins.save();
                 term.resume();
 
-                let prompt = ins.user.username;
-                prompt += '@' + ins.domain + '# ';
+                let prompt = _ins.user.username;
+                prompt += '@' + _ins.domain + '# ';
 
-                delete(ins.auth_code);
+                delete(_ins.auth_code);
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
@@ -372,7 +369,7 @@ var GlobalModeElement = (function () {
             });
         }
         else {
-            let prompt = '@' + ins.domain + '# '
+            let prompt = '@' + _ins.domain + '# '
             term.echo('Enter \'login\' and regist your access_token');
             term.resume();
             term.push(enterCommand, {
@@ -389,16 +386,15 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.delete_instance = function (term, analyzer) {
-        let name = analyzer.paramaters.instance_name;
+        let name = ins.name(analyzer.paramaters.instance_name);
+        let _ins = ins.get();
         let prompt = 'Instance "' + name + '" registration will delete! Continue? [confirm]';
-        if (typeof instances[name] === 'undefined') {
+        if (typeof _ins === 'undefined') {
             term.error('no instance registration.');
             return false;
         }
         term.push((input) => {
-                let store = localStorage;
-                delete(instances[name]);
-                store.setItem('instances', JSON.stringify(instances));
+                ins.delete();
                 term.echo('[OK]');
                 term.echo('Erase of instance: complete');
                 term.pop();
@@ -473,7 +469,7 @@ var GlobalModeElement = (function () {
             running_config: config.config,
             startup_config: s_config,
             default_config: config.default,
-            instances: instances,
+            instances: ins.instances,
             status: {
                 created_at: date.getTime(),
                 location: location.href
@@ -553,31 +549,32 @@ var regist_instance = (input, term) => {
             data: data
         })
         .then((data, status, jqxhr) => {
+            console.log(ins);
             let redirect_uri = data.redirect_uri;
+            let ins_name = ins.name();
             if (is_redirect) {
                 redirect_uri += '?instance_name=' + instance_name;
             }
-            instances[instance_name]               = config.find('instances')
-            instances[instance_name].client_id     = data.client_id;
-            instances[instance_name].client_secret = data.client_secret;
-            instances[instance_name].domain        = input;
-            instances[instance_name].application   = config.find('application');
-            instances[instance_name].application.uris = redirect_uri;
+            let _ins           = config.find('instances')
+            _ins.client_id     = data.client_id;
+            _ins.client_secret = data.client_secret;
+            _ins.domain        = input;
+            _ins.application   = config.find('application');
+            _ins.application.uris = redirect_uri;
 
-            let prompt = '@' + instances[instance_name].domain + '# ';
+            let prompt = '@' + _ins.domain + '# ';
             term.echo('New instance registed. enter \'login\' and regist your access_token');
 
-            let store = localStorage;
-            store.setItem('instances', JSON.stringify(instances));
+            ins.set(_ins);
             term.resume();
             term.push(enterCommand, {
                 name:   'instance',
                 prompt:  prompt,
                 onStart: function(term) {
                     term_mode = mode_instance;
-                    prompt = '@' + instances[instance_name].domain + '# ';
-                    if (instances[instance_name].hasOwnProperty('user')) {
-                        prompt = instances[instance_name].user.username + prompt;
+                    prompt = '@' + _ins.domain + '# ';
+                    if (_ins.hasOwnProperty('user')) {
+                        prompt = _ins.user.username + prompt;
                         term.set_prompt(prompt);
                     }
                     else {

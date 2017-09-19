@@ -420,11 +420,22 @@ home, local, publicを選択できます。
 Tooterminalは公式クライアントと同様に、正規表現フィルタに対応しています。
 
 ```
-shiroma@mstdn.jp# filter Tooterminal ←「Tooterminal」文字列が含まれるトゥートを表示にします。
-shiroma@mstdn.jp# filter /tooterminal/i ←小文字大文字を無視します。
-shiroma@mstdn.jp# filter "via sync.twi2mstdn.space" ←空白が含まれる文字列はダブルクォーテーションで括ります。
-shiroma@mstdn.jp# no filter ←フィルターを解除します。
+shiroma@mstdn.jp# access-list 1 deny Tooterminal ←「Tooterminal」文字列が含まれるトゥートを表示にします。
+shiroma@mstdn.jp# access-list 1 deny  /tooterminal/i ←小文字大文字を無視します。
+shiroma@mstdn.jp# access-list 1 deny "via sync.twi2mstdn.space" ←空白が含まれる文字列はダブルクォーテーションで括ります。
+shiroma@mstdn.jp# no access-list 1 ←フィルターを解除します。
+shiroma@mstdn.jp# access-list 2 deny  mstdn.jp ←2つ目の数字を変えることで、複数のフィルターを設定できます。
+shiroma@mstdn.jp# access-list 3 permit  media ←3つ目の数字をpermitに変えることで、非表示ではなく強調表示に変更することもできます。
+shiroma@mstdn.jp# show access-list
+Standard Status access list 1
+    deny regexp /via sync\.twi2mstdn\.space/
+Standard Status access list 2
+    deny regexp /mstdn\.jp/
+Standard Status access list 3
+    permit regexp /media/
 ```
+
+複数のフィルター(アクセスリスト)を設定することができ、数字の小さい順番にルールが適用されます。
 
 <h2 id="#advance_shortcut">便利なキーボードショートカット</h2>
 
