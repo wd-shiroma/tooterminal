@@ -32,7 +32,6 @@ let def_conf = {
 
 let config;
 let ins;
-let prompt;
 let url_params;
 let acls;
 
