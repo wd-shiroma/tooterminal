@@ -168,6 +168,12 @@ let init_instance = function(term) {
     req.send('')
 };
 
+let exit_instance = function() {
+    term_mode = mode_global;
+    closeTootbox();
+    ins.name('');
+}
+
 let count_toot_size = () => {
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
     $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
@@ -501,7 +507,9 @@ function makeStatus(payload, ins_name) {
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
-        + $('<i />').addClass('fa fa-' + (contents.reblogged ? 'check-circle-o' : 'retweet')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' ? 'times-circle-o'
+                        : contents.reblogged ? 'check-circle-o' : 'retweet'))
+                .attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (
                     contents.visibility === 'public'   ? 'globe'
                   : contents.visibility === 'unlisted' ? 'unlock'
@@ -673,7 +681,7 @@ function makeStatus(payload, ins_name) {
             let acl = ins.acls[ins_name][acl_num];
             if (status.text().match(acl.regexp)) {
                 if (acl.type === 'permit') {
-                    status.addClass('status_permit');
+                    status.addClass('status_' + acl.color);
                 }
                 else if(acl.type === 'deny') {
                     return '';
@@ -685,7 +693,7 @@ function makeStatus(payload, ins_name) {
     if (config.find('instances.status.separator')) {
         status.append(
             '<tr><td colspan="2"><span>'
-            + Array($.terminal.active().cols() - 3).join('-')
+            + Array($.terminal.active().cols() - 5).join('-')
             + '</span></td></tr>'
         );
     }
@@ -866,6 +874,9 @@ function closeTootbox() {
 }
 
 function boost(status) {
+    if ($($(status).find('i')[1]).hasClass('fa-times-circle-o')) {
+        return;
+    }
     let isReb = ($(status).data('reb') == 1);
     let api = '/api/v1/statuses/'
             + $(status).data('sid').toString()

@@ -461,7 +461,89 @@ let InstanceModeElement = (function () {
                                         "type": "paramater",
                                         "name": "regular_expression",
                                         "description": '正規表現文字列',
-                                        "execute": this.set_acl
+                                        "execute": this.set_acl,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "color",
+                                                "description": "背景色を設定します",
+                                                "children": [
+                                                    {
+                                                        "type": "command",
+                                                        "name": "red",
+                                                        "optional": "is_color",
+                                                        "description": "赤色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "green",
+                                                        "optional": "is_color",
+                                                        "description": "緑色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "blue",
+                                                        "optional": "is_color",
+                                                        "description": "青色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "yellow",
+                                                        "optional": "is_color",
+                                                        "description": "黄色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "purple",
+                                                        "optional": "is_color",
+                                                        "description": "紫色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "cyan",
+                                                        "optional": "is_color",
+                                                        "description": "水色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-red",
+                                                        "optional": "is_color",
+                                                        "description": "濃赤色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-blue",
+                                                        "optional": "is_color",
+                                                        "description": "紺色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-green",
+                                                        "optional": "is_color",
+                                                        "description": "深緑色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-yellow",
+                                                        "optional": "is_color",
+                                                        "description": "山吹色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-purple",
+                                                        "optional": "is_color",
+                                                        "description": "紫紺色",
+                                                        "execute": this.set_acl
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "dark-cyan",
+                                                        "optional": "is_color",
+                                                        "description": "藍色",
+                                                        "execute": this.set_acl
+                                                    }
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -1116,12 +1198,18 @@ let InstanceModeElement = (function () {
         term.pause();
         let sid = analyzer.paramaters.status_id;
         let cur_status;
+        let cur_detail;
         callAPI('/api/v1/statuses/' + sid, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            cur_status = makeStatus(data)
-                       + data.favourites_count + ' account favourited, '
-                       + data.reblogs_count + ' account reblogged. <br />';
+            cur_status = makeStatus(data);
+            cur_detail = data.favourites_count + ' account favourited, '
+                    + data.reblogs_count + ' account reblogged.\n'
+                    + 'URL: ' + data.url + '\n';
+
+            if (config.find('instances.status.separator')) {
+                cur_detail += Array($.terminal.active().cols() - 5).join('-') + '\n';
+            }
 
             return callAPI('/api/v1/statuses/' + sid + '/context', {
                 type: 'GET',
@@ -1133,6 +1221,7 @@ let InstanceModeElement = (function () {
                 term.echo(s, { raw: true, flush: false });
             }
             term.echo(cur_status, { raw: true, flush: false });
+            term.echo(cur_detail, { flush: false });
             for (let i = 0; i < data.descendants.length; i++) {
                 s = makeStatus(data.descendants[i]);
                 term.echo(s, { raw: true, flush: false });
@@ -1224,12 +1313,15 @@ let InstanceModeElement = (function () {
         }
         for (let acl_num in acls) {
             term.echo('Standard Status access list ' + acl_num);
-            term.echo('    ' + acls[acl_num].type + ' regexp ' + acls[acl_num].regexp.toString());
+            term.echo('    ' + acls[acl_num].type + ' regexp '
+                + acls[acl_num].regexp.toString()
+                + ', color ' + acls[acl_num].color);
         }
         return true;
     };
     InstanceModeElement.prototype.set_acl = function (term, analyzer) {
         let _ins = ins.get();
+        let bgcolor = analyzer.optional.is_color ? analyzer.line_parsed[4].name : 'dark-blue';
         if (analyzer.line_parsed[0].name === 'no') {
             if (analyzer.paramaters.hasOwnProperty('acl_num')) {
                 delete(_ins.acl[analyzer.paramaters.acl_num]);
@@ -1242,10 +1334,13 @@ let InstanceModeElement = (function () {
             if (!_ins.hasOwnProperty('acl')) {
                 _ins.acl = {};
             }
-            _ins.acl[analyzer.paramaters.acl_num] = {
-                type: analyzer.line_parsed[2].name,
-                regexp: analyzer.paramaters.regular_expression
-            };
+            if (!_ins.acl[analyzer.paramaters.acl_num]) {
+                _ins.acl[analyzer.paramaters.acl_num] = {};
+            }
+            let _acl = _ins.acl[analyzer.paramaters.acl_num];
+            _acl.type = analyzer.line_parsed[2].name;
+            _acl.regexp = analyzer.paramaters.regular_expression;
+            _acl.color = bgcolor;
         }
         ins.parse_acl();
         ins.save();

@@ -141,11 +141,14 @@ let ModeManager = (function () {
                 }
             }
             stored += p;
-            let is_quate = stored.match(/^(?:(')[^']*|(")[^"]*)$/);
+            let is_quate = stored.match(/^(?:(')[^']+|(")[^"]+)$/);
             if (is_quate) {
                 quate =
                     is_quate[1] ? '\'' :
                     is_quate[2] ? '"' : '';
+            }
+            else {
+                quate = '';
             }
             let filter = [];
             for (var j = 0; j < this.cmd_list.length; j++) {
@@ -180,7 +183,7 @@ let ModeManager = (function () {
                 }
                 else if (this.cmd_list[j].type === "paramater") {
                     //1ブロックまたはクォーテーションで囲まれた範囲をパラメータとして処理する。
-                    let re = new RegExp('^' + quate + '(.*)' + quate + '$');
+                    let re = new RegExp('^["\']?(.*?)["\']?$');
                     this.cmd_list[j].param = stored.replace(re, '$1');
                     filter.push(this.cmd_list[j]);
                 }
@@ -399,6 +402,7 @@ let InstanceManager = (function () {
             }
             for (let acl_num in this.instances[ins_name].acl) {
                 let acl = this.instances[ins_name].acl[acl_num];
+                let color = acl.color ? acl.color : 'dark-blue';
                 let filter = acl.regexp;
                 let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
                 let re;
@@ -410,15 +414,16 @@ let InstanceManager = (function () {
                 }
                 this.acls[ins_name][acl_num] = {
                     type: acl.type,
-                    regexp: re
+                    regexp: re,
+                    color: color
                 };
             }
         }
     }
 
     InstanceManager.prototype.name = function (name) {
-        if (this.instances.hasOwnProperty(name)) {
-            this._name = name
+        if (typeof name === 'string') {
+            this._name = name;
             this.ins = this.instances[name];
         }
         return this._name;

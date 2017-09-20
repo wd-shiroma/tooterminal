@@ -173,8 +173,52 @@ body {
     text-decoration: line-through;
 }
 
-.status_permit *{
-    font-weight: bold;
+.status_red *{
+    background-color: #302222;
+}
+
+.status_green *{
+    background-color: #223022;
+}
+
+.status_blue *{
+    background-color: #222230;
+}
+
+.status_yellow *{
+    background-color: #303022;
+}
+
+.status_purple *{
+    background-color: #302230;
+}
+
+.status_cyan *{
+    background-color: #223030;
+}
+
+.status_dark-red *{
+    background-color: #201111;
+}
+
+.status_dark-green *{
+    background-color: #112011;
+}
+
+.status_dark-blue *{
+    background-color: #111120;
+}
+
+.status_dark-yellow *{
+    background-color: #202011;
+}
+
+.status_dark-purple *{
+    background-color: #201120;
+}
+
+.status_dark-cyan *{
+    background-color: #112020;
 }
 
 .status_avatar {

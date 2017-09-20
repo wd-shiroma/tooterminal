@@ -318,7 +318,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: init_instance,
-                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
+                    onExit:  exit_instance,
                     exit:    false
                 });
 
@@ -335,7 +335,7 @@ var GlobalModeElement = (function () {
                         term_mode = mode_instance;
                         term.exec('login');
                     },
-                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
+                    onExit:  exit_instance,
                     exit:    false
                 });
             });
@@ -358,7 +358,7 @@ var GlobalModeElement = (function () {
                     name:   'instance',
                     prompt:  prompt,
                     onStart: init_instance,
-                    onExit:  function() { term_mode = mode_global; closeTootbox(); },
+                    onExit:  exit_instance,
                     exit:    false
                 });
 
@@ -379,7 +379,7 @@ var GlobalModeElement = (function () {
                     term_mode = mode_instance;
                     term.exec('login');
                 },
-                onExit:  function() { term_mode = mode_global; closeTootbox(); },
+                onExit:  exit_instance,
                 exit:    false
             });
         }
@@ -581,7 +581,7 @@ var regist_instance = (input, term) => {
                         term.exec('login');
                     }
                 },
-                onExit:  function() { term_mode = mode_global; },
+                onExit:  function() { term_mode = mode_global; ins.name(''); },
                 exit:    false
             });
         }, (jqxhr, status, error) => {
