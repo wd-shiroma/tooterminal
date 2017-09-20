@@ -2867,15 +2867,15 @@
                             }
                             var result;
                             if (style.indexOf('!') !== -1) {
-                                if (data.match(email_re)) {
-                                    result = '<a class="a_acct" name="a_acct"';
-                                } else {
+                                if (data.match(url_re)) {
                                     result = '<a target="_blank" href="' + data + '"';
                                     if (settings.linksNoReferrer) {
                                         result += ' rel="noreferrer noopener"';
                                     } else {
                                         result += ' rel="noopener"';
                                     }
+                                } else {
+                                    result = '<a class="a_acct" name="a_acct"';
                                 }
                                 // make focus to terminal textarea that will enable
                                 // terminal when pressing tab and terminal is disabled
@@ -3975,8 +3975,12 @@
         function buffer_line(string, options) {
             // urls should always have formatting to keep url if split
             if (settings.convertLinks && !options.raw) {
-                string = string.replace(email_re, '[[!;;]$1]').
-                    replace(url_nf_re, '[[!;;]$1]');
+                if (string.match(url_nf_re)) {
+                    string = string.replace(url_nf_re, '[[!;;]$1]');
+                }
+                else if (string.match(email_re)) {
+                    string = string.replace(email_re, '[[!;;]$1]');
+                }
             }
             var i, len;
             if (!options.raw) {
