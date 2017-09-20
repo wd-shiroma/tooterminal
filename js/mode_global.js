@@ -185,8 +185,8 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-19');
-        let ver = '0.3.8';
+        let date = new Date('2017-9-20');
+        let ver = '0.3.9';
         term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
         term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
