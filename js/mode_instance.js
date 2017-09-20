@@ -1321,7 +1321,7 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.set_acl = function (term, analyzer) {
         let _ins = ins.get();
-        let bgcolor = analyzer.optional.is_color ? analyzer.line_parsed[4].name : 'dark-blue';
+        let bgcolor = analyzer.optional.is_color ? analyzer.line_parsed[5].name : 'dark-blue';
         if (analyzer.line_parsed[0].name === 'no') {
             if (analyzer.paramaters.hasOwnProperty('acl_num')) {
                 delete(_ins.acl[analyzer.paramaters.acl_num]);
