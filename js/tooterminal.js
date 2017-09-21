@@ -426,7 +426,33 @@ $(function() {
         }
     })
     .on('click', '.status_enquete span', function(e) {
-        $.terminal.active().echo('まだ投票できないです。。。');
+        let enquete = $(e.target).parent();
+        let index = $(e.target).children().index(e.target);
+        let status = enquete.parents('.status');
+        let time_limit = Date.now() - Date.parse($(enquete).data('created'));
+        let term = $.terminal.active();
+
+        if (time_limit > 30000) {
+            term.error('The vote has expired.');
+            return;
+        }
+
+        let api = '/api/v1/votes/' + $(status).data('sid');
+        callAPI(api, {
+            type: 'POST',
+            data: { item_index: index }
+        })
+        .then((data, status, jqxhr) => {
+            if (data.valid) {
+                term.echo('Vote: ' + $(e.target).text());
+            }
+            else {
+                term.error(data.message);
+            }
+        }, (jqxhr, status, error) => {
+            console.log(jqxhr);
+        });
+
     })
     .on('click', '.toot_media img', (e,e2,e3) => {
         $(e.target).remove();
@@ -560,9 +586,14 @@ function makeStatus(payload, ins_name) {
 
     if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
         enquete = JSON.parse(contents.enquete);
-        content = $('<div />').append(enquete.question
-            .replace(/<p>(.*?)<\/p>/g, '<p><span>$1' + (enquete.type === 'enquete' ? '(回答枠)' : '(結果)') + '</span></p>'));
-        let enquete_items = $('<div />').addClass('status_' + enquete.type);
+        question = enquete.question.replace(
+                /^(?:<p>)?(.*?)(?:<\/p>)?$/g, '<p><span>$1' +
+                (enquete.type === 'enquete' ? '(回答枠)' : '(結果)')
+                + '</span></p>')
+        content = $('<div />').append(question);
+        let enquete_items = $('<div />')
+                .addClass('status_' + enquete.type)
+                .attr('data-created', contents.created_at);
         for (let i = 0; i < enquete.items.length; i++) {
             if (enquete.type === 'enquete') {
                 enquete_items.append($('<span />')
@@ -572,11 +603,14 @@ function makeStatus(payload, ins_name) {
                 enquete_items
                     .append($('<span />')
                         .append($('<span />')
-                            .addClass('progress')
+                            .addClass('progress ratio')
+                            .text(enquete.ratios[i] + '%'))
+                        .append($('<span />')
+                            .addClass('progress item')
                             .text(enquete.items[i]))
                         .append($('<span />')
                             .addClass('proceed')
-                            .css('width', enquete.ratios[i].toString() + '%')));
+                            .css('width', enquete.ratios[i].toString() + '%')))
             }
         }
         content.append(enquete_items);

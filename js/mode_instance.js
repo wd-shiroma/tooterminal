@@ -1197,33 +1197,55 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
         term.pause();
         let sid = analyzer.paramaters.status_id;
-        let cur_status;
-        let cur_detail;
-        callAPI('/api/v1/statuses/' + sid, {
-            type: 'GET',
-        }).then((data, status, jqxhr) => {
-            cur_status = makeStatus(data);
-            cur_detail = data.favourites_count + ' account favourited, '
-                    + data.reblogs_count + ' account reblogged.\n'
-                    + 'URL: ' + data.url + '\n';
+        $.when(
+            callAPI('/api/v1/statuses/' + sid, { type: 'GET' }),
+            callAPI('/api/v1/statuses/' + sid + '/context', { type: 'GET' }),
+            callAPI('/api/v1/statuses/' + sid + '/card', { type: 'GET' })
+        ).then((res_status, res_context, res_card) => {
+            let status = res_status[0];
+            let context = res_context[0];
+            let card = res_card[0];
 
             if (config.find('instances.status.separator')) {
                 cur_detail += Array($.terminal.active().cols() - 5).join('-') + '\n';
             }
 
-            return callAPI('/api/v1/statuses/' + sid + '/context', {
-                type: 'GET',
-            })
-        }).then((data, status, jqxhr) => {
             let s;
-            for (let i = 0; i < data.ancestors.length; i++) {
-                s = makeStatus(data.ancestors[i]);
+            for (let i = 0; i < context.ancestors.length; i++) {
+                s = makeStatus(context.ancestors[i]);
                 term.echo(s, { raw: true, flush: false });
             }
-            term.echo(cur_status, { raw: true, flush: false });
+            term.echo(makeStatus(status), { raw: true, flush: false });
+            if (card.hasOwnProperty('url')) {
+                let card_elem = $('<a />')
+                        .attr('href', card.url)
+                        .attr('target', '_blank')
+                        .addClass('status_card')
+                        .append($('<div />')
+                            .append($('<span />').text('[ ' + card.title + ' ]'))
+                            .append($('<br />'))
+                            .append($('<span />').text(card.description)));
+                if (config.find(['instances', 'status', 'avater']) === true) {
+                    card_elem.append($('<img />').attr('src', card.image));
+                }
+
+                let img = new Image();
+                img.onload = () => {
+                    $('[name=card_' + status.id + '] img').attr('src', card.image);
+                };
+                img.onerror = (e) => {
+                    console.log(e);
+                };
+                img.src = card.image;
+                term.echo(card_elem.prop('outerHTML'), {raw: true, flush: false});
+                term.echo('<br />', {raw: true, flush: false});
+            }
+            let cur_detail = status.favourites_count + ' account favourited, '
+                    + status.reblogs_count + ' account reblogged.\n'
+                    + 'URL: ' + status.url + '\n';
             term.echo(cur_detail, { flush: false });
-            for (let i = 0; i < data.descendants.length; i++) {
-                s = makeStatus(data.descendants[i]);
+            for (let i = 0; i < context.descendants.length; i++) {
+                s = makeStatus(context.descendants[i]);
                 term.echo(s, { raw: true, flush: false });
             }
             term.flush();

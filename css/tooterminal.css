@@ -263,6 +263,11 @@ td.status_main{
     color: goldenrod !important;
 }
 
+.status_card img {
+    max-width: 3em;
+    max-height: 3em;
+    float: left;
+}
 
 .status_enquete span{
     border-radius: 5px;
@@ -287,7 +292,6 @@ td.status_main{
 .status_enquete_result>span {
     margin: 0 0.5em 0 0;
     width: 16em;
-    display: inline;
     border-radius: 5px;
     border: 1px solid #353535;
     position: relative;
@@ -303,8 +307,24 @@ td.status_main{
 
 .status_enquete_result .proceed{
     border-radius: 5px;
-    background-color: #225;
+    background-color: #225 !important;
     height: 1.5em;
+}
+
+.status_enquete_result>span .item{
+    display: inline;
+}
+
+.status_enquete_result>span .ratio{
+    display: none !important;
+}
+
+.status_enquete_result>span:hover .item{
+    display: none;
+}
+
+.status_enquete_result>span:hover .ratio{
+    display: inline !important;
 }
 
 .img_background {
