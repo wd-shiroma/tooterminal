@@ -1206,10 +1206,6 @@ let InstanceModeElement = (function () {
             let context = res_context[0];
             let card = res_card[0];
 
-            if (config.find('instances.status.separator')) {
-                cur_detail += Array($.terminal.active().cols() - 5).join('-') + '\n';
-            }
-
             let s;
             for (let i = 0; i < context.ancestors.length; i++) {
                 s = makeStatus(context.ancestors[i]);
@@ -1243,6 +1239,11 @@ let InstanceModeElement = (function () {
             let cur_detail = status.favourites_count + ' account favourited, '
                     + status.reblogs_count + ' account reblogged.\n'
                     + 'URL: ' + status.url + '\n';
+
+            if (config.find('instances.status.separator')) {
+                cur_detail += Array($.terminal.active().cols() - 5).join('-') + '\n';
+            }
+
             term.echo(cur_detail, { flush: false });
             for (let i = 0; i < context.descendants.length; i++) {
                 s = makeStatus(context.descendants[i]);
