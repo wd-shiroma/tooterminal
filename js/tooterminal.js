@@ -24,7 +24,6 @@ let def_conf = {
                 mention: true,
                 following: true
             },
-            monitor: 'local'
         },
         status: {},
     }
@@ -876,7 +875,7 @@ function favorite(status, term) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[0]).removeClass().addClass('fa fa-spinner');
+    $($(status).find('i')[0]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
@@ -918,7 +917,7 @@ function boost(status) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner');
+    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
