@@ -523,6 +523,7 @@ var regist_instance = (input, term) => {
     input = input.trim();
     if (!input.match(/^([A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+$/)) {
         term.error('domain couldn\'t unrecognize');
+        ins.delete();
     }
     else if (input.length > 0) {
         term.pause();
@@ -586,6 +587,7 @@ var regist_instance = (input, term) => {
             });
         }, (jqxhr, status, error) => {
             let msg = 'Failed to connect the instance "' + input + '"';
+            ins.delete();
             term.error(msg);
             term_error(msg, {
                 path: path,
