@@ -24,6 +24,7 @@ let def_conf = {
                 mention: true,
                 following: true
             },
+            monitor: 'local'
         },
         status: {},
     }
@@ -136,12 +137,22 @@ let init_instance = function(term) {
     let auto_term;
     if (config.find(['instances', 'terminal', 'auto'])){
         auto_term = config.find(['instances', 'terminal', 'monitor']);
+        auto_term = auto_term.match(/(home|local|public|notification)/g);
     }
     if (url_params.hasOwnProperty('terminal')) {
-        auto_term = (url_params.terminal.match(/^(home|local|public)$/ ? url_params.terminal : ''));
+        auto_term = url_params.terminal.match(/(home|local|public|notification)/g);
+
     }
-    if (typeof auto_term !== 'undefined' && _ins.hasOwnProperty('access_token')) {
-        term.exec('terminal monitor ' + auto_term);
+    auto_term = (auto_term ? auto_term : []);
+    if (auto_term.length > 0 && _ins.hasOwnProperty('access_token')) {
+        if (typeof auto_term === 'string') {
+            auto_term = [auto_term];
+        }
+        for (let i = 0; i < auto_term.length; i++) {
+            ws.monitor[auto_term[i]] = true;
+        }
+        ws.startup = auto_term[0];
+        term.exec('terminal monitor');
     }
     return;
     let src_url = 'https://' + _ins.domain + '/sounds/boop.ogg';
@@ -182,7 +193,7 @@ function upload_img(imageFile) {
     let formData = new FormData();
     let _ins = ins.get();
     let len = $('.toot_media img').length;
-    $('#toot_media').append($('<img />').attr('id', 'media_' + len));
+    $('#toot_media').append($('<img />').attr('id', 'media_' + len)).slideDown('first');
     formData.append('file', imageFile);
     $.ajax('https://' + _ins.domain + '/api/v1/media' , {
         type: 'POST',
@@ -265,20 +276,16 @@ $(function() {
         }
     });
     $('#toot_box').on('dragenter', (e) => {
-        console.log(e);
         e.preventDefault();
         $('#toot_box').addClass('toot_imghover');
 
     })
     .on('dragover', (e) => {
-        console.log(e);
     })
     .on('dragleave', (e) => {
-        console.log(e);
         $('#toot_box').removeClass('toot_imghover');
     })
     .on('drop', (e) => {
-        console.log(e);
         e.preventDefault();
         $('#toot_box').removeClass('toot_imghover');
         let files = e.originalEvent.dataTransfer.files;
@@ -456,6 +463,9 @@ $(function() {
     .on('click', '.toot_media img', (e,e2,e3) => {
         $(e.target).remove();
         $('#toot_box').val($('#toot_box').val().replace($(e.target).data('url'),''));
+        if ($('#toot_media img').length === 0) {
+            $('#toot_media').slideUp('first');
+        }
     })
     .on('keydown', (e) => {
         if (e.keyCode === 65 && e.altKey && term_mode === mode_instance && $('#toot').css('display') === 'none') {
@@ -499,7 +509,7 @@ function getConfig(config, index, d_conf) {
     return cf;
 }*/
 
-function makeStatus(payload, ins_name) {
+function makeStatus(payload, optional) {
     let date = new Date(payload.created_at);
     let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
@@ -507,10 +517,12 @@ function makeStatus(payload, ins_name) {
                  : is_mention ? payload.status
                  : payload;
 
-    if (typeof ins_name === 'undefined') {
-        ins_name = ins.name();
+    if (typeof optional !== 'object') {
+        optional = {};
     }
-    let _ins = ins.get(ins_name);
+    let ins_name = (typeof optional.ins_name === 'undefined') ? ins.name() : optional.ins_name;
+
+    let _ins = ins.get(optional.ins_name);
 
     let app;
     if (contents.application === null) {
@@ -707,8 +719,21 @@ function makeStatus(payload, ins_name) {
         .attr('data-reb', contents.reblogged ? '1' : '0')
         .attr('data-reply', reply)
         .addClass('status')
-        .append(avatar)
-        .append(main);
+        .append($('<tr />')
+            .append(avatar)
+            .append(main));
+    if (typeof optional.tl_name === 'string') {
+        let name = 'stream_' + contents.id;
+        if ($('[name=' + name + ']').length > 0) {
+            return '';
+        }
+        let tl = $('<tr />')
+            .attr('name', name)
+            .append($('<td />')
+                .html('>> ' + optional.tl_name + ' streaming updated.')
+                .attr('colspan', '2'));
+        status.prepend(tl);
+    }
     if (ins.acls.hasOwnProperty(ins_name)) {
         for (let acl_num in ins.acls[ins_name]) {
             let acl = ins.acls[ins_name][acl_num];
@@ -790,6 +815,10 @@ function post_status() {
     let imgs = $('#toot_media img');
     for (let i = 0; i < imgs.length; i++) {
         data.media_ids.push($(imgs[i]).data('id'));
+    }
+
+    if (data.media_ids.length > 0) {
+        data.sensitive = $('#nsfw').prop('checked');
     }
 
     return $.ajax({
@@ -875,14 +904,14 @@ function favorite(status, term) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[0]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            $($(elem).find('i')[0])
+            $($(elem).find('i')[1])
                 .removeClass()
                 .addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'))
             $(elem).data('fav', data.favourited ? '1' : '0');
@@ -892,7 +921,7 @@ function favorite(status, term) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Favorite failed.(' + jqxhr.status + ')');
-        $($(status).find('i')[0]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
+        $($(status).find('i')[1]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
         console.log(jqxhr);
     });
 }
@@ -906,7 +935,7 @@ function closeTootbox() {
 }
 
 function boost(status) {
-    if ($($(status).find('i')[1]).hasClass('fa-times-circle-o')) {
+    if ($($(status).find('i')[2]).hasClass('fa-times-circle-o')) {
         return;
     }
     let isReb = ($(status).data('reb') == 1);
@@ -917,14 +946,14 @@ function boost(status) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $($(status).find('i')[2]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            $($(elem).find('i')[1])
+            $($(elem).find('i')[2])
                 .removeClass()
                 .addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'))
             $(elem).data('reb', data.reblogged ? '1' : '0');
@@ -934,7 +963,7 @@ function boost(status) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Reblogged failed.(' + jqxhr.status + ')');
-        $($(status).find('i')[1]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
+        $($(status).find('i')[2]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
         console.log(jqxhr);
     });
 }

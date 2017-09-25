@@ -72,6 +72,23 @@ body {
 
 .toot_media {
     clear: both;
+    display: none;
+}
+
+.toot_media input:checked + label:before {
+    content: '✔ ';
+}
+
+.toot_media input + label:before {
+    content: '✖ ';
+}
+
+.toot_media label {
+    padding: 3px 5px;
+}
+
+.toot_media input{
+    display: none;
 }
 
 .toot_media img{

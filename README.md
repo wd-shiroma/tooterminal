@@ -405,7 +405,8 @@ URLの末尾にパラメータを設定することでインスタンスモー�
 * インスタンス名
 `Tooterminal# instance インスタンス名`で指定した名称
 * 取得ストリーミング
-home, local, publicを選択できます。
+home, local, public, notificationをカンマ区切りで指定します。
+(最初に指定したタイムラインが初期TLとして表示されます)
 それ以外の文字列が指定された場合はrunning-configの設定値が適用されます。
 * 通知種別
 表示したい通知種別をカンマ区切りで複数選択できます。(初期値：notification=fav,rev,fol,men)

@@ -1,4 +1,14 @@
-var ws = [];
+var ws = {
+    stream: [],
+    startup: 'local',
+    monitor: {
+        home: false,
+        local: false,
+        public: false,
+        tag: false,
+        notification: false
+    },
+};
 let InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
@@ -335,15 +345,20 @@ let InstanceModeElement = (function () {
                 "name": "terminal",
                 "description": 'ストリーミングの設定を行います。',
                 "execute": this.terminal_monitor,
-                "optional": "on_monitor",
                 "children": [
                     {
                         "type": "command",
                         "name": "monitor",
+                        "optional": "on_monitor",
                         "description": 'ストリーミングを有効にします。',
                         "execute": this.terminal_monitor,
                         "children": [
                             {
+                                "type": "command",
+                                "name": "notification",
+                                "description": '通知タイムラインをモニターします。',
+                                "execute": this.terminal_monitor,
+                            }, {
                                 "type": "command",
                                 "name": "home",
                                 "description": 'ホームタイムラインをモニターします。',
@@ -668,19 +683,181 @@ let InstanceModeElement = (function () {
         return true;
     };
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {
-        if (
-            (analyzer.optional.on_monitor === true)
-            && (ws.length === 0 || ws[0].readyStatus >= WebSocket.CLOSING)
-        ) {
-            let _ins = ins.get();
-            if (typeof analyzer.line_parsed[2] === 'undefined') {
-                monitor = config.find('instances.terminal.monitor');
+
+        function push_monitor(stream, hashtag) {
+            if (stream === 'tag' && typeof hashtag !== 'string') {
+                term.error('Hashtag is undefined.')
+                return false;
             }
-            else if (analyzer.line_parsed[2].name === 'tag') {
-                monitor = analyzer.paramaters.hashtag;
+
+            let _stream = {};
+            if (stream === 'home' || stream === 'notification') {
+                for (let i = 0; i < ws.stream.length; i++) {
+                    if (ws.stream[i].type === 'user') {
+                        ws.monitor[stream] = true;
+                        console.log('OK:' + stream);
+                        return true;
+                    }
+                }
+                _stream.type = 'user';
+            }
+            else if (stream === 'tag') {
+                for (let i = 0; i < ws.stream.length; i++) {
+                    if (ws.stream[i].type === 'tag' && ws.stream[i].name === hashtag) {
+                        ws.monitor['tag'] = true;
+                        return true;
+                    }
+                }
+                _stream.type = 'tag';
+                _stream.name = hashtag;
             }
             else {
-                monitor = analyzer.line_parsed[2].name;
+                for (let i = 0; i < ws.stream.length; i++) {
+                    if (ws.stream[i].type === stream) {
+                        ws.monitor[stream] = true;
+                        return true;
+                    }
+                }
+                _stream.type = stream;
+            }
+
+            let _ins = ins.get();
+            let url = 'wss://' + _ins.domain
+                    + '/api/v1/streaming?access_token='
+                    + _ins.access_token;
+            if (stream === 'home' || stream === 'notification') {
+                url += '&stream=user';
+            }
+            else if (stream === 'local') {
+                url += '&stream=public:local';
+            }
+            else if (stream === 'public') {
+                url += '&stream=public';
+            }
+            else if (stream === 'tag') {
+                url += '&stream=hashtag&tag=' + hashtag;
+            }
+            else {
+                term.error('Monitor stream type error.');
+                return false;
+            }
+
+            let label =
+                (stream === 'home') ? '<i class="fa fa-home" aria-hidden="true"></i> HOME' :
+                (stream === 'notification') ? '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> NOTIFICATION' :
+                (stream === 'local') ? '<i class="fa fa-users" aria-hidden="true"></i> LOCAL' :
+                (stream === 'public') ? '<i class="fa fa-globe" aria-hidden="true"></i> GLOBAL' :
+                (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) : '???';
+
+            ws.monitor[stream] = true;
+
+            let notifies = config_notify();
+            let is_noti = false;
+            for (let noti in notifies) {
+                is_noti = (is_noti || noti);
+            }
+            let onmessage = (stream === 'home' || stream === 'notification')
+                ? function(e) {
+                    let data = JSON.parse(e.data);
+                    let payload;
+
+                    if (data.event === 'delete') {
+                        payload = data.payload;
+                        $('[name=id_' + payload + ']').addClass('status_deleted');
+                        if (notifies.delete) {
+                            term.error('deleted ID:' + payload);
+                        }
+                    }
+                    else if(data.event === 'notification' && ws.monitor.notification === true) {
+                        payload = JSON.parse(data.payload);
+                        term.echo(make_notification(payload, notifies), {raw: true});
+
+                        if(beep_buf) {
+                            let source = context.createBufferSource();
+                            source.buffer = beep_buf;
+                            source.connect(context.destination);
+                            source.start(0);
+                        }
+                    }
+                    else if(data.event === 'update' && ws.monitor.home === true) {
+                        payload = JSON.parse(data.payload);
+
+                        let status = makeStatus(payload, {tl_name: label});
+                        term.echo(status, { raw: true });
+                    }
+                    reduce_status();
+                }
+                : function(e) {
+                    let data = JSON.parse(e.data);
+                    let payload;
+
+                    if (data.event === 'delete') {
+                        payload = data.payload;
+                        $('[name=id_' + payload + ']').addClass('status_deleted');
+                        if (notifies.delete) {
+                            term.error('deleted ID:' + payload);
+                        }
+                    }
+                    else if(data.event === 'update') {
+                        payload = JSON.parse(data.payload);
+                        let status = makeStatus(payload, {tl_name: label});
+                        term.echo(status, { raw: true });
+                    }
+                    reduce_status();
+                };
+
+            let _ws = new WebSocket(url);
+
+            _ws.onmessage = onmessage;
+
+            _ws.onopen = (e) => {
+                term.echo(stream + " Streaming start.");
+            };
+
+            _ws.onerror = (e) => {
+                term.error(stream + ' Streaming error. closed.');
+                console.log(e);
+            };
+
+            _ws.onclose = (e) => {
+                term.echo(stream + " Streaming closed.");
+            };
+
+            _stream.ws = _ws;
+            ws.stream.push(_stream);
+
+        }
+        if (analyzer.optional.on_monitor === true) {
+            let _ins = ins.get();
+            let monitor = [];
+            let hashtag;
+            if (typeof analyzer.line_parsed[2] === 'undefined') {
+                let conf_mon = config.find('instances.terminal.monitor');
+                conf_mon = conf_mon ? conf_mon.match(/(home|local|public|notification)/g) : [];
+                for (let i = 0; i < conf_mon.length; i++) {
+                    ws.monitor[conf_mon[i]] = true;
+                }
+
+                for (let m in ws.monitor) {
+                    if (ws.monitor[m]) {
+                        monitor.push({ type: m });
+                    }
+                }
+
+                /* if (conf_mon.length > 0) {
+                    ws.startup = conf_mon[0];
+                }*/
+            }
+            else if (analyzer.line_parsed[2].name === 'tag') {
+                monitor.push({
+                    type: analyzer.line_parsed[2].name,
+                    hashtag: analyzer.paramaters.hashtag
+                });
+            }
+            else {
+                monitor.push({
+                    type: analyzer.line_parsed[2].name
+                });
             }
             let notifies = config_notify();
 
@@ -688,6 +865,36 @@ let InstanceModeElement = (function () {
             for (let noti in notifies) {
                 is_noti = (is_noti || noti);
             }
+
+            for (let i = 0; i < monitor.length; i++) {
+                push_monitor(monitor[i].type, monitor[i].hashtag);
+            }
+            if (ws.startup && ws.startup !== 'tag') {
+                let type = ws.startup;
+                let path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
+                let limit = config.find(['instances', 'terminal', 'length']);
+                limit = (limit > 0) ? limit : 20;
+                params = { limit: limit };
+                if (type === 'local') {
+                    params.local = true;
+                }
+                else if (type === 'tag') {
+                    path += '/' + analyzer.paramaters.tag_name;
+                }
+                term.pause();
+                callAPI(path, { data: params })
+                .then((data, status, jqxhr) => {
+                    for (let i = data.length - 1; i >= 0; i--) {
+                        if (analyzer.optional.pinned && !data[i].pinned) {
+                            continue;
+                        }
+                        term.echo(makeStatus(data[i]), {raw: true, flush: false});
+                    }
+                    term.resume();
+                    term.flush();
+                });
+            }
+            return;
 
             let api = 'wss://' + _ins.domain
                             + '/api/v1/streaming?access_token='
@@ -838,11 +1045,14 @@ let InstanceModeElement = (function () {
             }
         }
         else if(analyzer.optional.no_monitor === true){
-            for (let i = 0; i < ws.length; i++) {
-                ws[i].close();
-                ws[i] = undefined;
+            for (let i = 0; i < ws.stream.length; i++) {
+                ws.stream[i].ws.close();
+                ws.stream[i] = undefined;
             }
-            ws = [];
+            for (let m in ws.monitor) {
+                ws.monitor[m] = false;
+            }
+            ws.stream = [];
         }
     };
     InstanceModeElement.prototype.toot = function (term, analyzer) {
