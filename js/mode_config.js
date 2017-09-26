@@ -95,17 +95,22 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "home",
                                         "description": "ホームタイムラインのストリーミングを有効にします。",
-                                        "execute": this.set_command
+                                        "execute": this.set_array
                                     }, {
                                         "type": "command",
                                         "name": "local",
                                         "description": "ローカルタイムラインのストリーミングを有効にします。",
-                                        "execute": this.set_command
+                                        "execute": this.set_array
                                     }, {
                                         "type": "command",
                                         "name": "public",
                                         "description": "連合タイムラインのストリーミングを有効にします。",
-                                        "execute": this.set_command
+                                        "execute": this.set_array
+                                    }, {
+                                        "type": "command",
+                                        "name": "notification",
+                                        "description": "連合タイムラインのストリーミングを有効にします。",
+                                        "execute": this.set_array
                                     }
                                 ]
                             }, {
@@ -251,6 +256,7 @@ var ConfigurationModeElement = (function () {
             }, {
                 "type": "command",
                 "name": "no",
+                "optional": "is_no",
                 "description": "設定の削除を行います。",
                 "children": [
                     {
@@ -278,8 +284,30 @@ var ConfigurationModeElement = (function () {
                                     {
                                         "type": "command",
                                         "name": "monitor",
-                                        "description": "取得するタイムラインの設定をします。",
-                                        "execute": this.set_default
+                                        "description": "取得するタイムラインの設定を削除します。",
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "home",
+                                                "description": "ホームタイムラインのストリーミングを無効にします。",
+                                                "execute": this.set_array
+                                            }, {
+                                                "type": "command",
+                                                "name": "local",
+                                                "description": "ローカルタイムラインのストリーミングを無効にします。",
+                                                "execute": this.set_array
+                                            }, {
+                                                "type": "command",
+                                                "name": "public",
+                                                "description": "連合タイムラインのストリーミングを無効にします。",
+                                                "execute": this.set_array
+                                            }, {
+                                                "type": "command",
+                                                "name": "notification",
+                                                "description": "連合タイムラインのストリーミングを無効にします。",
+                                                "execute": this.set_array
+                                            }
+                                        ]
                                     }, {
                                         "type": "command",
                                         "name": "logging",
@@ -397,15 +425,7 @@ var ConfigurationModeElement = (function () {
     });
     ConfigurationModeElement.prototype.set_paramater = function (term, analyzer) {
         let index = analyzer.line_parsed.length - 1;
-        /*
-        var t_conf = config;
-        for (var i = 0; i < index-1; i++) {
-            if (typeof t_conf[analyzer.line_parsed[i].name] === 'undefined') {
-                t_conf[analyzer.line_parsed[i].name] = {};
-            }
-            t_conf = t_conf[analyzer.line_parsed[i].name];
-        }
-        t_conf[analyzer.line_parsed[index-1].name] = analyzer.paramaters.string;*/
+
         let nodes = [];
         for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
             nodes.push(analyzer.line_parsed[i].name);
@@ -417,14 +437,6 @@ var ConfigurationModeElement = (function () {
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
-
-        /*
-        for (var i = 0; i < index; i++) {
-            t_conf = t_conf[analyzer.line_parsed[i].name];
-            if (typeof t_conf === 'undefined') {
-                return true;
-            }
-        }*/
 
         let nodes = [];
         for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
@@ -438,22 +450,9 @@ var ConfigurationModeElement = (function () {
         return config.write(['instances', 'terminal', 'length'], limit);
     };
     ConfigurationModeElement.prototype.set_true = function (term, analyzer) {
-        //var t_conf = config;
         if (analyzer.line_parsed[0].name === 'no') {
             analyzer.line_parsed.shift();
         }
-
-        /*
-        var cmd = 'config';
-        for (var i = 0; i < analyzer.line_parsed.length; i++) {
-            cmd += '.' + analyzer.line_parsed[i].name;
-            if (eval('typeof ' + cmd) === 'undefined') {
-                eval(cmd + ' = {}');
-            }
-            t_conf = t_conf[analyzer.line_parsed[i].name];
-        }
-        cmd += ' = true';
-        eval(cmd);*/
 
         let nodes = [];
         for (let i = 0; i < analyzer.line_parsed.length; i++) {
@@ -467,19 +466,6 @@ var ConfigurationModeElement = (function () {
             analyzer.line_parsed.shift();
         }
 
-        /*
-        var cmd = 'config';
-        for (var i = 0; i < analyzer.line_parsed.length; i++) {
-            cmd += '.' + analyzer.line_parsed[i].name;
-            if (eval('typeof ' + cmd) === 'undefined') {
-                eval(cmd + ' = {}');
-            }
-            t_conf = t_conf[analyzer.line_parsed[i].name];
-        }
-        cmd += ' = false';
-        eval(cmd);*/
-
-
         let nodes = [];
         for (let i = 0; i < analyzer.line_parsed.length; i++) {
             nodes.push(analyzer.line_parsed[i].name);
@@ -487,23 +473,6 @@ var ConfigurationModeElement = (function () {
         return config.write(nodes, false);
     };
     ConfigurationModeElement.prototype.set_command = function (term, analyzer) {
-        /*
-        var index = analyzer.line_parsed.length - 1;
-        var t_conf = config;
-        for (var i = 0; i < index-1; i++) {
-            if (typeof t_conf[analyzer.line_parsed[i].name] === 'undefined') {
-                t_conf[analyzer.line_parsed[i].name] = {};
-            }
-            t_conf = t_conf[analyzer.line_parsed[i].name];
-        }
-        if (typeof analyzer.line_parsed[index].children === 'undefined') {
-            t_conf[analyzer.line_parsed[index-1].name] = analyzer.line_parsed[index].name;
-        }
-        else {
-            t_conf[analyzer.line_parsed[index-1].name] = {};
-            t_conf[analyzer.line_parsed[index-1].name][analyzer.line_parsed[index].name] = {}
-        }*/
-
         let nodes = [];
         for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
             nodes.push(analyzer.line_parsed[i].name);
@@ -519,6 +488,26 @@ var ConfigurationModeElement = (function () {
             return true;
         }
         return config.write(nodes, {});
+    };
+    ConfigurationModeElement.prototype.set_array = function (term, analyzer) {
+        if (analyzer.optional.is_no === true) {
+            analyzer.line_parsed.shift();
+        }
+        let nodes = [];
+        for (let i = 0; i < analyzer.line_parsed.length - 1; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+        let arr = config.find(nodes);
+        if (typeof arr !== 'object') {
+            arr = [];
+        }
+        arr = arr.filter((val) => {
+            return (val !== analyzer.line_parsed[3].name);
+        });
+        if (analyzer.optional.is_no !== true) {
+            arr.unshift(analyzer.line_parsed[3].name);
+        }
+        return config.write(nodes, arr);
     };
     ConfigurationModeElement.prototype.set_broadcast = function (term, analyzer) {
         term.echo('executed!');

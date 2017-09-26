@@ -24,7 +24,10 @@ let def_conf = {
                 mention: true,
                 following: true
             },
-            monitor: 'local'
+            monitor: [
+                'local',
+                'notification'
+            ]
         },
         status: {},
     }
@@ -152,7 +155,9 @@ let init_instance = function(term) {
             ws.monitor[auto_term[i]] = true;
         }
         ws.startup = auto_term[0];
-        term.exec('terminal monitor');
+        if (!is_monitoring()) {
+            term.exec('terminal monitor');
+        }
     }
     return;
     let src_url = 'https://' + _ins.domain + '/sounds/boop.ogg';
@@ -730,7 +735,7 @@ function makeStatus(payload, optional) {
         let tl = $('<tr />')
             .attr('name', name)
             .append($('<td />')
-                .html('>> ' + optional.tl_name + ' streaming updated.')
+                .html(optional.tl_name + ' streaming updated.')
                 .attr('colspan', '2'));
         status.prepend(tl);
     }
@@ -897,6 +902,7 @@ function callAPI(path, opts = {}) {
 
 function favorite(status, term) {
     let isFav = ($(status).data('fav') == 1);
+    let head_fa = $(status).find('.status_head i');
     let api = '/api/v1/statuses/'
             + $(status).data('sid').toString()
             + (isFav ? '/unfavourite' : '/favourite' );
@@ -904,14 +910,14 @@ function favorite(status, term) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[1]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $(head_fa[0]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            $($(elem).find('i')[1])
+            $(head_fa[0])
                 .removeClass()
                 .addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'))
             $(elem).data('fav', data.favourited ? '1' : '0');
@@ -921,7 +927,7 @@ function favorite(status, term) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Favorite failed.(' + jqxhr.status + ')');
-        $($(status).find('i')[1]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
+        $(head_fa[0]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
         console.log(jqxhr);
     });
 }
@@ -935,7 +941,8 @@ function closeTootbox() {
 }
 
 function boost(status) {
-    if ($($(status).find('i')[2]).hasClass('fa-times-circle-o')) {
+    let head_fa = $(status).find('.status_head i');
+    if ($(head_fa[1]).hasClass('fa-times-circle-o')) {
         return;
     }
     let isReb = ($(status).data('reb') == 1);
@@ -946,14 +953,14 @@ function boost(status) {
         term = $.terminal.active();
     }
 
-    $($(status).find('i')[2]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $(head_fa[1]).removeClass().addClass('fa fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
         type: 'POST'
     }).then((data, stat, jqxhr) => {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
-            $($(elem).find('i')[2])
+            $(head_fa[1])
                 .removeClass()
                 .addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'))
             $(elem).data('reb', data.reblogged ? '1' : '0');
@@ -963,7 +970,7 @@ function boost(status) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Reblogged failed.(' + jqxhr.status + ')');
-        $($(status).find('i')[2]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
+        $(head_fa[1]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
         console.log(jqxhr);
     });
 }
