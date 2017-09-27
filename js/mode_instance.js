@@ -412,7 +412,7 @@ let InstanceModeElement = (function () {
                         ]
                     }
                 ]
-            }, {
+            }, {/*
                 "type": "command",
                 "name": "monitor",
                 "description": 'デフォルトのストリーミング設定を行います。',
@@ -448,7 +448,7 @@ let InstanceModeElement = (function () {
                         ]
                     }
                 ]
-            }, {
+            }, {*/
                 "type": "command",
                 "name": "access-list",
                 "description": '正規表現フィルタを設定します。',
@@ -700,7 +700,6 @@ let InstanceModeElement = (function () {
                 for (let i = 0; i < ws.stream.length; i++) {
                     if (ws.stream[i].type === 'user') {
                         ws.monitor[stream] = true;
-                        console.log('OK:' + stream);
                         return true;
                     }
                 }
@@ -775,13 +774,54 @@ let InstanceModeElement = (function () {
                     }
                     else if(data.event === 'notification' && ws.monitor.notification === true) {
                         payload = JSON.parse(data.payload);
-                        term.echo(make_notification(payload, notifies), {raw: true});
+                        let notification = make_notification(payload, notifies)
+                        term.echo(notification, {raw: true});
+
+                        let is_desktop = config.find(['instances', 'terminal', 'notification']);
 
                         if(beep_buf) {
                             let source = context.createBufferSource();
                             source.buffer = beep_buf;
                             source.connect(context.destination);
                             source.start(0);
+                        }
+
+
+                        let title;
+                        let body;
+                        if (payload.type === 'favourite' && is_desktop.favourite && notification) {
+                            title =　'お気に入り： ';
+                            body = payload.status.content;
+                        }
+                        else if (payload.type === 'reblog' && is_desktop.reblog && notification) {
+                            title = 'ブースト： ';
+                            body = payload.status.content;
+                        }
+                        else if (payload.type === 'mention' && is_desktop.mention && notification) {
+                            title = 'リプライ： ';
+                            body = payload.status.content;
+                        }
+                        else if (payload.type === 'follow' && is_desktop.following && notification) {
+                            title = 'フォロー： ';
+                        }
+
+                        if (typeof body === 'string') {
+                            body = $(body).text();
+                            if (body.length > 100) {
+                                body = body.slice(0, 100);
+                            }
+                        }
+
+                        if (typeof title !== 'undefined') {
+                            title += payload.account.display_name + ' @' + payload.account.acct;
+                            var n = new Notification(title, {
+                                body: body,
+                                icon: payload.account.avatar_static,
+                                data: payload
+                            });
+                            n.onclick = function(e) {
+                                e.srcElement.close();
+                            };
                         }
                     }
                     else if(data.event === 'update' && ws.monitor.home === true) {
@@ -906,7 +946,6 @@ let InstanceModeElement = (function () {
                 callAPI(path, { data: params })
                 .then((data, status, jqxhr) => {
                     let notifies = config_notify();
-                    console.log(data);
                     for (let i = data.length - 1; i >= 0; i--) {
                         if (analyzer.optional.pinned && !data[i].pinned) {
                             continue;
@@ -1433,7 +1472,8 @@ let InstanceModeElement = (function () {
             term.echo('Standard Status access list ' + acl_num);
             term.echo('    ' + acls[acl_num].type + ' regexp '
                 + acls[acl_num].regexp.toString()
-                + ', color ' + acls[acl_num].color);
+                + (acls[acl_num].type === 'permit'
+                    ? (', color ' + acls[acl_num].color) : ''));
         }
         return true;
     };
@@ -1478,7 +1518,7 @@ let InstanceModeElement = (function () {
             let msg = 'Line ' + (i + 1).toString() + ', type ' + s.type;
 
             if (s.type === 'tag') {
-                msg += ' "' + s.hashtag + '"'
+                msg += ' "' + s.name + '"'
             }
             term.echo('\n', {raw: true});
             term.echo(msg);

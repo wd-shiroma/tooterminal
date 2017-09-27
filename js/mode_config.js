@@ -147,6 +147,34 @@ var ConfigurationModeElement = (function () {
                                 ]
                             }, {
                                 "type": "command",
+                                "name": "notification",
+                                "optional": "desktop_notification",
+                                "description": "デスクトップ通知の設定をします。",
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "favourite",
+                                        "description": "お気に入り登録の通知を表示します。",
+                                        "execute": this.set_true
+                                    }, {
+                                        "type": "command",
+                                        "name": "reblog",
+                                        "description": "ブーストの通知を表示します。",
+                                        "execute": this.set_true
+                                    }, {
+                                        "type": "command",
+                                        "name": "mention",
+                                        "description": "リプライの通知を表示します。",
+                                        "execute": this.set_true
+                                    }, {
+                                        "type": "command",
+                                        "name": "following",
+                                        "description": "フォローの通知を表示します。",
+                                        "execute": this.set_true
+                                    }
+                                ]
+                            }, {
+                                "type": "command",
                                 "name": "length",
                                 "description": "トゥートの取得数について設定します。",
                                 "children": [
@@ -341,6 +369,35 @@ var ConfigurationModeElement = (function () {
                                                 "execute": this.set_false
                                             }
                                         ]
+                                    }, {
+                                        "type": "command",
+                                        "name": "notification",
+                                        "optional": "desktop_notification",
+                                        "description": "デスクトップ通知の設定をします。",
+                                        "execute": this.set_false,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "favourite",
+                                                "description": "お気に入り登録の通知を非表示にします。",
+                                                "execute": this.set_default
+                                            }, {
+                                                "type": "command",
+                                                "name": "reblog",
+                                                "description": "ブーストの通知を非表示にします。",
+                                                "execute": this.set_default
+                                            }, {
+                                                "type": "command",
+                                                "name": "mention",
+                                                "description": "リプライの通知を非表示にします。",
+                                                "execute": this.set_default
+                                            }, {
+                                                "type": "command",
+                                                "name": "following",
+                                                "description": "フォロー通知を非表示にします。",
+                                                "execute": this.set_default
+                                            }
+                                        ]
                                     }
                                 ]
                             }, {
@@ -458,7 +515,21 @@ var ConfigurationModeElement = (function () {
         for (let i = 0; i < analyzer.line_parsed.length; i++) {
             nodes.push(analyzer.line_parsed[i].name);
         }
-        return config.write(nodes, true);
+
+        if (analyzer.optional.desktop_notification === true) {
+            Notification.requestPermission(function(result) {
+              if (result === 'granted') {
+                config.write(nodes, true);
+              }
+              else {
+                console.log('Desktop-Notification is rejected: ' + result);
+              }
+            });
+        }
+        else {
+            config.write(nodes, true);
+        }
+        return true;
     };
     ConfigurationModeElement.prototype.set_false = function (term, analyzer) {
         //var t_conf = config;

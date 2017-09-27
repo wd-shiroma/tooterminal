@@ -15,6 +15,7 @@
   - [インスタンスログイン、terminal monitorを自動化する](#url_params)
   - [アイコン、サムネ画像、区切り線表示](#conf_status)
   - [正規表現フィルタ](#ins_filter)
+  - [デスクトップ通知](#desktop_notification)
   - [便利なキーボードショートカット](#advance_shortcut)
 
 Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。
@@ -23,7 +24,7 @@ Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利�
 
 CiscoIOSのコマンド感覚でマストドンしたかったので作りました。
 
-<h1 id="#whatis_ios">CiscoIOSとは</h1>
+<h1 id="whatis_ios">CiscoIOSとは</h1>
 
 商用NW機器大手のCisco社製ルーター/スイッチ等で幅広く使われているファームウェアです
 
@@ -35,9 +36,9 @@ CiscoIOSのコマンド感覚でマストドンしたかったので作りまし
 
 (一応注意書きしときますが、私はCisco社とは無縁の人間です)
 
-<h1 id="#howto_first">使い方(基本編)</h1>
+<h1 id="howto_first">使い方(基本編)</h1>
 
-<h2 id="#howto_global">基本的な操作感(特権モード)</h2>
+<h2 id="howto_global">基本的な操作感(特権モード)</h2>
 
 [クライアントページ](http://wd-shiroma.github.io/tooterminal)にアクセスします。
 
@@ -122,7 +123,7 @@ gunma     | gunmastodon.com             |  rwf  | @shiroma
  登録件数: 3件
 ```
 
-<h2 id="#howto_instance">インスタンスの登録/ログイン(インスタンスモード)</h2>
+<h2 id="howto_instance">インスタンスの登録/ログイン(インスタンスモード)</h2>
 
 各インスタンスの登録はグローバルモードからinstanceコマンドを打ちます。
 
@@ -171,25 +172,53 @@ Tooterminal#
 
 ※アプリケーションを再登録すると、別アプリケーションとして認識されてしまうため、アプリの再登録は極力控えるようにしましょう。
 
-<h2 id="#howto_termon">タイムラインを表示する</h2>
+<h2 id="howto_termon">タイムラインを表示する</h2>
 
 インスタンスモードに遷移した状態ではタイムラインは表示されません。
 別途コマンドを入力する必要があります。
 
 ```
-shiroma@mstdn.jp# ter mon
+shiroma@mstdn.jp# ter mon ←タイムライン取得開始
 
-Streaming start.
+notification Streaming start.
+local Streaming start.
 [ ぐすくま @shiroma 2017-7-21 18:24:30.514 ] from Tooterminal
 テスト
 
-shiroma@mstdn.jp# ter no mon
+shiroma@mstdn.jp# ter no mon ←タイムライン取得終了
 
 Streaming closed.
 shiroma@mstdn.jp#
 ```
 
-<h2 id="#howto_toot">トゥート。画像/動画のアップロード</h2>
+デフォルトではローカルタイムラインと通知タイムラインが流れるように設定してあります。
+
+このデフォルト設定を変更する場合は、コンフィギュレーションモードに入って設定を変更してください。  (コンフィギュレーションモードについては後述の[Tooterminalの設定変更(コンフィギュレーションモード)](#conf_mode)を参照)
+
+複数のタイムラインをまとめて表示することもできます。
+
+```
+shiroma@mstdn.jp# ter mon ←タイムライン取得開始
+
+notification Streaming start.
+local Streaming start.
+[ ぐすくま @shiroma 2017-7-21 18:24:30.514 ] from Tooterminal
+テスト
+
+shiroma@mstdn.jp# ter mon home ←ホームタイムラインを追加で取得開始
+
+home Streaming start.
+ HOME streaming updated.
+[ ぐすくま @shiroma 2017-7-21 18:25:34.193 ] from Tooterminal
+未収容で流す→ホームタイムライン
+
+ LOCAL streaming updated.
+[ ぐすくま２ @shiroma2 2017-7-21 18:25:55.555 ] from Tooterminal
+同じインスタンスのフォローしてないアカウント→ローカルタイムライン
+shiroma@mstdn.jp#
+```
+
+<h2 id="howto_toot">トゥート。画像/動画のアップロード</h2>
 
 ```
 shiroma@mstdn.jp# toot
@@ -209,9 +238,9 @@ Toot!ボタンを押下するか、`Ctrl+Enter`でトゥートできます。
 
 ![画像投稿](./img/toot_window.png "画像投稿")
 
-<h1 id="#advance">使い方(応用編)</h1>
+<h1 id="advance">使い方(応用編)</h1>
 
-<h2 id="#conf_manage">Tooterminalの設定確認・保存・削除</h2>
+<h2 id="conf_manage">Tooterminalの設定確認・保存・削除</h2>
 
 設定はCiscoIOSに倣って、running-configとstartup-configに保存されています。
 
@@ -276,7 +305,7 @@ Tooterminal#
 Tooterminal# reload
 ```
 
-<h2 id="#conf_mode">Tooterminalの設定変更(コンフィギュレーションモード)</h2>
+<h2 id="conf_mode">Tooterminalの設定変更(コンフィギュレーションモード)</h2>
 
 当クライアントに関する様々な設定はコンフィギュレーションモードに遷移して行います。
 
@@ -294,7 +323,7 @@ Tooterminal(config)# ←コンフィギュレーションモードに入った�
 
 ※application scopesは設定変更できるようにしてありますが、出来るだけ変更しない方がいいと思います。
 
-<h2 id="#conf_status">アイコン、サムネ画像、区切り線表示</h2>
+<h2 id="conf_status">アイコン、サムネ画像、区切り線表示</h2>
 
 Tooterminalはデフォルトでアイコン・サムネ画像・区切り線が非表示になっています。
 
@@ -341,7 +370,7 @@ Tooterminal#
 
 ![トゥート表示設定後](./img/status_all.png "トゥート表示設定後")
 
-<h2 id="#conf_app">クライアント名、URLを変更する</h2>
+<h2 id="conf_app">クライアント名、URLを変更する</h2>
 
 Tooterminalのクライアント名はデフォルトで「Tooterminal」となっていますが、コンフィグを設定することにより、クライアント名を変更することが出来ます。
 
@@ -396,7 +425,7 @@ Tooterminal# sh run
 
 設定変更後、特権モードにて「instance インスタンス名」コマンドを実行し、新規インスタンス登録を行うと、クライアント名が変更されます。
 
-<h2 id="#url_params">インスタンスログイン、terminal monitorを自動化する</h2>
+<h2 id="url_params">インスタンスログイン、terminal monitorを自動化する</h2>
 
 URLの末尾にパラメータを設定することでインスタンスモードへの自動遷移＆terminal monitorコマンドの自動発行ができます。
 
@@ -416,29 +445,61 @@ home, local, public, notificationをカンマ区切りで指定します。
   * men: リプライ
   * del: トゥート削除
 
-<h2 id="#ins_filter">正規表現フィルタ</h2>
+<h2 id="ins_filter">正規表現フィルタ</h2>
 
 Tooterminalは公式クライアントと同様に、正規表現フィルタに対応しています。
 
 ```
 shiroma@mstdn.jp# access-list 1 deny Tooterminal ←「Tooterminal」文字列が含まれるトゥートを表示にします。
-shiroma@mstdn.jp# access-list 1 deny  /tooterminal/i ←小文字大文字を無視します。
+shiroma@mstdn.jp# access-list 1 deny /tooterminal/i ←小文字大文字を無視します。
 shiroma@mstdn.jp# access-list 1 deny "via sync.twi2mstdn.space" ←空白が含まれる文字列はダブルクォーテーションで括ります。
-shiroma@mstdn.jp# no access-list 1 ←フィルターを解除します。
-shiroma@mstdn.jp# access-list 2 deny  mstdn.jp ←2つ目の数字を変えることで、複数のフィルターを設定できます。
-shiroma@mstdn.jp# access-list 3 permit  media ←3つ目の数字をpermitに変えることで、非表示ではなく強調表示に変更することもできます。
+↑ 同じACL番号を指定した場合、上書きされます。
+shiroma@mstdn.jp# no access-list 1 ←不要なフィルターを解除します。
+shiroma@mstdn.jp# access-list 2 deny mstdn.jp ←2つ目の数字を変えることで、複数のフィルターを設定できます。
+shiroma@mstdn.jp# access-list 3 permit media ←3つ目の数字をpermitに変えることで、非表示ではなくトゥートの背景色を変更することもできます。
+shiroma@mstdn.jp# access-list 4 permit @shiroma color dark-red ←更にcolorオプションを追加することで、背景色の色を変更することができます。
+
 shiroma@mstdn.jp# show access-list
 Standard Status access list 1
     deny regexp /via sync\.twi2mstdn\.space/
 Standard Status access list 2
     deny regexp /mstdn\.jp/
 Standard Status access list 3
-    permit regexp /media/
+    permit regexp /media/, color dark-blue
+Standard Status access list 4
+    permit regexp /media/, color dark-red
 ```
 
 複数のフィルター(アクセスリスト)を設定することができ、数字の小さい順番にルールが適用されます。
 
-<h2 id="#advance_shortcut">便利なキーボードショートカット</h2>
+フィルターの適用範囲は、表示されるトゥートの文字列全体なので、複数タイムラインを流している場合はTLごとに色分けすることも可能です。
+
+```
+shiroma@mstdn.jp# show access-list
+→HTLは背景を紺色にする
+Standard Status access list 30
+    permit regexp /HOME streaming updated/, color dark-blue
+→LTLは背景を濃赤色にする
+Standard Status access list 40
+    permit regexp /LOCAL streaming updated/, color dark-red
+```
+
+<h2 id="desktop_notification">デスクトップ通知</h2>
+
+Tooterminalは公式クライアントと同様に、デスクトップ通知を表示することができます。。
+
+```
+Tooterminal# configure terminal
+Tooterminal(config)#
+Tooterminal(config)# instances terminal notification ?
+Exec commands:
+  favourite             お気に入り登録の通知を表示します。
+  reblog                ブーストの通知を表示します。
+  mention               リプライの通知を表示します。
+  following             フォローの通知を表示します。
+```
+
+<h2 id="advance_shortcut">便利なキーボードショートカット</h2>
 
 TooterminalではCtrl、Alt、Shiftを駆使した様々なショートカットが利用できます。
 

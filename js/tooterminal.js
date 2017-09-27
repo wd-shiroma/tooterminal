@@ -732,12 +732,15 @@ function makeStatus(payload, optional) {
         if ($('[name=' + name + ']').length > 0) {
             return '';
         }
-        let tl = $('<tr />')
-            .attr('name', name)
-            .append($('<td />')
-                .html(optional.tl_name + ' streaming updated.')
-                .attr('colspan', '2'));
-        status.prepend(tl);
+        let n_stream = ws.stream.length - (!ws.monitor.home && ws.monitor.notification ? 1 : 0);
+        if (n_stream > 1) {
+            let tl = $('<tr />')
+                .attr('name', name)
+                .append($('<td />')
+                    .html(optional.tl_name + ' streaming updated.')
+                    .attr('colspan', '2'));
+            status.prepend(tl);
+        }
     }
     if (ins.acls.hasOwnProperty(ins_name)) {
         for (let acl_num in ins.acls[ins_name]) {
