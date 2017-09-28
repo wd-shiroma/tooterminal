@@ -310,7 +310,7 @@ td.status_main{
 }
 
 .status_contents span {
-    word-break: keep-all;
+    word-break: break-all;
     word-wrap: break-word;
 }
 
