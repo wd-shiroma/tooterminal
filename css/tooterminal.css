@@ -181,6 +181,46 @@ body {
     background-color: inherit;
 }
 
+.status_mouseover .avatar_static{
+    display: none;
+}
+
+.status_mouseover .avatar_animate{
+    display: inline;
+}
+
+.status_mouseover .status_avatar{
+    display: none;
+}
+
+.status_mouseover:hover .status_avatar{
+    display: block;
+}
+
+.status_animation .avatar_static{
+    display: none;
+}
+
+.status_animation .avatar_animate{
+    display: inline;
+}
+
+.status_standard .avatar_static{
+    display: inline;
+}
+
+.status_standard .avatar_animate{
+    display: none;
+}
+
+.status_standard:hover .avatar_static{
+    display: none;
+}
+
+.status_standard:hover .avatar_animate{
+    display: inline;
+}
+
 .status:active {
     padding: 0.1em 0.4em 0.9em 0.6em;
     background-color: #333;
@@ -269,6 +309,11 @@ td.status_main{
     padding-bottom: 1em;
 }
 
+.status_contents span {
+    word-break: keep-all;
+    word-wrap: break-word;
+}
+
 .status_contents a {
     word-break: break-all;
 }
@@ -276,6 +321,7 @@ td.status_main{
 .status_notify {
     color: goldenrod !important;
 }
+
 .status_notify * {
     color: goldenrod !important;
 }

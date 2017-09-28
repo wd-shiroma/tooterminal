@@ -2,7 +2,7 @@
  * 設定
  *****************************/
 
-let def_conf = {
+let defconf = {
     application: {
         name: 'Tooterminal',
         website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
@@ -31,7 +31,7 @@ let def_conf = {
         },
         status: {},
     }
-}
+};
 
 let config;
 let ins;
@@ -87,10 +87,10 @@ let initConfig = (term) => {
     }
     else {
         console.log('Initialization: read default config')
-        config = def_conf;
+        config = defconf;
     }*/
 
-    config = new ConfigManager(def_conf, st_conf ? JSON.parse(st_conf) : {});
+    config = new ConfigManager(defconf, st_conf ? JSON.parse(st_conf) : {});
     url_params = {};
 
     if (!location.search.match(/^\?.+=.+/)) {
@@ -504,7 +504,7 @@ function getConfig(config, index, d_conf) {
         return cf;
     }
 
-    cf = (typeof d_conf !== 'undefined' ? d_conf : def_conf);
+    cf = (typeof d_conf !== 'undefined' ? d_conf : defconf);
     for (let i = 0; i < idxs.length; i++) {
         cf = cf[idxs[i]];
         if (typeof cf === 'undefined') {
@@ -574,27 +574,51 @@ function makeStatus(payload, optional) {
     }
 
     let avatar = $('<td />').addClass('status_avatar');
-    let cfg = config.find('instances.status.avatar');
-    if (typeof cfg !== 'undefined') {
-        let url = contents.account.avatar_static;
-        avatar.append($('<img />')
-            .attr('name', 'img_' + contents.account.id)
-            .attr('src', url));
-        if (!url.match(/^http/)) {
-            url = 'https://' + _ins.domain + url;
-        }
-
-        let img = new Image();
-        img.onload = () => {
-            $('[name=img_' + contents.account.id + ']').attr('src', url);
-        };
-        img.onerror = (e) => {
-            console.log(e);
-        };
-        img.src = url;
+    let cfg_avatar = config.find('instances.status.avatar');
+    if (typeof cfg_avatar === 'undefined') {
+        avatar.hide();
     }
     else {
-        avatar.hide();
+        let url_s = contents.account.avatar_static;
+        let url_m = contents.account.avatar;
+        if (!url_s.match(/^http/)) {
+            url_s = 'https://' + _ins.domain + url_s;
+        }
+        if (!url_m.match(/^http/)) {
+            url_m = 'https://' + _ins.domain + url_m;
+        }
+        avatar
+            .append($('<img />')
+                .addClass('avatar_static')
+                .attr('name', 'avatar_s_' + contents.account.id)
+                .attr('src', url_s))
+            .append($('<img />')
+                .addClass('avatar_animate')
+                .attr('name', 'avatar_m_' + contents.account.id)
+                .attr('src', url_m));
+
+        let img_s = new Image();
+        img_s.onload = () => {
+            $('[name=avatar_s_' + contents.account.id + ']').attr('src', url_s);
+            if (url_s === url_m) {
+                $('[name=avatar_m_' + contents.account.id + ']').attr('src', url_s);
+            }
+        };
+        img_s.onerror = (e) => {
+            console.log(e);
+        };
+        img_s.src = url_s;
+
+        if (contents.account.avatar_static !== contents.account.avatar) {
+            let img_m = new Image();
+            img_m.onload = () => {
+                $('[name=avatar_m_' + contents.account.id + ']').attr('src', url_m);
+            };
+            img_m.onerror = (e) => {
+                console.log(e);
+            };
+            img_m.src = url_m;
+        }
     }
 
     let content;
@@ -727,6 +751,17 @@ function makeStatus(payload, optional) {
         .append($('<tr />')
             .append(avatar)
             .append(main));
+
+    if (cfg_avatar === 'mouseover') {
+        status.addClass('status_mouseover');
+    }
+    else if (cfg_avatar === 'animation') {
+        status.addClass('status_animation');
+    }
+    else if (cfg_avatar === 'standard' || cfg_avatar === true) {
+        status.addClass('status_standard');
+    }
+
     if (typeof optional.tl_name === 'string') {
         let name = 'stream_' + contents.id;
         if ($('[name=' + name + ']').length > 0) {

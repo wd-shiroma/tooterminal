@@ -203,17 +203,22 @@ var ConfigurationModeElement = (function () {
                                 "type": "command",
                                 "name": "avatar",
                                 "description": "アイコンを表示します。",
-                                "execute": this.set_object,
+                                "execute": this.set_true,
                                 "children": [
                                     {
                                         "type": "command",
+                                        "name": "standard",
+                                        "description": "常にアイコンを表示し、マウスオーバーで動画GIFを再生します。",
+                                        "execute": this.set_command
+                                    }, {
+                                        "type": "command",
                                         "name": "animation",
-                                        "description": "常にアニメーションを再生します。",
+                                        "description": "常に動画GIFを再生します。",
                                         "execute": this.set_command
                                     }, {
                                         "type": "command",
                                         "name": "mouseover",
-                                        "description": "マウスオーバーでアニメーションを再生します。",
+                                        "description": "アイコンは非表示、マウスオーバーで表示と動画GIFを再生します。",
                                         "execute": this.set_command
                                     }
                                 ]
