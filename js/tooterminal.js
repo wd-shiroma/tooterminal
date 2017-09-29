@@ -756,8 +756,10 @@ function makeStatus(payload, optional) {
         .attr('data-reb', contents.reblogged ? '1' : '0')
         .attr('data-reply', reply)
         .addClass('status')
-        .append(avatar)
-        .append($(main));
+        .append($('<div />')
+            .addClass('status_table')
+            .append(avatar)
+            .append($(main)));
 
     if (cfg_avatar === 'mouseover') {
         status.addClass('status_mouseover');
@@ -776,11 +778,10 @@ function makeStatus(payload, optional) {
         }
         let n_stream = ws.stream.length - (!ws.monitor.home && ws.monitor.notification ? 1 : 0);
         if (n_stream > 1) {
-            let tl = $('<tr />')
+            let tl = $('<div />')
                 .attr('name', name)
-                .append($('<td />')
-                    .html(optional.tl_name + ' streaming updated.')
-                    .attr('colspan', '2'));
+                .append($('<span />')
+                    .html(optional.tl_name + ' streaming updated.'));
             status.prepend(tl);
         }
     }
@@ -800,9 +801,9 @@ function makeStatus(payload, optional) {
     }
     if (config.find('instances.status.separator')) {
         status.append(
-            '<tr><td colspan="2"><span>'
+            '<div><span>'
             + Array($.terminal.active().cols() - 5).join('-')
-            + '</span></td></tr>'
+            + '</span></div>'
         );
     }
     return status.prop('outerHTML');

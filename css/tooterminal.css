@@ -164,10 +164,13 @@ body {
 }
 
 .status {
-    display: table !important;
-    table-layout: fixed;
     width: 100%;
     margin: 0px
+}
+
+.status_table {
+    display: table !important;
+    table-layout: fixed;
 }
 
 .status_cell {

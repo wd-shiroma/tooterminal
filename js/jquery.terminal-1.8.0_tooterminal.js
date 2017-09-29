@@ -6470,7 +6470,7 @@
                 self.click(function() {
                     if (!frozen) {
                         if (!self.enabled()) {
-                            self.focus();
+                            //self.focus(); 画面クリック時のフォーカスを抑制
                             command_line.enable();
                         } else {
                             self.disable();
