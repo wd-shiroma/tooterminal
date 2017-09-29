@@ -250,8 +250,8 @@ $(function() {
         clear:        false,
         scrollOnEcho: false,
         keypress:     filterKey,
-        onFocus:      (term) => { return false; },
-        onResume:     false,
+        onFocus:      (term) => { return true; },
+        //onResume:     false,
         onCommandChange: parseCommand,
     });
     $('#toot').on('keydown', (event) => {
@@ -473,8 +473,16 @@ $(function() {
         }
     })
     .on('keydown', (e) => {
-        if (e.keyCode === 65 && e.altKey && term_mode === mode_instance && $('#toot').css('display') === 'none') {
-            $.terminal.active().exec('toot');
+        if (e.keyCode === 65 && e.altKey && term_mode === mode_instance) {
+            if ($('#toot').css('display') === 'none') {
+                $.terminal.active().exec('toot');
+            }
+            else {
+                $('#toot_box').focus();
+            }
+        }
+        else if (e.target.localName === 'body') {
+            $.terminal.active().focus(true, true);
         }
     });
     window.onerror = function(msg, url, line, col, error) {
@@ -573,7 +581,7 @@ function makeStatus(payload, optional) {
         reply = reply.replace('@' + _ins.user.acct + ' ', '');
     }
 
-    let avatar = $('<td />').addClass('status_avatar');
+    let avatar = $('<div />').addClass('status_cell status_avatar');
     let cfg_avatar = config.find('instances.status.avatar');
     if (typeof cfg_avatar === 'undefined') {
         avatar.hide();
@@ -732,12 +740,12 @@ function makeStatus(payload, optional) {
             .append(content_more.hide());
     }
 
-    let main = $('<td />')
-        .addClass('status_main')
-            .append($('<div />').addClass('status_head').html($.terminal.format(head)))
-            .append(content_visible);
+    let main = $('<div />')
+        .addClass('status_cell status_main')
+        .append($('<div />').addClass('status_head').html(head))
+        .append(content_visible);
 
-    let status = $('<table />')
+    let status = $('<div />')
         .attr('name', 'id_' + contents.id)
         .attr('data-sid', contents.id)
         .attr('data-instance', ins_name)
@@ -748,9 +756,8 @@ function makeStatus(payload, optional) {
         .attr('data-reb', contents.reblogged ? '1' : '0')
         .attr('data-reply', reply)
         .addClass('status')
-        .append($('<tr />')
-            .append(avatar)
-            .append(main));
+        .append(avatar)
+        .append($(main));
 
     if (cfg_avatar === 'mouseover') {
         status.addClass('status_mouseover');

@@ -164,21 +164,42 @@ body {
 }
 
 .status {
+    display: table !important;
+    table-layout: fixed;
     width: 100%;
-    padding: 0em 0.5em 1em 0.5em;
     margin: 0px
 }
 
-.status td {
+.status_cell {
     border: none;
+    width: 100%;
     margin-left: 0px;
 }
 
 .status:hover {
     background-color: #252525;
 }
+
 .status:hover *{
     background-color: inherit;
+}
+
+.status:active {
+    margin: 0px 0px 0px 1px;
+    background-color: #333;
+}
+
+.status_avatar {
+    display: none;
+    width: 3em;
+    height: auto;
+    margin-right: 0.7em;
+    text-align: center;
+}
+
+.status_avatar img {
+    width: 3em;
+    height: 3em;
 }
 
 .status_mouseover .avatar_static{
@@ -186,15 +207,15 @@ body {
 }
 
 .status_mouseover .avatar_animate{
+    display: none;
+}
+
+.status_mouseover:hover .avatar_animate{
     display: inline;
 }
 
 .status_mouseover .status_avatar{
-    display: none;
-}
-
-.status_mouseover:hover .status_avatar{
-    display: block;
+    display: table-cell !important;
 }
 
 .status_animation .avatar_static{
@@ -203,6 +224,10 @@ body {
 
 .status_animation .avatar_animate{
     display: inline;
+}
+
+.status_animation .status_avatar{
+    display: table-cell !important;
 }
 
 .status_standard .avatar_static{
@@ -221,13 +246,16 @@ body {
     display: inline;
 }
 
-.status:active {
-    padding: 0.1em 0.4em 0.9em 0.6em;
-    background-color: #333;
+.status_standard .status_avatar{
+    display: table-cell !important;
 }
 
-.status_deleted *{
-    text-decoration: line-through;
+.status_main{
+    display: table-cell !important;
+    width: 100%;
+    padding: 0px 0.5em;
+    text-align: left;
+    vertical-align: top;
 }
 
 .status_red *{
@@ -278,23 +306,8 @@ body {
     background-color: #112020;
 }
 
-.status_avatar {
-    width: 3em;
-    height: auto;
-    margin-right: 0.7em;
-    text-align: center;
-    float: left;
-}
-
-.status_avatar img {
-    width: 3em;
-    height: 3em;
-}
-
-td.status_main{
-    width: 100%;
-    text-align: left;
-    vertical-align: top;
+.status_deleted *{
+    text-decoration: line-through;
 }
 
 .status_contents img {
@@ -309,8 +322,9 @@ td.status_main{
     padding-bottom: 1em;
 }
 
-.status_contents span {
-    word-break: break-all;
+.status_contents>p>span {
+    width: 100%;
+    word-break: keep-all;
     word-wrap: break-word;
 }
 

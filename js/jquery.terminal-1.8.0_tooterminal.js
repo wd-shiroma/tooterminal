@@ -2353,7 +2353,7 @@
     var color_hex_re = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
     var url_re = /(\bhttps?:\/\/(?:(?:(?!&[^;]+;)|(?=&amp;))[^\s"'<>\][)])+\b)/gi;
     var url_nf_re = /\b(https?:\/\/(?:(?:(?!&[^;]+;)|(?=&amp;))[^\s"'<>\][)])+)\b(?![^[\]]*])/gi;
-    var email_re = /((([^<>('")[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})))/g;
+    var email_re = /((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))/g;
     var command_re = /((?:"[^"\\]*(?:\\[\S\s][^"\\]*)*"|'[^'\\]*(?:\\[\S\s][^'\\]*)*'|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|$)|(?:\\\s|\S))+)(?=\s|$)/gi;
     var format_begin_re = /(\[\[[!gbiuso]*;[^;]*;[^\]]*\])/i;
     var format_start_re = /^(\[\[[!gbiuso]*;[^;]*;[^\]]*\])/i;
@@ -2909,15 +2909,15 @@
                             }
                             var result;
                             if (style.indexOf('!') !== -1) {
-                                if (data.match(email_re)) {
-                                    result = '<a href="mailto:' + data + '"';
-                                } else {
+                                if (data.match(url_re)) {
                                     result = '<a target="_blank" href="' + data + '"';
                                     if (settings.linksNoReferrer) {
                                         result += ' rel="noreferrer noopener"';
                                     } else {
                                         result += ' rel="noopener"';
                                     }
+                                } else {
+                                    result = '<a class="a_acct" name="a_acct"';
                                 }
                                 // make focus to terminal textarea that will enable
                                 // terminal when pressing tab and terminal is disabled
@@ -4036,12 +4036,16 @@
         var NEW_LINE = 1;
         function buffer_line(string, options) {
             // urls should always have formatting to keep url if split
-            if (settings.convertLinks && !options.raw) {
-                string = string.replace(email_re, '[[!;;]$1]').
-                    replace(url_nf_re, '[[!;;]$1]');
-            }
             var i, len;
             if (!options.raw) {
+                // rawじゃない場合もURL&メアド置換してしまったのを修正
+                if (string.match(url_nf_re)) {
+                    string = string.replace(url_nf_re, '[[!;;]$1]');
+                }
+                else if (string.match(email_re)) {
+                    string = string.replace(email_re, '[[!;;]$1]');
+                }
+                // 修正ここまで
                 if (options.formatters) {
                     try {
                         string = $.terminal.apply_formatters(string);
@@ -4099,6 +4103,7 @@
                 var string = $.type(line) === 'function' ? line() : line;
                 string = $.type(string) === 'string' ? string : String(string);
                 if (string !== '') {
+                    /* echoで呼び出される[[]]コマンドがウザかったので削除
                     string = $.map(string.split(format_exec_re), function(string) {
                         if (string && string.match(format_exec_re) &&
                             !$.terminal.is_formatting(string)) {
@@ -4116,11 +4121,12 @@
                         } else {
                             return string;
                         }
-                    }).join('');
-                    if (string !== '') {
+                    }).join('');*/
+                    // ここも中身だけ使う
+                    //if (string !== '') {
                         // string can be empty after removing extended commands
                         buffer_line(string, line_settings);
-                    }
+                    //}
                 }
             } catch (e) {
                 output_buffer = [];
@@ -6341,7 +6347,7 @@
         terminals.append(self);
         function focus_terminal() {
             if (old_enabled) {
-                self.focus();
+                //self.focus();
             }
         }
         function blur_terminal() {
@@ -6501,7 +6507,7 @@
                             if (++count === 1) {
                                 if (!frozen) {
                                     if (!enabled) {
-                                        self.focus();
+                                        //self.focus(); 画面クリック時のフォーカスを抑制
                                     } else {
                                         var timeout = settings.clickTimeout;
                                         self.oneTime(timeout, name, position);
