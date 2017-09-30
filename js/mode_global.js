@@ -557,7 +557,7 @@ var regist_instance = (input, term) => {
             let redirect_uri = data.redirect_uri;
             let ins_name = ins.name();
             if (is_redirect) {
-                redirect_uri += '?instance_name=' + instance_name;
+                redirect_uri += '?instance_name=' + ins_name;
             }
             let _ins           = JSON.parse(JSON.stringify(config.find('instances')));
             _ins.client_id     = data.client_id;
