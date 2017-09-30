@@ -430,6 +430,11 @@ let InstanceManager = (function () {
     }
 
     InstanceManager.prototype.save = function () {
+        for (let _ins in this.instances) {
+            if (!this.instances[_ins].hasOwnProperty('client_id')) {
+                delete(this.instances[_ins]);
+            }
+        }
         let ins_str = JSON.stringify(this.instances);
         localStorage.setItem('instances', ins_str);
         return true;

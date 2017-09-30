@@ -481,7 +481,7 @@ $(function() {
                 $('#toot_box').focus();
             }
         }
-        else if (e.target.localName === 'body') {
+        else if (e.target.localName === 'body' && e.keyCode !== 17 && e.keyCode !== 18) {
             $.terminal.active().focus(true, true);
         }
     });

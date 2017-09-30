@@ -185,8 +185,8 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-9-29');
-        let ver = '0.4.5';
+        let date = new Date('2017-9-30');
+        let ver = '0.4.6';
         term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
         term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
         term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
@@ -279,6 +279,9 @@ var GlobalModeElement = (function () {
             ins.create(analyzer.paramaters.instance_name);
             term.push(regist_instance, {
                 prompt: 'Input instance domain: ',
+                onExit: (term) => {
+                    ins.save();
+                }
             });
         }
         else if (_ins.hasOwnProperty('auth_code')){
@@ -556,7 +559,7 @@ var regist_instance = (input, term) => {
             if (is_redirect) {
                 redirect_uri += '?instance_name=' + instance_name;
             }
-            let _ins           = config.find('instances')
+            let _ins           = JSON.parse(JSON.stringify(config.find('instances')));
             _ins.client_id     = data.client_id;
             _ins.client_secret = data.client_secret;
             _ins.domain        = input;

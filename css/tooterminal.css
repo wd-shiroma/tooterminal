@@ -169,6 +169,7 @@ body {
 }
 
 .status_table {
+    width: 100%;
     display: table !important;
     table-layout: fixed;
 }
