@@ -130,7 +130,13 @@ let filterKey = (event, term) => {
 };
 
 let parseCommand = (command, term) => {
-    term_mode.parse(command.replace(/\?$/, ''));
+    try {
+        term_mode.parse(command.replace(/\?$/, ''));
+    }
+    catch (e) {
+        term.error('Invalid command characters. ([, \\)');
+        term.set_command('');
+    }
 };
 
 let init_instance = function(term) {
@@ -344,7 +350,7 @@ $(function() {
             $.terminal.active().exec('show user id ' + data[0].id)
             .done(() => {
                 $.terminal.active().exec('show user id ' + data[0].id + ' statuses limit 3');
-            })
+            });
         })
     })
     .on('mouseover', '.status', function() {
@@ -479,9 +485,13 @@ $(function() {
             }
             else {
                 $('#toot_box').focus();
+                $.terminal.active().focus(false);
             }
         }
-        else if (e.target.localName === 'body' && e.keyCode !== 17 && e.keyCode !== 18) {
+        else if (!e.target.id.match(/^toot_/)
+            && !e.ctrlKey && e.keyCode !== 17
+            && !e.altKey && e.keyCode !== 18)
+        {
             $.terminal.active().focus(true, true);
         }
     });
@@ -572,6 +582,7 @@ function makeStatus(payload, optional) {
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
+    head = '<span>' + head + '</span>'
 
     let reply = '';
     if (contents.mentions.length > 0) {
@@ -627,6 +638,24 @@ function makeStatus(payload, optional) {
             };
             img_m.src = url_m;
         }
+
+        if (payload.reblog) {
+            let url_r = payload.account.avatar_static;
+            let avatar_r = $('<div />')
+                .append($('<img />')
+                    .addClass('avatar_reblog')
+                    .attr('name', 'avatar_s_' + payload.account.id)
+                    .attr('src', url_r));
+            let img_r = new Image();
+            img_r.onload = () => {
+                $('[name=avatar_m_' + payload.account.id + ']').attr('src', url_r);
+            };
+            img_r.onerror = (e) => {
+                console.log(e);
+            };
+            img_r.src = url_r;
+            avatar.append(avatar_r);
+        }
     }
 
     let content;
@@ -667,6 +696,14 @@ function makeStatus(payload, optional) {
         content = contents.content;
         if (content.match(/^<.+>$/)) {
             content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>')
+        }
+    }
+
+    let userid = content.match(/<a[^>]*?u-url.+?<\/a>/g);
+    if (userid !== null) {
+        for (let i = 0; i < userid.length; i++) {
+            let _userid = $.terminal.format('[[!;;]' + $(userid[i]).text() + ']');
+            content = content.replace(userid[i], _userid);
         }
     }
 

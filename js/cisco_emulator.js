@@ -389,7 +389,7 @@ let InstanceManager = (function () {
         else {
             this.instances = {};
         }
-        this.ins = undefined;
+        this._ins = undefined;
         this._name = '';
     }
 
@@ -424,7 +424,7 @@ let InstanceManager = (function () {
     InstanceManager.prototype.name = function (name) {
         if (typeof name === 'string') {
             this._name = name;
-            this.ins = this.instances[name];
+            this._ins = this.instances[name];
         }
         return this._name;
     }
@@ -442,7 +442,7 @@ let InstanceManager = (function () {
 
     InstanceManager.prototype.get = function (name) {
         if (typeof name === 'undefined') {
-            return this.ins;
+            return this._ins;
         }
         else {
             return this.instances[name];
@@ -457,7 +457,7 @@ let InstanceManager = (function () {
             return false;
         }
         this.instances[name] = ins;
-        this.ins = ins;
+        this._ins = ins;
         this.save();
     }
 
@@ -468,7 +468,7 @@ let InstanceManager = (function () {
         result = delete(this.instances[name]);
         if (result) {
             this._name = '';
-            this.ins = undefined;
+            this._ins = undefined;
         }
         this.save();
         return result;

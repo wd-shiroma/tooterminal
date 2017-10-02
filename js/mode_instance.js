@@ -631,7 +631,7 @@ let InstanceModeElement = (function () {
             + '&scope='        + (_ins.application.scopes.read   ? 'read '  : '')
                                + (_ins.application.scopes.write  ? 'write ' : '')
                                + (_ins.application.scopes.follow ? 'follow' : '');
-        if (uri.match(/^https?:\/\//)) {
+        if (uri.match(/^https?%3A%2F%2F/)) {
             location.href = url;
             term.pause();
             return true;
@@ -778,6 +778,9 @@ let InstanceModeElement = (function () {
                         term.echo(notification, {raw: true});
 
                         let is_desktop = config.find(['instances', 'terminal', 'notification']);
+                        if (typeof is_desktop === 'undefined') {
+                            is_desktop = {};
+                        }
 
                         if(beep_buf) {
                             let source = context.createBufferSource();
@@ -1029,7 +1032,7 @@ let InstanceModeElement = (function () {
             term.echo('Uptime is '
                     + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
                     + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
-            term.echo(data.statuses_count  + ' statuses posted, '
+            term.echo('<span>' + data.statuses_count  + ' statuses posted, '
                     + $('<a />')
                         .attr('name', 'cmd_following')
                         .attr('data-uid', data.id)
@@ -1040,6 +1043,7 @@ let InstanceModeElement = (function () {
                         .attr('data-uid', data.id)
                         .text(data.followers_count + ' accounts are followed')
                         .prop('outerHTML')
+                    + '</span>'
             , {raw: true, flush: false});
             term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
             term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
@@ -1198,7 +1202,7 @@ let InstanceModeElement = (function () {
         if (analyzer.line_parsed[1].name === 'timeline') {
             let type = typeof analyzer.line_parsed[2] === 'undefined' ? 'local' : analyzer.line_parsed[2].name;
             path = '/api/v1/timelines/' + (type === 'local' ? 'public' : type);
-            params = {};
+            params = {limit: limit};
             if (type === 'local') {
                 params.local = true;
             }

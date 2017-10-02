@@ -195,7 +195,7 @@ body {
 
 .status_avatar {
     display: none;
-    width: 3em;
+    width: 3.5em;
     height: auto;
     margin-right: 0.7em;
     text-align: center;
@@ -206,6 +206,13 @@ body {
     height: 3em;
 }
 
+.avatar_reblog {
+    margin-left: 0.5em;
+    margin-top: -2em;
+    width: 2em !important;
+    height: 2em !important;
+}
+
 .status_mouseover .avatar_static{
     display: none;
 }
@@ -214,7 +221,15 @@ body {
     display: none;
 }
 
+.status_mouseover .avatar_reblog{
+    display: none;
+}
+
 .status_mouseover:hover .avatar_animate{
+    display: inline;
+}
+
+.status_mouseover:hover .avatar_reblog{
     display: inline;
 }
 
@@ -257,7 +272,7 @@ body {
 .status_main{
     display: table-cell !important;
     width: 100%;
-    padding: 0px 0.5em;
+    padding: 0px 0px;
     text-align: left;
     vertical-align: top;
 }

@@ -1422,7 +1422,7 @@
                 }
                 self.oneTime(10, function() {
                     if (!clip.is(':focus') && enabled) {
-                        clip.trigger('focus', [true]);
+                        //clip.trigger('focus', [true]);
                     }
                 });
             } else if (focus && (is_mobile || !enabled)) {
