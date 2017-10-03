@@ -42,6 +42,7 @@ let term_mode;
 let mode_global;
 let mode_configuration;
 let mode_instance;
+let mode_config_instance;
 let instance_name;
 let beep_buf;
 
@@ -143,6 +144,12 @@ let init_instance = function(term) {
     term_mode = mode_instance;
     let _ins = ins.get();
 
+    let ins_config;
+    if (!_ins.hasOwnProperty('config')) {
+        _ins['config'] = JSON.parse(JSON.stringify(config.find(['instances'])));
+        ins.save();
+    }
+
     let auto_term;
     if (config.find(['instances', 'terminal', 'auto'])){
         auto_term = config.find(['instances', 'terminal', 'monitor']);
@@ -150,7 +157,6 @@ let init_instance = function(term) {
     }
     if (url_params.hasOwnProperty('terminal')) {
         auto_term = url_params.terminal.match(/(home|local|public|notification)/g);
-
     }
     auto_term = (auto_term ? auto_term : []);
     if (auto_term.length > 0 && _ins.hasOwnProperty('access_token')) {
@@ -241,6 +247,7 @@ $(function() {
     mode_global        = new ModeManager(new GlobalModeElement);
     mode_configuration = new ModeManager(new ConfigurationModeElement);
     mode_instance      = new ModeManager(new InstanceModeElement);
+    //mode_config_instance = new ModeManager(new InstanceConfigModeElement);
     ins = new InstanceManager();
     term_mode          = mode_global;
     tl = $('#timeline').terminal(enterCommand, {
@@ -577,7 +584,7 @@ function makeStatus(payload, optional) {
                   : contents.visibility === 'direct'   ? 'envelope'
                   : 'question'))
             .attr('aria-hidden', 'true').prop('outerHTML')
-        + (contents.in_reply_to_id ? ' ' + $($('<i />').addClass('fa fa-mail-reply'))
+        + (contents.in_reply_to_id ? ' ' + $($('<i />').addClass('fa fa-commenting'))
                   .attr('aria-hidden', 'true').prop('outerHTML') + ' ' : '')
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
@@ -861,8 +868,13 @@ function make_notification(payload, notifies) {
             content = content.slice(0,100) + ' ...';
         }
 
-        msg = 'Notification! : ' + payload.type
-            + ' << ' + payload.account.display_name + ' '
+        msg = '<i class="fa fa-' + (
+            (payload.type === 'favourite') ? 'star' :
+            (payload.type === 'reblog') ? 'retweet' :
+            (payload.type === 'mention') ? 'commenting' :
+            (payload.type === 'follow') ? 'handshake-o' : 'bell')
+            + '" aria-hidden="true"></i> '
+            + payload.account.display_name + ' '
             + $.terminal.format('[[!;;]@' + payload.account.acct + ']') + "<br />"
             + (payload.status ? content : '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');

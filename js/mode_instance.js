@@ -1450,21 +1450,96 @@ let InstanceModeElement = (function () {
         term.pause();
         let data = {};
         let notifies = config_notify();
+        let path = '/api/v1/notifications';
+        let current_sid;
+        let limit = 20;
+        let statuses = [];
         if (analyzer.paramaters.post_limits) {
-            data.limit = analyzer.paramaters.post_limits;
+            limit = analyzer.paramaters.post_limits;
         }
-        callAPI('/api/v1/notifications', {
-            type: 'GET',
-            data: data
-        }).then((data, status, jqxhr) => {
-            for (let i = data.length-1; i >= 0; i--) {
-                term.echo(make_notification(data[i], notifies), {raw: true});
+        data.limit = limit;
+        term.push(function(command, moreterm){},{
+            name: 'more',
+            //prompt: '[[;#111111;#DDDDDD]-- More --]',
+            prompt: '--More-- ',
+            onStart: function(moreterm){
+                moreterm.pause();
+                callAPI(path, {
+                    type: 'GET',
+                    data: data
+                }).then((data, status, jqxhr) => {
+                    for (let i = 0; i < data.length; i++) {
+                        term.echo(make_notification(data[i], notifies), {raw: true});
+                        current_sid = data[i].id;
+                    }
+                    term.resume();
+                }, (jqxhr, status, error) => {
+                    term.error('Getting data is failed.(' + jqxhr.status + ')');
+                    console.log(jqxhr);
+                    term.resume();
+                });
+            },
+            onExit: function(term) {
+                setTimeout(function() {
+                    term.set_command('');
+                }, 10);
+            },
+            keydown: function(event, term){
+                function echo_statuses(size) {
+                    if (!(size > 0)) {
+                        return;
+                    }
+                    size = statuses.length < size ? statuses.length : size;
+                    let updated = [];
+                    for (let i = 0; i < size; i++) {
+                        let stats = statuses.shift();
+                        term.echo(stats, {raw: true, flush: false});
+                    }
+                    term.flush();
+                }
+                switch(event.keyCode){
+                    case 27:
+                    case 81:
+                        term.pop();
+                        term.set_command('');
+                        break;
+                    case 13:
+                    default:
+                        term.pause();
+                        let echo_size = (event.keyCode === 13) ? 1 : limit;
+                        data.limit = 100;
+                        if (current_sid > 0) {
+                            data.max_id = current_sid - 1;
+                        }
+                        if (!(statuses.length > 0)) {
+                            callAPI(path, {
+                                type: 'GET',
+                                data: data
+                            })
+                            .then((data, status, jqxhr) => {
+                                if (data.length === 0) {
+                                    term.pop();
+                                    return;
+                                }
+                                statuses = [];
+                                for (let i = 0; i < data.length; i++) {
+                                    statuses.push(make_notification(data[i], notifies));
+                                    current_sid = data[i].id;
+                                }
+                                echo_statuses(echo_size);
+                                term.resume();
+                            }, (jqxhr, status, error) => {
+                                term.error('Failed to getting statsues.');
+                            });
+                        }
+                        else {
+                            echo_statuses(echo_size);
+                            term.resume();
+                        }
+                }
+                setTimeout(() => { term.set_command(''); }, 10);
+                return true;
             }
-            term.resume();
-        }, (jqxhr, status, error) => {
-            term.error('Getting data is failed.(' + jqxhr.status + ')');
-            console.log(jqxhr);
-            term.resume();
         });
     };
     InstanceModeElement.prototype.show_acl = function (term, analyzer) {

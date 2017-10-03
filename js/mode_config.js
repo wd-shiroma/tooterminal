@@ -261,27 +261,16 @@ var ConfigurationModeElement = (function () {
                                 "execute": this.set_command
                             }
                         ]
-                    }
-                    /*, {
+                    }/*, { そのうち対応するよ
                         "type": "command",
-                        "name": "display",
-                        "description": "表示に関する設定をします。",
+                        "name": "mode",
+                        "description": "インスタンスコンフィギュレーションモードに入ります。",
                         "children": [
                             {
-                                "type": "command",
-                                "name": "icon",
-                                "description": "アイコンを表示します。",
-                                "execute": this.set_config
-                            }, {
-                                "type": "command",
-                                "name": "cw",
-                                "description": "閲覧注意文章の表示を標準にします。",
-                                "execute": this.set_config
-                            }, {
-                                "type": "command",
-                                "name": "public",
-                                "description": "閲覧注意画像の表示を標準にします。",
-                                "execute": this.set_config
+                                "type": "paramater",
+                                "name": "instance_name",
+                                "description": "インスタンス名",
+                                "execute": this.entry_instance
                             }
                         ]
                     }*/
@@ -432,36 +421,14 @@ var ConfigurationModeElement = (function () {
                                         "execute": this.set_default
                                     }
                                 ]
-                            }/*, {
-                                "type": "command",
-                                "name": "display",
-                                "description": "表示に関する設定をします。",
-                                "children": [
-                                    {
-                                        "type": "command",
-                                        "name": "icon",
-                                        "description": "アイコンを表示します。",
-                                        "execute": this.instance_display_icon
-                                    }, {
-                                        "type": "command",
-                                        "name": "cw",
-                                        "description": "閲覧注意文章の表示を標準にします。",
-                                        "execute": this.instance_display_cw
-                                    }, {
-                                        "type": "command",
-                                        "name": "public",
-                                        "description": "閲覧注意画像の表示を標準にします。",
-                                        "execute": this.instance_display_nsfw
-                                    }
-                                ]
-                            }*/
+                            }
                         ]
                     }
                 ]
             }, {
                 "type": "command",
                 "name": "exit",
-                "description": "コンフィギュレーションモードを終了します。",
+                "description": "コンフィギュレーションモードに戻ります。",
                 "execute": this.exit_configuration
             }, {
                 "type": "command",
@@ -584,6 +551,25 @@ var ConfigurationModeElement = (function () {
             arr.unshift(analyzer.line_parsed[3].name);
         }
         return config.write(nodes, arr);
+    };
+    ConfigurationModeElement.prototype.entry_instance = function (term, analyzer) {
+        if (!ins.instances.hasOwnProperty(analyzer.paramaters.instance_name)) {
+            term.error('No instance name.')
+            return false;
+        }
+        term.push(enterCommand, {
+            name: 'ins_config',
+            prompt: 'Tooterminal(config-ins)# ',
+            onStart: function () {
+                term_mode = mode_config_instance;
+                ins.name(analyzer.paramaters.instance_name);
+            },
+            onExit: function() {
+                term_mode = mode_configuration;
+                ins.name('');
+            }
+        })
+        return true;
     };
     ConfigurationModeElement.prototype.set_broadcast = function (term, analyzer) {
         term.echo('executed!');
