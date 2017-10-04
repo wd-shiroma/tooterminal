@@ -1234,102 +1234,14 @@ let InstanceModeElement = (function () {
             term.error('show status error.');
             return;
         }
-        let statuses = [];
-        let current_sid = 0;
-        term.push(function(command, moreterm){},{
-            name: 'more',
-            //prompt: '[[;#111111;#DDDDDD]-- More --]',
-            prompt: '--More-- ',
-            onStart: function(moreterm){
-                moreterm.pause();
-                callAPI(path, {
-                    type: 'GET',
-                    data: params
-                })
-                .then((data, status, jqxhr) => {
-                    statuses = [];
-                    for (let i = 0; i < data.length; i++) {
-                        if (analyzer.optional.pinned && !data[i].pinned) {
-                            continue;
-                        }
-                        moreterm.echo(makeStatus(data[i]), {raw: true, flush: false});
-                        current_sid = data[i].id;
-                    }
-                    moreterm.resume();
-                    moreterm.flush();
-                    if (data.length < limit) {
-                        moreterm.pop();
-                    }
-                }, (jqxhr, status, error) => {
-                    moreterm.error('Failed to getting statsues.');
-                    moreterm.resume();
-                })
-            },
-            onExit: function(term) {
-                setTimeout(function() {
-                    term.set_command('');
-                }, 10);
-            },
-            keydown: function(event, term){
-                function echo_statuses(size) {
-                    if (!(size > 0)) {
-                        return;
-                    }
-                    size = statuses.length < size ? statuses.length : size;
-                    let updated = [];
-                    for (let i = 0; i < size; i++) {
-                        let stats = statuses.shift();
-                        term.echo(stats, {raw: true, flush: false});
-                    }
-                    term.flush();
-                }
-                switch(event.keyCode){
-                    case 27:
-                    case 81:
-                        term.pop();
-                        term.set_command('');
-                        break;
-                    case 13:
-                    default:
-                        term.pause();
-                        let echo_size = (event.keyCode === 13) ? 1 : limit;
-                        params.limit = 100;
-                        if (current_sid > 0) {
-                            params.max_id = current_sid - 1;
-                        }
-                        if (!(statuses.length > 0)) {
-                            callAPI(path, {
-                                type: 'GET',
-                                data: params
-                            })
-                            .then((data, status, jqxhr) => {
-                                if (data.length === 0) {
-                                    term.pop();
-                                    return;
-                                }
-                                statuses = [];
-                                for (let i = 0; i < data.length; i++) {
-                                    if (analyzer.optional.pinned && !data[i].pinned) {
-                                        continue;
-                                    }
-                                    statuses.push(makeStatus(data[i]));
-                                    current_sid = data[i].id;
-                                }
-                                echo_statuses(echo_size);
-                                term.resume();
-                            }, (jqxhr, status, error) => {
-                                term.error('Failed to getting statsues.');
-                            });
-                        }
-                        else {
-                            echo_statuses(echo_size);
-                            term.resume();
-                        }
-                }
-                setTimeout(() => { term.set_command(''); }, 10);
-                return true;
+        callMore(path, (data) => {
+            if (analyzer.optional.pinned && !data.pinned) {
+                return false;
             }
-        });
+            else {
+                return makeStatus(data);
+            }
+        }, {limit: limit, term: term});
         return;
     };
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
@@ -1397,7 +1309,7 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_follows = function (term, analyzer) {
         term.pause();
-        let api;
+        let path;
         let userid;
         let type;
         if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
@@ -1408,8 +1320,29 @@ let InstanceModeElement = (function () {
             userid = analyzer.paramaters.userid;
             type = analyzer.line_parsed[4].name;
         }
-        api = '/api/v1/accounts/' + userid + '/' + type;
-        callAPI(api, {
+        path = '/api/v1/accounts/' + userid + '/' + type;
+        callMore(path, (data) => {
+            let line = data.display_name;
+            if (line.length > 20) {
+                line = line.substr(0, 20) + '...';
+            }
+            line = ('| ' + line + ' @' + data.acct).addTab(data.id, 9);
+            return line;
+        }, {
+            limit: 40,
+            header: ("Accounts:\n"
+                + ('| account name').addTab('id', 9)
+                + "\n" + Array(35).join('-')),
+            term: term,
+            raw: false,
+            next: (data, jqxhr) => {
+                let url = jqxhr.getResponseHeader('link');
+                let max_id = url.match(/max_id=(\d+)/);
+                return (max_id !== null ? parseInt(max_id[1]) : 0);
+            }
+        });
+        return;
+        callAPI(path, {
             type: 'GET',
         }).then((data, status, jqxhr) => {
             let max_len = 15;
@@ -1458,89 +1391,11 @@ let InstanceModeElement = (function () {
             limit = analyzer.paramaters.post_limits;
         }
         data.limit = limit;
-        term.push(function(command, moreterm){},{
-            name: 'more',
-            //prompt: '[[;#111111;#DDDDDD]-- More --]',
-            prompt: '--More-- ',
-            onStart: function(moreterm){
-                moreterm.pause();
-                callAPI(path, {
-                    type: 'GET',
-                    data: data
-                }).then((data, status, jqxhr) => {
-                    for (let i = 0; i < data.length; i++) {
-                        term.echo(make_notification(data[i], notifies), {raw: true});
-                        current_sid = data[i].id;
-                    }
-                    term.resume();
-                }, (jqxhr, status, error) => {
-                    term.error('Getting data is failed.(' + jqxhr.status + ')');
-                    console.log(jqxhr);
-                    term.resume();
-                });
-            },
-            onExit: function(term) {
-                setTimeout(function() {
-                    term.set_command('');
-                }, 10);
-            },
-            keydown: function(event, term){
-                function echo_statuses(size) {
-                    if (!(size > 0)) {
-                        return;
-                    }
-                    size = statuses.length < size ? statuses.length : size;
-                    let updated = [];
-                    for (let i = 0; i < size; i++) {
-                        let stats = statuses.shift();
-                        term.echo(stats, {raw: true, flush: false});
-                    }
-                    term.flush();
-                }
-                switch(event.keyCode){
-                    case 27:
-                    case 81:
-                        term.pop();
-                        term.set_command('');
-                        break;
-                    case 13:
-                    default:
-                        term.pause();
-                        let echo_size = (event.keyCode === 13) ? 1 : limit;
-                        data.limit = 100;
-                        if (current_sid > 0) {
-                            data.max_id = current_sid - 1;
-                        }
-                        if (!(statuses.length > 0)) {
-                            callAPI(path, {
-                                type: 'GET',
-                                data: data
-                            })
-                            .then((data, status, jqxhr) => {
-                                if (data.length === 0) {
-                                    term.pop();
-                                    return;
-                                }
-                                statuses = [];
-                                for (let i = 0; i < data.length; i++) {
-                                    statuses.push(make_notification(data[i], notifies));
-                                    current_sid = data[i].id;
-                                }
-                                echo_statuses(echo_size);
-                                term.resume();
-                            }, (jqxhr, status, error) => {
-                                term.error('Failed to getting statsues.');
-                            });
-                        }
-                        else {
-                            echo_statuses(echo_size);
-                            term.resume();
-                        }
-                }
-                setTimeout(() => { term.set_command(''); }, 10);
-                return true;
-            }
-        });
+        callMore(path, (data) => {
+            return make_notification(data, notifies);
+        }, {limit: limit, term: term});
+        return true;
+
     };
     InstanceModeElement.prototype.show_acl = function (term, analyzer) {
         let acls = ins.acls[ins.name()];

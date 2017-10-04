@@ -48,6 +48,14 @@ let beep_buf;
 
 let context = new AudioContext();
 
+let client_info = {
+    modified: (new Date('2017-10-04')),
+    version: '0.4.9',
+    auther: 'Gusk-ma(Shiroma)',
+    acct: 'shiroma@mstdn.jp',
+    website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md'
+}
+
 
 /*****************************
  * 本処理
@@ -250,9 +258,15 @@ $(function() {
     //mode_config_instance = new ModeManager(new InstanceConfigModeElement);
     ins = new InstanceManager();
     term_mode          = mode_global;
+    let greetings = "=== CLI画面風 マストドンクライアント \"Tooterminal\" ===\n"
+        + "                    Version " + client_info.version + ", modified "
+        + client_info.modified.getFullYear() + "/"
+        + ('0' + (client_info.modified.getMonth() + 1)).slice(-2) + "/"
+        + ('0' + client_info.modified.getDate()).slice(-2) + "\n\n"
+        + "使い方は\"help\"コマンドまたは\"?\"キーを押してください。\n\n"
     tl = $('#timeline').terminal(enterCommand, {
         name:        'global',
-        greetings:   "=== CLI画面風 マストドンクライアント \"Tooterminal\" ===\n\n使い方は\"help\"コマンドまたは\"?\"キーを押してください。\n\n",
+        greetings:   greetings,
         login:        false,
         onInit:       initConfig,
         prompt:       'Tooterminal# ',
@@ -342,7 +356,11 @@ $(function() {
         $(this).next().toggle('fast');
     })
     .on('click', '.a_acct', function(e) {
-        if (term_mode !== mode_instance) {
+        let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() !== 'instance') {
             return;
         }
 
@@ -354,9 +372,9 @@ $(function() {
             }
         })
         .then((data, status, jqxhr) => {
-            $.terminal.active().exec('show user id ' + data[0].id)
+            term.exec('show user id ' + data[0].id)
             .done(() => {
-                $.terminal.active().exec('show user id ' + data[0].id + ' statuses limit 3');
+                term.exec('show user id ' + data[0].id + ' statuses limit 3');
             });
         })
     })
@@ -436,13 +454,31 @@ $(function() {
         }
     })
     .on('click', '[name=cmd_followers]', (e) => {
-        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' followers');
+        let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() === 'instance') {
+            term.exec('show user id ' + $(e.target).data('uid') + ' followers');
+        }
     })
     .on('click', '[name=cmd_following]', (e) => {
-        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' following');
+        let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() === 'instance') {
+            term.exec('show user id ' + $(e.target).data('uid') + ' following');
+        }
     })
     .on('click', '[name=cmd_status_pinned]', (e) => {
-        $.terminal.active().exec('show user id ' + $(e.target).data('uid') + ' statuses pinned');
+        let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() === 'instance') {
+            term.exec('show user id ' + $(e.target).data('uid') + ' statuses pinned');
+        }
     })
     .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
@@ -993,6 +1029,147 @@ function callAPI(path, opts = {}) {
         });
     }
     return def;
+}
+
+function callMore(path, cb_mkmsg, optional = {}) {
+    let limit = 20;
+    let statuses = [];
+    let data = {};
+    let term;
+    let current_sid;
+    let raw = true;
+
+    if (optional.hasOwnProperty('limit')) {
+        limit = optional.limit;
+    }
+
+    if (optional.hasOwnProperty('term')) {
+        term = optional.term;
+    }
+    else {
+        term = $.terminal.active();
+    }
+
+    if (optional.hasOwnProperty('raw')) {
+        raw = optional.raw;
+    }
+
+    term.push(function(command, moreterm){},{
+        name: 'more',
+        //prompt: '[[;#111111;#DDDDDD]-- More --]',
+        prompt: '--More-- ',
+        onStart: function(moreterm){
+            moreterm.pause();
+            data.limit = limit;
+            callAPI(path, {
+                type: 'GET',
+                data: data
+            }).then((data, status, jqxhr) => {
+                if (optional.hasOwnProperty('header')) {
+                    moreterm.echo(optional.header);
+                }
+                for (let i = 0; i < data.length; i++) {
+                    let msg = cb_mkmsg(data[i]);
+                    if (msg) {
+                        moreterm.echo(msg, {raw: raw});
+                    }
+                    if (optional.hasOwnProperty('next')) {
+                        current_sid = optional.next(data, jqxhr);
+                    }
+                    else {
+                        current_sid = data[i].id;
+                    }
+                }
+                moreterm.resume();
+            }, (jqxhr, status, error) => {
+                moreterm.error('Getting data is failed.(' + jqxhr.status + ')');
+                console.log(jqxhr);
+                moreterm.resume();
+            });
+        },
+        onExit: function(moreterm) {
+            if (optional.hasOwnProperty('footer')) {
+                moreterm.echo(optional.footer);
+            }
+            setTimeout(function() {
+                moreterm.set_command('');
+            }, 10);
+        },
+        keydown: function(event, moreterm){
+            function echo_statuses(size) {
+                if (!(size > 0)) {
+                    return;
+                }
+                size = statuses.length < size ? statuses.length : size;
+                let updated = [];
+                for (let i = 0; i < size; i++) {
+                    let stats = statuses.shift();
+                    moreterm.echo(stats, {raw: raw, flush: false});
+                }
+                moreterm.flush();
+            }
+            switch(event.keyCode){
+                case 27:
+                case 81:
+                    moreterm.pop();
+                    moreterm.set_command('');
+                    break;
+                case 13:
+                default:
+                    moreterm.pause();
+                    let echo_size = (event.keyCode === 13) ? 1 : limit;
+                    data.limit = 100;
+                    if (current_sid > 0) {
+                        data.max_id = current_sid;
+                    }
+                    else if (statuses.length === 0){
+                        moreterm.pop();
+                    }
+                    if (!(statuses.length > 0)) {
+                        callAPI(path, {
+                            type: 'GET',
+                            data: data
+                        })
+                        .then((data, status, jqxhr) => {
+                            if (data.length === 0) {
+                                moreterm.pop();
+                                return;
+                            }
+                            statuses = [];
+                            for (let i = 0; i < data.length; i++) {
+                                let msg = cb_mkmsg(data[i]);
+                                if (msg) {
+                                    statuses.push(msg);
+                                }
+                                if (optional.hasOwnProperty('next')) {
+                                    current_sid = optional.next(data, jqxhr);
+                                }
+                                else {
+                                    current_sid = data[i].id;
+                                }
+                            }
+                            echo_statuses(echo_size);
+                            moreterm.resume();
+                            if (statuses.length === 0 && current_sid <= 0) {
+                                moreterm.pop();
+                            }
+                        }, (jqxhr, status, error) => {
+                            console.log(jqxhr);
+                            moreterm.error('Getting data is failed.(' + jqxhr.status + ')');
+                        });
+                    }
+                    else {
+                        echo_statuses(echo_size);
+                        moreterm.resume();
+                        if (statuses.length === 0 && current_sid <= 0) {
+                            moreterm.pop();
+                        }
+                    }
+            }
+            setTimeout(() => { moreterm.set_command(''); }, 10);
+            return true;
+        }
+    });
 }
 
 function favorite(status, term) {

@@ -185,12 +185,10 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        let date = new Date('2017-10-03');
-        let ver = '0.4.8';
-        term.echo('Mastodon Client Tooterminal, Version ' + ver + ', RELEASE SERVICE(Beta)');
-        term.echo('Technical Support: https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md');
-        term.echo('Copyright (c) 2017 by Gusk-ma(Shiroma)');
-        term.echo('Updated ' + date.toDateString() + ' by shiroma@mstdn.jp');
+        term.echo('Mastodon Client Tooterminal, Version ' + client_info.version + ', RELEASE SERVICE(Beta)');
+        term.echo('Technical Support: ' + client_info.website);
+        term.echo('Copyright (c) ' + client_info.modified.getFullYear() + ' by ' + client_info.auther);
+        term.echo('Updated ' + client_info.modified.toDateString() + ' by ' + client_info.acct);
         term.echo('<br>', {raw: true});
         term.echo('Powered by:');
         term.echo('jQuery (' + $.fn.jquery + ')');
