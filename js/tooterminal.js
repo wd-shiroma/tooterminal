@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-04')),
-    version: '0.4.9',
+    modified: (new Date('2017-10-05')),
+    version: '0.5.0',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md'
@@ -355,29 +355,6 @@ $(function() {
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     })
-    .on('click', '.a_acct', function(e) {
-        let term = $.terminal.active();
-        if (term.name() === 'more') {
-            term.pop();
-        }
-        if (term.name() !== 'instance') {
-            return;
-        }
-
-        let acct = $(this).text().match(/((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+))|(?:@([a-zA-Z0-9_]+)))/);
-        callAPI('/api/v1/accounts/search', {
-            data: {
-                q: acct[0],
-                limit: 1
-            }
-        })
-        .then((data, status, jqxhr) => {
-            term.exec('show user id ' + data[0].id)
-            .done(() => {
-                term.exec('show user id ' + data[0].id + ' statuses limit 3');
-            });
-        })
-    })
     .on('mouseover', '.status', function() {
         let cfg = config.find('instances.status.thumbnail');
         if (typeof cfg === 'undefined'){
@@ -453,31 +430,47 @@ $(function() {
             img.src = elem.data('url');
         }
     })
-    .on('click', '[name=cmd_followers]', (e) => {
+    .on('click', '.a_acct', function(e) {
         let term = $.terminal.active();
         if (term.name() === 'more') {
             term.pop();
         }
-        if (term.name() === 'instance') {
-            term.exec('show user id ' + $(e.target).data('uid') + ' followers');
+        if (term.name() !== 'instance') {
+            return;
         }
+
+        let acct = $(this).text().match(/((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z0-9]+))|(?:@([a-zA-Z0-9_]+)))/);
+        callAPI('/api/v1/accounts/search', {
+            data: {
+                q: acct[0],
+                limit: 1
+            }
+        })
+        .then((data, status, jqxhr) => {
+            term.exec('show user id ' + data[0].id);
+        });
     })
-    .on('click', '[name=cmd_following]', (e) => {
+    .on('click', '[name=cmd_link]', (e) => {
         let term = $.terminal.active();
+        let type = $(e.target).data('type');
+        let command
+            = (type === 'show_followed')
+                ? 'show user id ' + $(e.target).data('uid') + ' followers'
+            : (type === 'show_following')
+                ? 'show user id ' + $(e.target).data('uid') + ' following'
+            : (type === 'show_statuses_pinned')
+                ? 'show user id ' + $(e.target).data('uid') + ' statuses pinned'
+            : (type === 'show_statuses')
+                ? 'show user id ' + $(e.target).data('uid') + ' statuses limit 10'
+            : (type === 'request')
+                ? 'request ' + $(e.target).data('req') + ' ' + $(e.target).data('uid')
+            : false;
+
         if (term.name() === 'more') {
             term.pop();
         }
-        if (term.name() === 'instance') {
-            term.exec('show user id ' + $(e.target).data('uid') + ' following');
-        }
-    })
-    .on('click', '[name=cmd_status_pinned]', (e) => {
-        let term = $.terminal.active();
-        if (term.name() === 'more') {
-            term.pop();
-        }
-        if (term.name() === 'instance') {
-            term.exec('show user id ' + $(e.target).data('uid') + ' statuses pinned');
+        if (term.name() === 'instance' && command) {
+            term.exec(command);
         }
     })
     .on('keydown', '.img_background', (event) => {
@@ -1038,6 +1031,11 @@ function callMore(path, cb_mkmsg, optional = {}) {
     let term;
     let current_sid;
     let raw = true;
+    let params = {};
+
+    if (optional.hasOwnProperty('params')) {
+        data = optional.params;
+    }
 
     if (optional.hasOwnProperty('limit')) {
         limit = optional.limit;

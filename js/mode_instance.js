@@ -450,6 +450,109 @@ let InstanceModeElement = (function () {
                 ]
             }, {*/
                 "type": "command",
+                "name": "request",
+                "description": '他ユーザーに対してリクエストを送信します。',
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "follow",
+                        "description": 'フォローします。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "unfollow",
+                        "description": 'フォローを解除します。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "mute",
+                        "description": 'ミュートします',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "unmute",
+                        "description": 'ミュートを解除します。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "block",
+                        "description": 'ブロックします。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "unblock",
+                        "description": 'ブロック解除します。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "min": 1,
+                                "max": 9999999,
+                                "description": 'ユーザーID',
+                                "execute": this.request_relationship,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "remote-follow",
+                        "description": 'リモートフォローします。',
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "acct",
+                                "description": 'アカウントID',
+                                "execute": this.request_remote_follow,
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "access-list",
                 "description": '正規表現フィルタを設定します。',
                 "children": [
@@ -1006,25 +1109,53 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
         term.pause();
-        let api;
+        let api_user;
+        let api_rel;
+        let user = ins.get().user;
         if (typeof analyzer.line_parsed[2] === 'undefined' || analyzer.line_parsed[2].name === 'self') {
-            api = callAPI('/api/v1/accounts/verify_credentials', {
+            api_user = callAPI('/api/v1/accounts/verify_credentials', {
                 type: 'GET',
+            });
+            api_rel = callAPI('/api/v1/accounts/relationships?id[]=' + user.id, {
+                type: 'GET'
             });
         }
         else {
-            api = callAPI('/api/v1/accounts/' + analyzer.paramaters['userid'], {
+            api_user = callAPI('/api/v1/accounts/' + analyzer.paramaters['userid'], {
+                type: 'GET',
+            });
+            api_rel = callAPI('/api/v1/accounts/relationships?id[]=' + analyzer.paramaters['userid'], {
                 type: 'GET',
             });
         }
 
-        api.then((data, status, jqxhr) => {
+        $.when(api_user, api_rel)
+        .then((data_user, data_rel) => {
+            let data = data_user[0];
+            let jqxhr = data_user[2];
+            let relation = data_rel[0];
+            let jqxhr_r = data_rel[2];
             let created = new Date(data.created_at);
             let passing = parseInt((Date.now() - created.getTime()) / 60000);
             let minutes = passing % 60;
             let hours   = (passing = (passing - minutes) / 60) % 24;
             let days    = (passing = (passing - hours) / 24) % 7;
             let weeks   = (passing - days) / 7;
+            let rel = '<span>Relationship ';
+            if (relation[0].id === user.id) {
+                rel += 'self.</span>';
+            }
+            else {
+                rel += "others.<br />"
+                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                        + (relation[0].following ? 'unfollow">' : 'follow">No ') + 'following</a>, '
+                        + (relation[0].followed_by ? '' : 'No ') + 'followed, '
+                        + (relation[0].requested ? '' : 'No ') + 'requesting, '
+                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                        + (relation[0].muting ? 'unmute">' : 'mute">No ') + 'muting</a>, '
+                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                        + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
+            }
             term.echo(data.display_name + ' ID:' + data.id
                 + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
             term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
@@ -1032,20 +1163,29 @@ let InstanceModeElement = (function () {
             term.echo('Uptime is '
                     + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
                     + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
-            term.echo('<span>' + data.statuses_count  + ' statuses posted, '
+            term.echo('<span>'
                     + $('<a />')
-                        .attr('name', 'cmd_following')
+                        .attr('name', 'cmd_link')
                         .attr('data-uid', data.id)
+                        .attr('data-type', 'show_statuses')
+                        .text(data.statuses_count  + ' statuses posted, ')
+                        .prop('outerHTML') + ', '
+                    + $('<a />')
+                        .attr('name', 'cmd_link')
+                        .attr('data-uid', data.id)
+                        .attr('data-type', 'show_following')
                         .text(data.following_count + ' accounts are following')
                         .prop('outerHTML') + ', '
                     + $('<a />')
-                        .attr('name', 'cmd_followers')
+                        .attr('name', 'cmd_link')
                         .attr('data-uid', data.id)
+                        .attr('data-type', 'show_followed')
                         .text(data.followers_count + ' accounts are followed')
                         .prop('outerHTML')
                     + '</span>'
             , {raw: true, flush: false});
             term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
+            term.echo(rel, {raw: true, flush: false});
             term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
             term.echo('URL: ' + data.url, {raw: false, flush: false});
 
@@ -1065,8 +1205,9 @@ let InstanceModeElement = (function () {
                 for (let i = 0; i < data.length; i++) {
                     if (i > 2) {
                         let more = $('<a />')
-                            .attr('name', 'cmd_status_pinned')
+                            .attr('name', 'cmd_link')
                             .attr('data-uid', data[i].account.id)
+                            .attr('data-type', 'show_statuses_pinned')
                             .text('... and more pinned status');
                         term.echo(more.prop('outerHTML'), {raw: true, flush: false});
                         break;
@@ -1081,8 +1222,9 @@ let InstanceModeElement = (function () {
             term.resume();
         }, (jqxhr, status, error) => {
             console.log(jqxhr);
-            let response = JSON.parse(jqxhr.responseText);
-            //term.echo('Getting user data failed.(' + jqxhr + ')');
+
+            //let response = JSON.parse(jqxhr.responseText);
+            term.echo('Getting user data failed.(' + jqxhr + ')');
             term.resume();
         });
 
@@ -1241,7 +1383,7 @@ let InstanceModeElement = (function () {
             else {
                 return makeStatus(data);
             }
-        }, {limit: limit, term: term});
+        }, {params: params, term: term, limit: limit});
         return;
     };
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
@@ -1470,6 +1612,53 @@ let InstanceModeElement = (function () {
             term.echo('Binary type, ' + s.ws.binaryType);
             term.echo('Extensions, ' + s.ws.extensions);
         }
+    };
+    InstanceModeElement.prototype.request_relationship = function (term, analyzer) {
+        if (analyzer.paramaters.user_id === ins.get().user.id) {
+            term.error('Request ID is yourself.');
+            return false;
+        }
+        term.pause();
+        let path = '/api/v1/accounts/' + analyzer.paramaters.user_id
+            + '/' + analyzer.line_parsed[1].name;
+        callAPI(path, {
+            type: 'POST',
+        }).then((data, status, jqxhr) => {
+            console.log(data);
+            term.echo("Request was accepted.\n"
+                + tab('Following', (data.following ? 'Yes' : 'No'), 14) + "\n"
+                + tab('Followed', (data.followed_by ? 'Yes' : 'No'), 14) + "\n"
+                + tab('Requested', (data.requested ? 'Yes' : 'No'), 14) + "\n"
+                + tab('Mute', (data.muting ? 'Yes' : 'No'), 14) + "\n"
+                + tab('Block', (data.blocking ? 'Yes' : 'No'), 14)
+            );
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.request_remote_follow = function (term, analyzer) {
+        let acct = analyzer.paramaters.acct;
+        if (!acct.match(/^((?:@?([a-zA-Z0-9_]+)@((?:[A-Za-z0-9][A-Za-z0-9\-]{0,61}[A-Za-z0-9]?\.)+[A-Za-z]+))|(?:@([a-zA-Z0-9_]+)))$/)) {
+            term.error('Invalid Account ID. (username@domain)');
+            return false;
+        }
+        term.pause();
+        let path = '/api/v1/follows?uri=' + acct;
+        callAPI(path, {
+            type: 'POST',
+        }).then((data, status, jqxhr) => {
+            console.log(data);
+            let relation;
+            term.echo("Request was accepted.\nFollowing " + data.acct);
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
     };
     /* template */
     InstanceModeElement.prototype.template = function (term, analyzer) {
