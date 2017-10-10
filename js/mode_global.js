@@ -279,6 +279,13 @@ var GlobalModeElement = (function () {
                 prompt: 'Input instance domain: ',
                 onExit: (term) => {
                     ins.save();
+                },
+                keydown: (e, term) => {
+                    if (e.keyCode === 67 && e.ctrlKey) {
+                        term.echo(term.get_prompt() + term.get_command());
+                        term.pop();
+                        term.set_command('');
+                    }
                 }
             });
         }

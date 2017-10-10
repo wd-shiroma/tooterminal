@@ -28,8 +28,8 @@ let ModeManager = (function () {
         let completion = [];
         for (let i = 0; i < cmd_list.length; i++) {
             completion.push(
-                  cmd_list[i].type == 'paramater' ? ('<' + cmd_list[i].name + '>')
-                : cmd_list[i].type == 'number'    ? ('[' + cmd_list[i].name + ']')
+                  cmd_list[i].type === 'paramater' ? ('<' + cmd_list[i].name + '>')
+                : cmd_list[i].type === 'number'    ? ('[' + cmd_list[i].name + ']')
                 : (cmd_list[i].name)
             );
         }

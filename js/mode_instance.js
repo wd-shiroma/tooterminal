@@ -12,6 +12,77 @@ var ws = {
 let InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
+        this._status_max = 9999999999;
+        this._user_max = 9999999;
+        this._sh_stats_opt = [
+            {
+                "type": "command",
+                "name": "limit",
+                "optional": "limit",
+                "description": '取得トゥート数',
+                "children": [
+                    {
+                        "type": "number",
+                        "name": "post_limits",
+                        "min": 1,
+                        "max": 40,
+                        "description": 'トゥート数(初期値20)',
+                        "execute": this.show_statuses,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "max_id",
+                                "optional": "max_id",
+                                "description": '指定ID以前のトゥートを表示',
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "status_id",
+                                        "min": 1,
+                                        "max": this._status_max,
+                                        "description": 'トゥートID',
+                                        "execute": this.show_statuses
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "max_id",
+                "optional": "max_id",
+                "description": '指定ID以前のトゥートを表示',
+                "children": [
+                    {
+                        "type": "number",
+                        "name": "status_id",
+                        "min": 1,
+                        "max": this._status_max,
+                        "description": 'トゥートID',
+                        "execute": this.show_statuses,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "limit",
+                                "optional": "limit",
+                                "description": '取得トゥート数',
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "post_limits",
+                                        "min": 1,
+                                        "max": 40,
+                                        "description": 'トゥート数(初期値20)',
+                                        "execute": this.show_statuses
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
         this._dataset = [
             {
                 "type": "command",
@@ -66,7 +137,7 @@ let InstanceModeElement = (function () {
                                         "type": "number",
                                         "name": "userid",
                                         "min": 1,
-                                        "max": 9999999,
+                                        "max": this._user_max,
                                         "description": 'ユーザID',
                                         "execute": this.show_user,
                                         "children": [
@@ -186,67 +257,19 @@ let InstanceModeElement = (function () {
                                 "name": "home",
                                 "description": 'ホームタイムライン',
                                 "execute": this.show_statuses,
-                                "children": [
-                                    {
-                                        "type": "command",
-                                        "name": "limit",
-                                        "description": '取得トゥート数',
-                                        "children": [
-                                            {
-                                                "type": "number",
-                                                "name": "post_limits",
-                                                "min": 1,
-                                                "max": 40,
-                                                "description": 'トゥート数(初期値20)',
-                                                "execute": this.show_statuses,
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "children": this._sh_stats_opt
                             }, {
                                 "type": "command",
                                 "name": "local",
                                 "description": 'ローカルタイムライン',
                                 "execute": this.show_statuses,
-                                "children": [
-                                    {
-                                        "type": "command",
-                                        "name": "limit",
-                                        "description": '取得トゥート数',
-                                        "children": [
-                                            {
-                                                "type": "number",
-                                                "name": "post_limits",
-                                                "min": 1,
-                                                "max": 40,
-                                                "description": 'トゥート数(初期値20)',
-                                                "execute": this.show_statuses,
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "children": this._sh_stats_opt
                             }, {
                                 "type": "command",
                                 "name": "public",
                                 "description": '連合タイムライン',
                                 "execute": this.show_statuses,
-                                "children": [
-                                    {
-                                        "type": "command",
-                                        "name": "limit",
-                                        "description": '取得トゥート数',
-                                        "children": [
-                                            {
-                                                "type": "number",
-                                                "name": "post_limits",
-                                                "min": 1,
-                                                "max": 40,
-                                                "description": 'トゥート数(初期値20)',
-                                                "execute": this.show_statuses,
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "children": this._sh_stats_opt
                             }, {
                                 "type": "command",
                                 "name": "tag",
@@ -257,23 +280,7 @@ let InstanceModeElement = (function () {
                                         "name": "tag_name",
                                         "description": 'タグ名',
                                         "execute": this.show_statuses,
-                                        "children": [
-                                            {
-                                                "type": "command",
-                                                "name": "limit",
-                                                "description": '取得トゥート数',
-                                                "children": [
-                                                    {
-                                                        "type": "number",
-                                                        "name": "post_limits",
-                                                        "min": 1,
-                                                        "max": 40,
-                                                        "description": 'トゥート数(初期値20)',
-                                                        "execute": this.show_statuses,
-                                                    }
-                                                ]
-                                            }
-                                        ]
+                                        "children": this._sh_stats_opt
                                     }
                                 ]
                             }, {
@@ -281,23 +288,7 @@ let InstanceModeElement = (function () {
                                 "name": "notifications",
                                 "description": '通知タイムライン',
                                 "execute": this.show_notifications,
-                                "children": [
-                                    {
-                                        "type": "command",
-                                        "name": "limit",
-                                        "description": '取得通知数',
-                                        "children": [
-                                            {
-                                                "type": "number",
-                                                "name": "post_limits",
-                                                "min": 1,
-                                                "max": 40,
-                                                "description": '通知数(初期値20)',
-                                                "execute": this.show_notifications,
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "children": this._sh_stats_opt
                             }
                         ]
                     }, {
@@ -314,17 +305,25 @@ let InstanceModeElement = (function () {
                                         "type": "number",
                                         "name": "status_id",
                                         "min": 1,
-                                        "max": 9999999999,
+                                        "max": this._status_max,
                                         "description": 'トゥートID',
-                                        "execute": this.show_status_id
+                                        "execute": this.show_status_id,
+                                        "children": [
+                                            {
+                                                "type": "command",
+                                                "name": "favourited",
+                                                "description": 'お気に入りユーザー一覧',
+                                                "execute": this.show_follows
+                                            }, {
+                                                "type": "command",
+                                                "name": "reblogged",
+                                                "description": 'ブーストユーザー一覧',
+                                                "execute": this.show_follows
+                                            }
+                                        ]
                                     }
                                 ]
-                            }, {
-                                "type": "command",
-                                "name": "self",
-                                "description": 'ログインユーザー',
-                                "execute": this.show_statuses
-                            },
+                            }
                         ]
                     }
                 ]
@@ -388,8 +387,6 @@ let InstanceModeElement = (function () {
                                         "name": "hashtag",
                                         "description": 'ハッシュタグ文字列',
                                         "execute": this.terminal_monitor,
-                                        "children": [
-                                        ]
                                     }
                                 ]
                             }
@@ -462,7 +459,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -476,7 +473,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -490,7 +487,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -504,7 +501,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -518,7 +515,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -532,7 +529,7 @@ let InstanceModeElement = (function () {
                                 "type": "number",
                                 "name": "user_id",
                                 "min": 1,
-                                "max": 9999999,
+                                "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
                             }
@@ -1335,10 +1332,10 @@ let InstanceModeElement = (function () {
         let path;
         let params;
 
-        let limit = (
-            typeof analyzer.paramaters.post_limits !== 'undefined'
-            && analyzer.paramaters.post_limits > 0
-        ) ? analyzer.paramaters.post_limits : config.find(['instances', 'terminal', 'length']);
+
+        let limit = ( analyzer.optional.limit && analyzer.paramaters.post_limits > 0 )
+                ? analyzer.paramaters.post_limits
+                : config.find(['instances', 'terminal', 'length']);
         limit = (limit > 0) ? limit : 20;
 
         if (analyzer.line_parsed[1].name === 'timeline') {
@@ -1372,6 +1369,10 @@ let InstanceModeElement = (function () {
             }
         }
 
+        if (analyzer.optional.max_id) {
+            params.max_id = analyzer.paramaters.status_id;
+        }
+
         if (typeof path === 'undefined') {
             term.error('show status error.');
             return;
@@ -1383,7 +1384,7 @@ let InstanceModeElement = (function () {
             else {
                 return makeStatus(data);
             }
-        }, {params: params, term: term, limit: limit});
+        }, {params: params, term: term, limit: limit, footer: '[OK]'});
         return;
     };
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
@@ -1428,15 +1429,33 @@ let InstanceModeElement = (function () {
                 term.echo(card_elem.prop('outerHTML'), {raw: true, flush: false});
                 term.echo('<br />', {raw: true, flush: false});
             }
-            let cur_detail = status.favourites_count + ' account favourited, '
-                    + status.reblogs_count + ' account reblogged.\n'
-                    + 'URL: ' + status.url + '\n';
+            let fav = (status.favourites_count > 0)
+                ? $('<a />')
+                    .attr('name', 'cmd_link')
+                    .attr('data-type', 'show_faved')
+                    .attr('data-sid', status.id)
+                : $('<span />');
+            fav.text(status.favourites_count + ' account favourited, ');
+            let reb = (status.reblogs_count > 0)
+                ? $('<a />')
+                    .attr('name', 'cmd_link')
+                    .attr('data-type', 'show_rebbed')
+                    .attr('data-sid', status.id)
+                : $('<span />')
+            reb.text(status.reblogs_count + ' account reblogged.');
+            let att = $('<a />')
+                .attr('name', 'cmd_link')
+                .attr('data-type', 'show_att')
+                .attr('data-sid', status.id)
+                .text('check the LTL of the time.');
+            term.echo(fav.prop('outerHTML') + reb.prop('outerHTML'), {raw: true, flush: false});
+            term.echo(att.prop('outerHTML'), {raw: true, flush: false});
 
+            term.echo('URL: ' + status.url, {flush: false});
             if (config.find('instances.status.separator')) {
-                cur_detail += Array($.terminal.active().cols() - 5).join('-') + '\n';
+                term.echo(Array($.terminal.active().cols() - 5).join('-'), {flush: false});
             }
 
-            term.echo(cur_detail, { flush: false });
             for (let i = 0; i < context.descendants.length; i++) {
                 s = makeStatus(context.descendants[i]);
                 term.echo(s, { raw: true, flush: false });
@@ -1454,15 +1473,27 @@ let InstanceModeElement = (function () {
         let path;
         let userid;
         let type;
-        if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
-            userid = ins.get().user.id;
-            type = analyzer.line_parsed[3].name;
+        if (analyzer.line_parsed[1].name === 'user') {
+            if (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self'){
+                userid = ins.get().user.id;
+                type = analyzer.line_parsed[3].name;
+            }
+            else {
+                userid = analyzer.paramaters.userid;
+                type = analyzer.line_parsed[4].name;
+            }
+            path = '/api/v1/accounts/' + userid + '/' + type;
+        }
+        else if (analyzer.line_parsed[1].name === 'statuses') {
+            userid = analyzer.paramaters.status_id;
+            path = '/api/v1/statuses/' + userid
+                + (analyzer.line_parsed[4].name === 'favourited' ? '/favourited_by'
+                : analyzer.line_parsed[4].name === 'reblogged' ? '/reblogged_by' : '');
         }
         else {
-            userid = analyzer.paramaters.userid;
-            type = analyzer.line_parsed[4].name;
+            term.error('Invalid Command');
+            return true;
         }
-        path = '/api/v1/accounts/' + userid + '/' + type;
         callMore(path, (data) => {
             let line = data.display_name;
             if (line.length > 20) {
@@ -1483,43 +1514,7 @@ let InstanceModeElement = (function () {
                 return (max_id !== null ? parseInt(max_id[1]) : 0);
             }
         });
-        return;
-        callAPI(path, {
-            type: 'GET',
-        }).then((data, status, jqxhr) => {
-            let max_len = 15;
-            for (let i = 0; i < data.length; i++) {
-                if (max_len < data[i].acct.length) {
-                    max_len = data[i].acct.length;
-                }
-            }
-            max_len += 7;
-
-            let sep;
-            for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
-            sep += '----------------------------';
-            let lines = [
-                'Accounts:',
-                ('| display name').addTab('| account name', max_len).addTab('id', 9),
-                sep
-            ];
-            for (let i = 0; i < data.length; i++) {
-                lines.push(
-                    ('| ' + data[i].display_name)
-                        .addTab('| @' + data[i].acct, max_len)
-                        .addTab(data[i].id, 9)
-                );
-            }
-            lines.push(sep);
-            lines.push('  該当件数：' + data.length + '件');
-            lines.push('');
-            term.echo(lines.join("\n"));
-            term.resume();
-        }, (jqxhr, status, error) => {
-            term.error('Getting account data is failed.(' + jqxhr.status + ')');
-            console.log(jqxhr);
-            term.resume();
-        });
+        return true;
     };
     InstanceModeElement.prototype.show_notifications = function (term, analyzer) {
         term.pause();
@@ -1653,6 +1648,24 @@ let InstanceModeElement = (function () {
             console.log(data);
             let relation;
             term.echo("Request was accepted.\nFollowing " + data.acct);
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_status_actions = function (term, analyzer) {
+        term.pause();
+        callMore(path, (data) => {
+
+        })
+        callAPI(path, {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            for (let i = 0; i < data.length; i++) {
+                callMore()
+            }
             term.resume();
         }, (jqxhr, status, error) => {
             term.error('Getting data is failed.(' + jqxhr.status + ')');

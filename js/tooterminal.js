@@ -83,7 +83,9 @@ let completion = (line, callback) => {
         $.terminal.active().set_command(term_mode.completion);
     }
     else {
-        callback(cmd_list);
+        callback(cmd_list.sort().filter((val) => {
+            return (val ? val : '<cr>');
+        }));
     }
 };
 
@@ -464,6 +466,12 @@ $(function() {
                 ? 'show user id ' + $(e.target).data('uid') + ' statuses limit 10'
             : (type === 'request')
                 ? 'request ' + $(e.target).data('req') + ' ' + $(e.target).data('uid')
+            : (type === 'show_faved')
+                ? 'show statuses id ' + $(e.target).data('sid') + ' favourited'
+            : (type === 'show_att')
+                ? 'show timeline local max_id ' + ($(e.target).data('sid') + 5)
+            : (type === 'show_rebbed')
+                ? 'show statuses id ' + $(e.target).data('sid') + ' reblogged'
             : false;
 
         if (term.name() === 'more') {
@@ -1078,6 +1086,9 @@ function callMore(path, cb_mkmsg, optional = {}) {
                         current_sid = data[i].id;
                     }
                 }
+                if (current_sid <= 0) {
+                    moreterm.pop();
+                }
                 moreterm.resume();
             }, (jqxhr, status, error) => {
                 moreterm.error('Getting data is failed.(' + jqxhr.status + ')');
@@ -1107,13 +1118,21 @@ function callMore(path, cb_mkmsg, optional = {}) {
                 moreterm.flush();
             }
             switch(event.keyCode){
-                case 27:
-                case 81:
+                /* 入れようと思ったけど、more中にコピーが出来なくなるので辞めた(暫定)
+                case 67: // c
+                    if (!event.ctrlKey) {
+                        break;
+                    }*/
+                case 27: // Esc
+                case 81: // q
                     moreterm.pop();
                     moreterm.set_command('');
+                case 16: // Ctrl only
+                case 17: // Alt only
+                case 18: // Shift only
                     break;
-                case 13:
-                default:
+                case 13: // Enter
+                default: // Other
                     moreterm.pause();
                     let echo_size = (event.keyCode === 13) ? 1 : limit;
                     data.limit = 100;
@@ -1163,8 +1182,8 @@ function callMore(path, cb_mkmsg, optional = {}) {
                             moreterm.pop();
                         }
                     }
+                    setTimeout(() => { moreterm.set_command(''); }, 10);
             }
-            setTimeout(() => { moreterm.set_command(''); }, 10);
             return true;
         }
     });
