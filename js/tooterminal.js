@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-10')),
-    version: '0.5.1',
+    modified: (new Date('2017-10-11')),
+    version: '0.5.2',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md'
@@ -469,9 +469,11 @@ $(function() {
             : (type === 'show_faved')
                 ? 'show statuses id ' + $(e.target).data('sid') + ' favourited'
             : (type === 'show_att')
-                ? 'show timeline local max_id ' + ($(e.target).data('sid') + 5)
+                ? 'show timeline local max_id ' + ($(e.target).data('sid') + 1)
             : (type === 'show_rebbed')
                 ? 'show statuses id ' + $(e.target).data('sid') + ' reblogged'
+            : (type === 'del_status')
+                ? 'request delete ' + ($(e.target).data('sid'))
             : false;
 
         if (term.name() === 'more') {
@@ -1103,6 +1105,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
             setTimeout(function() {
                 moreterm.set_command('');
             }, 10);
+            moreterm.resume();
         },
         keydown: function(event, moreterm){
             function echo_statuses(size) {

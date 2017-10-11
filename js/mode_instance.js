@@ -546,6 +546,20 @@ let InstanceModeElement = (function () {
                                 "execute": this.request_remote_follow,
                             }
                         ]
+                    }, {
+                        "type": "command",
+                        "name": "delete",
+                        "description": 'トゥートを削除します。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "status_id",
+                                "min": 1,
+                                "max": this._status_max,
+                                "description": 'トゥートID',
+                                "execute": this.request_delete_status,
+                            }
+                        ]
                     }
                 ]
             }, {
@@ -1435,7 +1449,7 @@ let InstanceModeElement = (function () {
                     .attr('data-type', 'show_faved')
                     .attr('data-sid', status.id)
                 : $('<span />');
-            fav.text(status.favourites_count + ' account favourited, ');
+            fav.text(status.favourites_count + ' account favourited,');
             let reb = (status.reblogs_count > 0)
                 ? $('<a />')
                     .attr('name', 'cmd_link')
@@ -1447,11 +1461,19 @@ let InstanceModeElement = (function () {
                 .attr('name', 'cmd_link')
                 .attr('data-type', 'show_att')
                 .attr('data-sid', status.id)
-                .text('check the LTL of the time.');
-            term.echo(fav.prop('outerHTML') + reb.prop('outerHTML'), {raw: true, flush: false});
+                .text('> check the LTL of the time.');
+            term.echo(fav.prop('outerHTML') + ' ' + reb.prop('outerHTML'), {raw: true, flush: false});
             term.echo(att.prop('outerHTML'), {raw: true, flush: false});
 
             term.echo('URL: ' + status.url, {flush: false});
+            if (status.account.id === ins.get().user.id) {
+                let del = $('<a />')
+                    .attr('name', 'cmd_link')
+                    .attr('data-type', 'del_status')
+                    .attr('data-sid', status.id)
+                    .text('> delete this status.');
+                term.echo('<br />' + del.prop('outerHTML'), {raw: true, flush: false});
+            }
             if (config.find('instances.status.separator')) {
                 term.echo(Array($.terminal.active().cols() - 5).join('-'), {flush: false});
             }
@@ -1671,6 +1693,40 @@ let InstanceModeElement = (function () {
             term.error('Getting data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
             term.resume();
+        });
+    };
+    InstanceModeElement.prototype.request_delete_status = function (term, analyzer) {
+        let sid = analyzer.paramaters.status_id;
+        let prompt = 'ID ' + sid + ' status will delete! Continue? Y/[N]: ';
+        term.push((input) => {
+            term.echo('Canceled.');
+            term.pop();
+        }, {
+            prompt: prompt,
+            keypress: (event, term) => {
+                term.echo(term.get_prompt() + event.key);
+                if (event.keyCode === 89 || event.keyCode === 121) {
+                    term.pause();
+                    term.echo('[OK]');
+                    callAPI('/api/v1/statuses/' + sid, {
+                        type: 'DELETE',
+                    }).then((data, status, jqxhr) => {
+                        term.echo('Erase of status: complete');
+                        term.resume();
+                    }, (jqxhr, status, error) => {
+                        term.error('Deleteing status is failed(' + jqxhr.status + ')');
+                        console.log(jqxhr);
+                        term.resume();
+                    });
+                }
+                else {
+                    term.echo('Canceled.');
+                }
+                term.pop();
+            },
+            onExit: (term) => {
+                setTimeout(() => { term.set_command(''); }, 10);
+            }
         });
     };
     /* template */
