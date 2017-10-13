@@ -415,7 +415,8 @@ let InstanceManager = (function () {
                 this.acls[ins_name][acl_num] = {
                     type: acl.type,
                     regexp: re,
-                    color: color
+                    color: color,
+                    notify: (acl.notify === true)
                 };
             }
         }

@@ -5,7 +5,7 @@
 let defconf = {
     application: {
         name: 'Tooterminal',
-        website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md',
+        website: 'https://wd-shiroma.github.io/',
         uris: 'urn:ietf:wg:oauth:2.0:oob',
         scopes: {
             read:   true,
@@ -49,11 +49,11 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-11')),
-    version: '0.5.2',
+    modified: (new Date('2017-10-13')),
+    version: '0.5.3',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
-    website: 'https://github.com/wd-shiroma/tooterminal/blob/gh-pages/README.md'
+    website: 'https://wd-shiroma.github.io/'
 }
 
 
@@ -455,6 +455,7 @@ $(function() {
     .on('click', '[name=cmd_link]', (e) => {
         let term = $.terminal.active();
         let type = $(e.target).data('type');
+        let len = parseInt(term.rows() / 5);
         let command
             = (type === 'show_followed')
                 ? 'show user id ' + $(e.target).data('uid') + ' followers'
@@ -463,7 +464,7 @@ $(function() {
             : (type === 'show_statuses_pinned')
                 ? 'show user id ' + $(e.target).data('uid') + ' statuses pinned'
             : (type === 'show_statuses')
-                ? 'show user id ' + $(e.target).data('uid') + ' statuses limit 10'
+                ? 'show user id ' + $(e.target).data('uid') + ' statuses limit ' + len
             : (type === 'request')
                 ? 'request ' + $(e.target).data('req') + ' ' + $(e.target).data('uid')
             : (type === 'show_faved')
@@ -709,7 +710,11 @@ function makeStatus(payload, optional) {
 
     if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
         enquete = JSON.parse(contents.enquete);
-        question = enquete.question.replace(
+        question = enquete.question;
+        if ($(question).find('span.fa-spin').length) {
+            question = $('<p />').append($(question).find('span').text()).prop('outerHTML');
+        }
+        question = question.replace(
                 /^(?:<p>)?(.*?)(?:<\/p>)?$/g, '<p><span>$1' +
                 (enquete.type === 'enquete' ? '(回答枠)' : '(結果)')
                 + '</span></p>')
@@ -740,6 +745,9 @@ function makeStatus(payload, optional) {
     }
     else {
         content = contents.content;
+        if ($(content).find('span.fa-spin').length) {
+            content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
+        }
         if (content.match(/^<.+>$/)) {
             content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>')
         }
@@ -872,11 +880,30 @@ function makeStatus(payload, optional) {
         for (let acl_num in ins.acls[ins_name]) {
             let acl = ins.acls[ins_name][acl_num];
             if (status.text().match(acl.regexp)) {
-                if (acl.type === 'permit') {
+                if(acl.type === 'deny') {
+                    return '';
+                }
+                let _params = url_params.hasOwnProperty('acl') ? url_params.acl : "";
+                _params = _params.split(',');
+                if (acl.type === "permit" && acl.hasOwnProperty('color') && _params.indexOf('col') < 0) {
                     status.addClass('status_' + acl.color);
                 }
-                else if(acl.type === 'deny') {
-                    return '';
+                let cfg_notify = config.find(['instances', 'terminal', 'monitor', 'notification'])
+                if (acl.type === "permit" && acl.notify && _params.indexOf('not') < 0) {
+                    let title = 'ACL ' + acl_num + ': '
+                        + contents.account.display_name + ' @' + contents.account.acct;
+                    let body = $(contents.content).text();
+                    if (body.length > 100) {
+                        body = body.slice(0, 100);
+                    }
+                    let n = new Notification(title, {
+                        body: body,
+                        icon: contents.account.avatar_static,
+                        data: contents
+                    });
+                    n.onclick = function(e) {
+                        e.srcElement.close();
+                    };
                 }
                 break;
             }

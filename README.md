@@ -429,7 +429,7 @@ Tooterminal# sh run
 
 URLの末尾にパラメータを設定することでインスタンスモードへの自動遷移＆terminal monitorコマンドの自動発行ができます。
 
-`https://wd-shiroma.github.io/tooterminal?instance=インスタンス名&terminal=取得ストリーミング&notification=通知種別`
+`https://wd-shiroma.github.io/tooterminal?instance=インスタンス名&terminal=取得ストリーミング&notification=通知種別&acl=抑制したいacl`
 
 * インスタンス名
 `Tooterminal# instance インスタンス名`で指定した名称
@@ -438,12 +438,16 @@ home, local, public, notificationをカンマ区切りで指定します。
 (最初に指定したタイムラインが初期TLとして表示されます)
 それ以外の文字列が指定された場合はrunning-configの設定値が適用されます。
 * 通知種別
-表示したい通知種別をカンマ区切りで複数選択できます。(初期値：notification=fav,rev,fol,men)
+表示したい通知種別をカンマ区切りで複数選択できます。(初期値：notification=fav,reb,fol,men)
   * fav: お気に入り
   * reb: ブースト
   * fol: フォロー
   * men: リプライ
   * del: トゥート削除
+* 抑制したいacl
+`access-list xxx permit xxx [color|notification]` コマンドから適用しない通知種別を指定します。
+  * col: ハイライト表示
+  * not: デスクトップ通知
 
 <h2 id="ins_filter">正規表現フィルタ</h2>
 
@@ -458,6 +462,7 @@ shiroma@mstdn.jp# no access-list 1 ←不要なフィルターを解除します
 shiroma@mstdn.jp# access-list 2 deny mstdn.jp ←2つ目の数字を変えることで、複数のフィルターを設定できます。
 shiroma@mstdn.jp# access-list 3 permit media ←3つ目の数字をpermitに変えることで、非表示ではなくトゥートの背景色を変更することもできます。
 shiroma@mstdn.jp# access-list 4 permit @shiroma color dark-red ←更にcolorオプションを追加することで、背景色の色を変更することができます。
+shiroma@mstdn.jp# access-list 4 add notification ←更に更に設定済みのaclに他の通知方法(例はデスクトップ通知)を追加できます。
 
 shiroma@mstdn.jp# show access-list
 Standard Status access list 1
@@ -467,7 +472,7 @@ Standard Status access list 2
 Standard Status access list 3
     permit regexp /media/, color dark-blue
 Standard Status access list 4
-    permit regexp /media/, color dark-red
+    permit regexp /media/, color dark-red, notification
 ```
 
 複数のフィルター(アクセスリスト)を設定することができ、数字の小さい順番にルールが適用されます。

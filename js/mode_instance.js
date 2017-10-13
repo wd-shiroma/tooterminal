@@ -83,6 +83,95 @@ let InstanceModeElement = (function () {
                 ]
             }
         ];
+        this._acl_opts = [
+            {
+                "type": "command",
+                "name": "color",
+                "optional": "is_color",
+                "description": "背景色を設定します",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "red",
+                        "description": "赤色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "green",
+                        "description": "緑色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "blue",
+                        "description": "青色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "yellow",
+                        "description": "黄色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "purple",
+                        "description": "紫色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "cyan",
+                        "description": "水色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-red",
+                        "description": "濃赤色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-blue",
+                        "description": "紺色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-green",
+                        "description": "深緑色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-yellow",
+                        "description": "山吹色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-purple",
+                        "description": "紫紺色",
+                        "execute": this.set_acl
+                    }, {
+                        "type": "command",
+                        "name": "dark-cyan",
+                        "description": "藍色",
+                        "execute": this.set_acl
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "notification",
+                "optional": "is_notify",
+                "description": "デスクトップ通知を設定します。",
+                "execute": this.set_acl
+            }/*, {
+                "type": "command",
+                "name": "voice",
+                "description": "合成音声を設定します。",
+                "children": [
+                    {
+                        "type": "paramater",
+                        "name": "voice_text",
+                        "description": "藍色",
+                        "execute": this.set_acl
+                    }
+                ]
+            }*/
+        ]
         this._dataset = [
             {
                 "type": "command",
@@ -146,7 +235,8 @@ let InstanceModeElement = (function () {
                                                 "name": "statuses",
                                                 "description": 'ユーザの最新トゥートを表示',
                                                 "execute": this.show_statuses,
-                                                "children": [
+                                                "children": this._sh_stats_opt
+                                                /*"children": [ 固定トゥ表示は一旦廃止～
                                                     {
                                                         "type": "command",
                                                         "name": "limit",
@@ -168,7 +258,7 @@ let InstanceModeElement = (function () {
                                                         "description": '固定トゥートを表示します。',
                                                         "execute": this.show_statuses
                                                     }
-                                                ]
+                                                ]*/
                                             }, {
                                                 "type": "command",
                                                 "name": "following",
@@ -194,7 +284,8 @@ let InstanceModeElement = (function () {
                                         "name": "statuses",
                                         "description": 'ユーザの最新トゥートを表示',
                                         "execute": this.show_statuses,
-                                        "children": [
+                                        "children": this._sh_stats_opt
+                                        /*"children": [
                                             {
                                                 "type": "command",
                                                 "name": "limit",
@@ -216,7 +307,7 @@ let InstanceModeElement = (function () {
                                                 "description": '固定トゥートを表示します。',
                                                 "execute": this.show_statuses
                                             }
-                                        ]
+                                        ]*/
                                     }, {
                                         "type": "command",
                                         "name": "following",
@@ -596,90 +687,15 @@ let InstanceModeElement = (function () {
                                         "name": "regular_expression",
                                         "description": '正規表現文字列',
                                         "execute": this.set_acl,
-                                        "children": [
-                                            {
-                                                "type": "command",
-                                                "name": "color",
-                                                "description": "背景色を設定します",
-                                                "children": [
-                                                    {
-                                                        "type": "command",
-                                                        "name": "red",
-                                                        "optional": "is_color",
-                                                        "description": "赤色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "green",
-                                                        "optional": "is_color",
-                                                        "description": "緑色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "blue",
-                                                        "optional": "is_color",
-                                                        "description": "青色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "yellow",
-                                                        "optional": "is_color",
-                                                        "description": "黄色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "purple",
-                                                        "optional": "is_color",
-                                                        "description": "紫色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "cyan",
-                                                        "optional": "is_color",
-                                                        "description": "水色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-red",
-                                                        "optional": "is_color",
-                                                        "description": "濃赤色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-blue",
-                                                        "optional": "is_color",
-                                                        "description": "紺色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-green",
-                                                        "optional": "is_color",
-                                                        "description": "深緑色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-yellow",
-                                                        "optional": "is_color",
-                                                        "description": "山吹色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-purple",
-                                                        "optional": "is_color",
-                                                        "description": "紫紺色",
-                                                        "execute": this.set_acl
-                                                    }, {
-                                                        "type": "command",
-                                                        "name": "dark-cyan",
-                                                        "optional": "is_color",
-                                                        "description": "藍色",
-                                                        "execute": this.set_acl
-                                                    }
-                                                ]
-                                            }
-                                        ]
+                                        "children": this._acl_opts
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "add",
+                                "optional": "is_add",
+                                "description": '既存ACLに通知方法を追加',
+                                "children": this._acl_opts
                             }
                         ]
                     }
@@ -1565,33 +1581,55 @@ let InstanceModeElement = (function () {
             term.echo('Standard Status access list ' + acl_num);
             term.echo('    ' + acls[acl_num].type + ' regexp '
                 + acls[acl_num].regexp.toString()
-                + (acls[acl_num].type === 'permit'
-                    ? (', color ' + acls[acl_num].color) : ''));
+                + (acls[acl_num].type === 'permit' && acls[acl_num].hasOwnProperty('color')
+                    ? (', color ' + acls[acl_num].color) : '')
+                + (acls[acl_num].type === 'permit' && acls[acl_num].notify
+                    ? ', notification' : ''));
         }
         return true;
     };
     InstanceModeElement.prototype.set_acl = function (term, analyzer) {
+        function add_acl(acl) {
+
+            if (analyzer.optional.is_color) {
+                acl.color = analyzer.line_parsed[5].name;
+            }
+            else if (analyzer.optional.is_notify) {
+                acl.notify = true;
+            }
+            else {
+                acl.color = 'dark-blue';
+            }
+        }
         let _ins = ins.get();
-        let bgcolor = analyzer.optional.is_color ? analyzer.line_parsed[5].name : 'dark-blue';
+        if (!_ins.hasOwnProperty('acl')) {
+            _ins.acl = {};
+        }
         if (analyzer.line_parsed[0].name === 'no') {
             if (analyzer.paramaters.hasOwnProperty('acl_num')) {
                 delete(_ins.acl[analyzer.paramaters.acl_num]);
             }
             else {
                 delete(_ins.acl);
-            }
-        }
-        else {
-            if (!_ins.hasOwnProperty('acl')) {
                 _ins.acl = {};
             }
+        }
+        else if(analyzer.optional.is_add) {
             if (!_ins.acl[analyzer.paramaters.acl_num]) {
-                _ins.acl[analyzer.paramaters.acl_num] = {};
+                term.error("access-list has no rule.");
+                return false;
             }
+            let _acl = _ins.acl[analyzer.paramaters.acl_num];
+            add_acl(_acl);
+        }
+        else {
+            _ins.acl[analyzer.paramaters.acl_num] = {};
             let _acl = _ins.acl[analyzer.paramaters.acl_num];
             _acl.type = analyzer.line_parsed[2].name;
             _acl.regexp = analyzer.paramaters.regular_expression;
-            _acl.color = bgcolor;
+            if (_acl.type === "permit") {
+                add_acl(_acl);
+            }
         }
         ins.parse_acl();
         ins.save();
