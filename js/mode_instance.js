@@ -158,20 +158,21 @@ let InstanceModeElement = (function () {
                 "optional": "is_notify",
                 "description": "デスクトップ通知を設定します。",
                 "execute": this.set_acl
-            }/*, {
+            }, {
                 "type": "command",
                 "name": "voice",
+                "optional": "is_voice",
                 "description": "合成音声を設定します。",
                 "children": [
                     {
                         "type": "paramater",
                         "name": "voice_text",
-                        "description": "藍色",
+                        "description": "文字",
                         "execute": this.set_acl
                     }
                 ]
-            }*/
-        ]
+            }
+        ];
         this._dataset = [
             {
                 "type": "command",
@@ -1584,7 +1585,9 @@ let InstanceModeElement = (function () {
                 + (acls[acl_num].type === 'permit' && acls[acl_num].hasOwnProperty('color')
                     ? (', color ' + acls[acl_num].color) : '')
                 + (acls[acl_num].type === 'permit' && acls[acl_num].notify
-                    ? ', notification' : ''));
+                    ? ', notification' : '')
+                + (acls[acl_num].type === 'permit' && acls[acl_num].hasOwnProperty('voice')
+                    ? (', voice "' + acls[acl_num].voice + '"') : ''));
         }
         return true;
     };
@@ -1596,6 +1599,10 @@ let InstanceModeElement = (function () {
             }
             else if (analyzer.optional.is_notify) {
                 acl.notify = true;
+                Notification.requestPermission();
+            }
+            else if (analyzer.optional.is_voice) {
+                acl.voice = analyzer.paramaters.voice_text;
             }
             else {
                 acl.color = 'dark-blue';
@@ -1834,4 +1841,11 @@ function is_monitoring(type) {
         }
     }
     return is_mon;
+}
+
+function talk(msg) {
+    var s = new SpeechSynthesisUtterance(msg);
+    s.rate = 1.3;
+    s.lang = 'ja-JP';
+    speechSynthesis.speak(s);
 }

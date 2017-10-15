@@ -416,7 +416,8 @@ let InstanceManager = (function () {
                     type: acl.type,
                     regexp: re,
                     color: color,
-                    notify: (acl.notify === true)
+                    notify: (acl.notify === true),
+                    voice: acl.voice
                 };
             }
         }

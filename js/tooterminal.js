@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-13')),
-    version: '0.5.3',
+    modified: (new Date('2017-10-15')),
+    version: '0.5.4',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -904,6 +904,12 @@ function makeStatus(payload, optional) {
                     n.onclick = function(e) {
                         e.srcElement.close();
                     };
+                }
+                if (acl.type === "permit" && acl.hasOwnProperty('voice') && _params.indexOf('voi') < 0) {
+                    var s = new SpeechSynthesisUtterance(acl.voice);
+                    s.rate = 1.3;
+                    s.lang = 'ja-JP';
+                    speechSynthesis.speak(s);
                 }
                 break;
             }

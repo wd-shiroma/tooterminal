@@ -448,6 +448,7 @@ home, local, public, notificationをカンマ区切りで指定します。
 `access-list xxx permit xxx [color|notification]` コマンドから適用しない通知種別を指定します。
   * col: ハイライト表示
   * not: デスクトップ通知
+  * voi: 合成音声
 
 <h2 id="ins_filter">正規表現フィルタ</h2>
 
