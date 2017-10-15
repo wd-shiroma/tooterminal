@@ -402,7 +402,6 @@ let InstanceManager = (function () {
             }
             for (let acl_num in this.instances[ins_name].acl) {
                 let acl = this.instances[ins_name].acl[acl_num];
-                let color = acl.color ? acl.color : 'dark-blue';
                 let filter = acl.regexp;
                 let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
                 let re;
@@ -415,10 +414,14 @@ let InstanceManager = (function () {
                 this.acls[ins_name][acl_num] = {
                     type: acl.type,
                     regexp: re,
-                    color: color,
-                    notify: (acl.notify === true),
-                    voice: acl.voice
+                    notify: (acl.notify === true)
                 };
+                if (acl.color) {
+                    this.acls[ins_name][acl_num].color = acl.color;
+                }
+                if (acl.voice) {
+                    this.acls[ins_name][acl_num].voice = acl.voice;
+                }
             }
         }
     }
