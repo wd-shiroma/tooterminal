@@ -12,7 +12,6 @@ var ws = {
 let InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
-        this._status_max = 9999999999;
         this._user_max = 9999999;
         this._sh_stats_opt = [
             {
@@ -36,10 +35,8 @@ let InstanceModeElement = (function () {
                                 "description": '指定ID以前のトゥートを表示',
                                 "children": [
                                     {
-                                        "type": "number",
+                                        "type": "paramater",
                                         "name": "status_id",
-                                        "min": 1,
-                                        "max": this._status_max,
                                         "description": 'トゥートID',
                                         "execute": this.show_statuses
                                     }
@@ -55,10 +52,8 @@ let InstanceModeElement = (function () {
                 "description": '指定ID以前のトゥートを表示',
                 "children": [
                     {
-                        "type": "number",
+                        "type": "paramater",
                         "name": "status_id",
-                        "min": 1,
-                        "max": this._status_max,
                         "description": 'トゥートID',
                         "execute": this.show_statuses,
                         "children": [
@@ -394,10 +389,8 @@ let InstanceModeElement = (function () {
                                 "description": 'トゥートIDを指定',
                                 "children": [
                                     {
-                                        "type": "number",
+                                        "type": "paramater",
                                         "name": "status_id",
-                                        "min": 1,
-                                        "max": this._status_max,
                                         "description": 'トゥートID',
                                         "execute": this.show_status_id,
                                         "children": [
@@ -422,14 +415,33 @@ let InstanceModeElement = (function () {
             }, {
                 "type": "command",
                 "name": "search",
-                "description": "ユーザー検索を行います",
+                "description": "検索を行います",
                 "children": [
                     {
-                        "type": "paramater",
-                        "name": "query",
-                        "description": '検索キーワード',
-                        "execute": this.search_query,
-                    }
+                        "type": "command",
+                        "name": "local",
+                        "description": 'インスタンス内から検索します。',
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "query",
+                                "description": '検索キーワード',
+                                "execute": this.search_query,
+                            }
+                        ]
+                    }/*, {
+                        "type": "command",
+                        "name": "tootsearch",
+                        "description": 'tootsearchエンジンを利用して検索します。',
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "query",
+                                "description": '検索キーワード',
+                                "execute": this.search_query,
+                            }
+                        ]
+                    }*/
                 ]
             }, {
                 "type": "command",
@@ -644,10 +656,8 @@ let InstanceModeElement = (function () {
                         "description": 'トゥートを削除します。',
                         "children": [
                             {
-                                "type": "number",
+                                "type": "paramater",
                                 "name": "status_id",
-                                "min": 1,
-                                "max": this._status_max,
                                 "description": 'トゥートID',
                                 "execute": this.request_delete_status,
                             }
@@ -697,6 +707,18 @@ let InstanceModeElement = (function () {
                                 "optional": "is_add",
                                 "description": '既存ACLに通知方法を追加',
                                 "children": this._acl_opts
+                            }, {
+                                "type": "command",
+                                "name": "drop",
+                                "description": 'フィルターの無効化',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "regular_expression",
+                                        "description": '正規表現文字列',
+                                        "execute": this.set_acl
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -1259,54 +1281,187 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.search_query = function (term, analyzer) {
         term.pause();
-        callAPI('/api/v1/search', {
-            type: 'GET',
-            data: {
-                q: analyzer.paramaters['query']
-            }
-        }).then((data, status, jqxhr) => {
-            let max_len = 15;
-            for (let i = 0; i < data.accounts.length; i++) {
-                if (max_len < data.accounts[i].acct.length) {
-                    max_len = data.accounts[i].acct.length;
+        if (analyzer.line_parsed[1].name === 'local') {
+            callAPI('/api/v1/search', {
+                type: 'GET',
+                data: {
+                    q: analyzer.paramaters['query']
                 }
-            }
-            max_len += 7;
+            }).then((data, status, jqxhr) => {
+                let max_len = 15;
+                for (let i = 0; i < data.accounts.length; i++) {
+                    if (max_len < data.accounts[i].acct.length) {
+                        max_len = data.accounts[i].acct.length;
+                    }
+                }
+                max_len += 7;
 
-            let sep;
-            for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
-            sep += '----------------------------';
-            let lines = [
-                'Accounts:',
-                ('| display name').addTab('| account name', max_len).addTab('id', 9),
-                sep
-            ];
-            for (let i = 0; i < data.accounts.length; i++) {
-                lines.push(
-                    ('| ' + data.accounts[i].display_name)
-                        .addTab('| @' + data.accounts[i].acct, max_len)
-                        .addTab(data.accounts[i].id, 9)
-                );
-            }
+                if (data.statuses.length > 0) {
+                    term.echo('[[b;;]Statuses:]', {flush: false});
+                    for (let i = 0; i < data.statuses.length; i++) {
+                        let s = makeStatus(data.statuses[i]);
+                        term.echo(s, {raw: true, flush: false});
+                    }
+                    term.flush();
+                }
+                else {
+                    let sep;
+                    for (sep = '---------------'; sep.length < (max_len); sep += '-') {};
+                    sep += '----------------------------';
+                    let lines = [
+                        '[[bu;;]Accounts:]',
+                        ('| display name').addTab('| account name', max_len).addTab('id', 9),
+                        sep
+                    ];
+                    for (let i = 0; i < data.accounts.length; i++) {
+                        lines.push(
+                            ('| ' + data.accounts[i].display_name)
+                                .addTab('| @' + data.accounts[i].acct, max_len)
+                                .addTab(data.accounts[i].id, 9)
+                        );
+                    }
 
 
-            lines.push('----------------------------------------------------------');
-            lines.push('  該当件数：' + data.accounts.length + '件');
-            lines.push('');
-            lines.push('Hash tags:');
-            lines.push('-----------------------------------');
-            for (let i = 0; i < data.hashtags.length; i++) {
-                lines.push('#' + data.hashtags[i]);
+                    lines.push('----------------------------------------------------------');
+                    lines.push('  該当件数：' + data.accounts.length + '件');
+                    lines.push('');
+                    lines.push('[[bu;;]Hash tags:]');
+                    lines.push('-----------------------------------');
+                    for (let i = 0; i < data.hashtags.length; i++) {
+                        lines.push('#' + data.hashtags[i]);
+                    }
+                    lines.push('-----------------------------------');
+                    lines.push('  該当件数：' + data.hashtags.length + '件');
+                    term.echo(lines.join("\n"));
+                }
+                term.resume();
+            }, (jqxhr, status, error) => {
+                term.error('Search request is failed.(' + jqxhr.status + ')');
+                console.log(jqxhr);
+                term.resume();
+            });
+        }
+        else {
+            let path;
+            let from = 0;
+            let statuses = [];
+            let limit = parseInt(term.rows() / 5);
+            function echo_statuses(size) {
+                if (!(size > 0)) {
+                    return;
+                }
+                size = statuses.length < size ? statuses.length : size;
+                for (let i = 0; i < size; i++) {
+                    let stats = statuses.shift();
+                    term.echo(stats, {raw: raw, flush: false});
+                }
+                term.flush();
             }
-            lines.push('-----------------------------------');
-            lines.push('  該当件数：' + data.hashtags.length + '件');
-            term.echo(lines.join("\n"));
-            term.resume();
-        }, (jqxhr, status, error) => {
-            term.error('Search request is failed.(' + jqxhr.status + ')');
-            console.log(jqxhr);
-            term.resume();
-        });
+            if (analyzer.line_parsed[1].name === 'tootsearch') {
+                path = "https://tootsearch.chotto.moe/api/v1/search?sort=created_at%3Adesc&q="
+                    + encodeURIComponent(analyzer.paramaters.query);
+            }
+            else {
+                term.error("Invalid search source.");
+                term.resume();
+                return false;
+            }
+            term.echo('[[b;;]Searching powered by tootsearch:]', {flush: false});
+            term.push(function(command, moreterm){},{
+                name: 'more',
+                prompt: '--More-- ',
+                onStart: function(moreterm){
+                    moreterm.pause();
+                    $.ajax({
+                        url: path + '&from=' + from,
+                        dataType: 'json',
+                        timeout: 15000
+                    }).then((data, status, jqxhr) => {
+                        let hits = data.hits.hits;
+                        if (hits.length > 0) {
+                            for (let i = 0; i < hits.length; i++) {
+                                if (hits[i]._type !== 'toot') {
+                                    continue;
+                                }
+                                hits[i]._source.id = 0;
+                                statuses.push(makeStatus(hits[i]._source));
+                            }
+                            echo_statuses(limit);
+                            from = hits.length;
+                            if (data.hits.total <= hits.length) {
+                                moreterm.pop();
+                            }
+                        }
+                        else {
+                            moreterm.echo('no hits.');
+                            moreterm.pop();
+                        }
+                        moreterm.resume();
+                    }, (jqxhr, status, error) => {
+                        moreterm.error('Search request is failed.(' + jqxhr.status + ')');
+                        console.log(jqxhr);
+                        moreterm.pop();
+                        moreterm.resume();
+                    });
+                },
+                keydown: function(event, moreterm){
+                    switch(event.keyCode){
+                        case 27: // Esc
+                        case 81: // q
+                            moreterm.pop();
+                            moreterm.set_command('');
+                        case 16: // Ctrl only
+                        case 17: // Alt only
+                        case 18: // Shift only
+                            break;
+                        case 13: // Enter
+                        default: // Other
+                            moreterm.pause();
+                            let echo_size = (event.keyCode === 13) ? 1 : limit;
+                            if (!(statuses.length > 0)) {
+                                $.ajax({
+                                    url: path + '&from=' + from,
+                                    dataType: 'json',
+                                    timeout: 15000
+                                }).then((data, status, jqxhr) => {
+                                    let hits = data.hits.hits;
+                                    if (hits.length === 0) {
+                                        moreterm.pop();
+                                        return;
+                                    }
+                                    statuses = [];
+                                    for (let i = 0; i < hits.length; i++) {
+                                        hits[i]._source.id = 0;
+                                        let s = makeStatus(hits[i]._source);
+                                        if (s) {
+                                            statuses.push(s);
+                                        }
+                                    }
+                                    echo_statuses(echo_size);
+                                    moreterm.resume();
+                                    from += hits.length;
+                                    if (statuses.length === 0 && from >= data.hits.total) {
+                                        moreterm.pop();
+                                    }
+                                }, (jqxhr, status, error) => {
+                                    console.log(jqxhr);
+                                    moreterm.error('Getting data is failed.(' + jqxhr.status + ')');
+                                });
+                            }
+                            else {
+                                echo_statuses(echo_size);
+                                moreterm.resume();
+                                if (statuses.length === 0 && from >= data.hits.total) {
+                                    moreterm.pop();
+                                }
+                            }
+                            setTimeout(() => { moreterm.set_command(''); }, 10);
+                            break;
+                    }
+                    return true;
+                }
+            });
+        }
     };
     InstanceModeElement.prototype.show_instance = function (term, analyzer) {
         term.pause();
@@ -1623,8 +1778,11 @@ let InstanceModeElement = (function () {
         }
         else if(analyzer.optional.is_add) {
             if (!_ins.acl[analyzer.paramaters.acl_num]) {
-                term.error("access-list has no rule.");
+                term.error('access-list has no rule.');
                 return false;
+            }
+            else if (_ins.acl[analyzer.paramaters.acl_num].type !== 'permit') {
+                term.error('add option apply to permit lists.')
             }
             let _acl = _ins.acl[analyzer.paramaters.acl_num];
             add_acl(_acl);

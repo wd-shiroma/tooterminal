@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-15')),
-    version: '0.5.4',
+    modified: (new Date('2017-10-17')),
+    version: '0.5.5',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -425,6 +425,7 @@ $(function() {
                 $('#img_view').attr('src', elem.data('url'));
             };
             img.onerror = (e) => {
+                console.log(elem);
                 console.log(e);
             };
             $('.img_background').fadeIn('first');
@@ -541,6 +542,10 @@ $(function() {
         {
             $.terminal.active().focus(true, true);
         }
+    })
+    .on('click', 'a', (e,t) => {
+        console.log(e, t);
+        return false;
     });
     window.onerror = function(msg, url, line, col, error) {
         console.log([msg,url,line,col,error]); // エラーの内容
@@ -580,6 +585,28 @@ function getConfig(config, index, d_conf) {
 }*/
 
 function makeStatus(payload, optional) {
+    function parse_emojis(cont, emojis = [], type = '') {
+        for (let i = 0; i < emojis.length; i++) {
+            let url = emojis[i].url;
+            let e_tag = $('<img />')
+                .addClass('pemoji')
+                .attr('name', 'pemoji_' + emojis[i].shortcode)
+                .attr('src', url);
+            let re = new RegExp(':' + (type === 'profile' ? '@' : '')
+                + emojis[i].shortcode + ':', 'g')
+            cont = cont.replace(re, e_tag.prop('outerHTML'));
+
+            let img = new Image();
+            img.onload = () => {
+                $('[name=pemoji_' + emojis[i].shortcode + ']').attr('src', url);
+            };
+            img.onerror = (e) => {
+                console.log(e);
+            };
+            img.src = url;
+        }
+        return cont;
+    }
     let date = new Date(payload.created_at);
     let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
@@ -630,6 +657,10 @@ function makeStatus(payload, optional) {
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
     head = '<span>' + head + '</span>'
+
+    if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
+        head = parse_emojis(head, contents.account.profile_emojis);
+    }
 
     let reply = '';
     if (contents.mentions.length > 0) {
@@ -749,7 +780,7 @@ function makeStatus(payload, optional) {
             content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
         }
         if (content.match(/^<.+>$/)) {
-            content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>')
+            content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
         }
     }
 
@@ -788,6 +819,13 @@ function makeStatus(payload, optional) {
         if (typeof cfg === 'undefined') {
             thumb.hide();
         }
+    }
+
+    if (contents.hasOwnProperty('profile_emojis') && contents.profile_emojis.length > 0) {
+        content = parse_emojis(content, contents.profile_emojis, 'profile');
+    }
+    if (contents.hasOwnProperty('emojis') && contents.emojis.length > 0) {
+        content = parse_emojis(content, contents.emojis);
     }
 
     let content_visible = $('<div />')
@@ -882,6 +920,9 @@ function makeStatus(payload, optional) {
             if (status.text().match(acl.regexp)) {
                 if(acl.type === 'deny') {
                     return '';
+                }
+                else if (acl.type === 'drop') {
+                    break;
                 }
                 let _params = url_params.hasOwnProperty('acl') ? url_params.acl : "";
                 _params = _params.split(',');
@@ -1128,6 +1169,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
             }, (jqxhr, status, error) => {
                 moreterm.error('Getting data is failed.(' + jqxhr.status + ')');
                 console.log(jqxhr);
+                moreterm.pop();
                 moreterm.resume();
             });
         },

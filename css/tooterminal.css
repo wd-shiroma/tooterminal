@@ -16,6 +16,12 @@ body {
     text-decoration: underline;
 }
 
+.pemoji {
+    height: 1em;
+    width: 1em;
+    display: inline;
+}
+
 .timeline {
     ime-mode: inactive;
 }
@@ -329,7 +335,7 @@ body {
     text-decoration: line-through;
 }
 
-.status_contents img {
+.status_thumbnail img {
     width: 5em;
     height: 3em;
     margin: 0 2px;
