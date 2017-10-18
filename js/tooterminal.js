@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-17')),
-    version: '0.5.5',
+    modified: (new Date('2017-10-18')),
+    version: '0.5.6',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -543,8 +543,65 @@ $(function() {
             $.terminal.active().focus(true, true);
         }
     })
-    .on('click', 'a', (e,t) => {
-        console.log(e, t);
+    .on('click', 'a', (e) => {
+        let link = $(e.currentTarget).prop('href');
+        let path = link.replace(/https?:\/\//, '').split('/');
+        let status = $(e.currentTarget).parents('.status:first');
+        let params = {};
+        let command = '';
+        if (path[0] === '') {
+            return false;
+        }
+        if (path[1] === 'users') {
+            params.user = path[2];
+        }
+        if (path[1].match(/^@/)) {
+            params.user = path[1].replace('@', '');
+            if (typeof path[2] !== 'undefined') {
+                params.status = path[2];
+            }
+        }
+        if (path[2] === 'accounts') {
+            params.account = path[3];
+        }
+        if (path[3] === 'statuses') {
+            params.status = path[4];
+        }
+        if (path[2] === 'statuses') {
+            params.status = path[3];
+        }
+        if (path[1] === 'tags') {
+            params.tag = path[2];
+        }
+
+        if (params.tag) {
+            command = 'show timeline tag ' + params.tag;
+        }
+        else if (path[0] === ins.get().domain && params.status) {
+            command = 'show status id ' + params.status;
+        }
+        else if (params.status) {
+            command = 'search local ' + link;
+        }
+        else if (path[0] === ins.get().domain && params.account) {
+            command = 'show user id ' + params.account
+        }
+        else if (params.user) {
+            command = 'show user name ' + params.user + '@' + path[0];
+        }
+
+        if (command !== '') {
+            let term = $.terminal.active();
+            if (term.name() === 'more') {
+                term.pop();
+            }
+            if (term.name() === 'instance') {
+                term.exec(command);
+            }
+        }
+        else {
+            window.open(link);
+        }
         return false;
     });
     window.onerror = function(msg, url, line, col, error) {
@@ -659,7 +716,7 @@ function makeStatus(payload, optional) {
     head = '<span>' + head + '</span>'
 
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
-        head = parse_emojis(head, contents.account.profile_emojis);
+        head = parse_emojis(head, contents.account.profile_emojis, 'profile');
     }
 
     let reply = '';
@@ -784,6 +841,7 @@ function makeStatus(payload, optional) {
         }
     }
 
+/*
     let userid = content.match(/<a[^>]*?u-url.+?<\/a>/g);
     if (userid !== null) {
         for (let i = 0; i < userid.length; i++) {
@@ -791,7 +849,7 @@ function makeStatus(payload, optional) {
             content = content.replace(userid[i], _userid);
         }
     }
-
+*/
     let thumb;
     if (contents.media_attachments.length > 0) {
         thumb = $('<div />').addClass('status_thumbnail');
@@ -963,6 +1021,10 @@ function makeStatus(payload, optional) {
             + '</span></div>'
         );
     }
+    status.append($('<div />')
+        .addClass('status_all')
+        .css('display', 'none')
+        .text(JSON.stringify(payload)));
     return status.prop('outerHTML');
 }
 

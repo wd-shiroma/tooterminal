@@ -316,12 +316,19 @@ let InstanceModeElement = (function () {
                                         "execute": this.show_follows,
                                     }
                                 ]
-                            }, /*{
+                            }, {
                                 "type": "command",
-                                "name": "select",
-                                "description": 'トゥートから選択',
-                                "execute": this.show_user
-                            }*/
+                                "name": "name",
+                                "description": 'ユーザ名・アカウント名から検索表示',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "account",
+                                        "description": 'ユーザ名・アカウント名',
+                                        "execute": this.show_user,
+                                    }
+                                ]
+                            }
                         ]
                     }, {
                         "type": "command",
@@ -1158,126 +1165,144 @@ let InstanceModeElement = (function () {
         ins.save();
     };
     InstanceModeElement.prototype.show_user = function (term, analyzer) {
-        term.pause();
-        let api_user;
-        let api_rel;
-        let user = ins.get().user;
-        if (typeof analyzer.line_parsed[2] === 'undefined' || analyzer.line_parsed[2].name === 'self') {
-            api_user = callAPI('/api/v1/accounts/verify_credentials', {
+        function echo_user(user_id) {
+            let api_user;
+            let api_rel;
+            let user = ins.get().user;
+            api_user = callAPI('/api/v1/accounts/' + user_id, {
                 type: 'GET',
             });
-            api_rel = callAPI('/api/v1/accounts/relationships?id[]=' + user.id, {
-                type: 'GET'
+            api_rel = callAPI('/api/v1/accounts/relationships?id[]=' + user_id, {
+                type: 'GET',
+            });
+            api_pinned = callAPI('/api/v1/accounts/' + user_id + '/statuses', {
+                data: { pinned: true }
+            });
+            $.when(api_user, api_rel, api_pinned)
+            .then((data_user, data_rel, data_pinned) => {
+                let data = data_user[0];
+                let jqxhr = data_user[2];
+                let relation = data_rel[0];
+                let jqxhr_r = data_rel[2];
+                let pinned = data_pinned[0];
+                let jqxhr_p = data_pinned[2];
+                let created = new Date(data.created_at);
+                let passing = parseInt((Date.now() - created.getTime()) / 60000);
+                let minutes = passing % 60;
+                let hours   = (passing = (passing - minutes) / 60) % 24;
+                let days    = (passing = (passing - hours) / 24) % 7;
+                let weeks   = (passing - days) / 7;
+                let rel = '<span>Relationship ';
+                if (relation[0].id === user_id) {
+                    rel += 'self.</span>';
+                }
+                else {
+                    rel += "others.<br />"
+                        + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                            + (relation[0].following ? 'unfollow">' : 'follow">No ') + 'following</a>, '
+                            + (relation[0].followed_by ? '' : 'No ') + 'followed, '
+                            + (relation[0].requested ? '' : 'No ') + 'requesting, '
+                        + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                            + (relation[0].muting ? 'unmute">' : 'mute">No ') + 'muting</a>, '
+                        + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                            + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
+                }
+                term.echo(data.display_name + ' ID:' + data.id
+                    + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
+                term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
+                term.echo('Created at ' + created.toString(), {flush: false});
+                term.echo('Uptime is '
+                        + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
+                        + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
+                term.echo('<span>'
+                        + $('<a />')
+                            .attr('name', 'cmd_link')
+                            .attr('data-uid', data.id)
+                            .attr('data-type', 'show_statuses')
+                            .text(data.statuses_count  + ' statuses posted')
+                            .prop('outerHTML') + ', '
+                        + $('<a />')
+                            .attr('name', 'cmd_link')
+                            .attr('data-uid', data.id)
+                            .attr('data-type', 'show_following')
+                            .text(data.following_count + ' accounts are following')
+                            .prop('outerHTML') + ', '
+                        + $('<a />')
+                            .attr('name', 'cmd_link')
+                            .attr('data-uid', data.id)
+                            .attr('data-type', 'show_followed')
+                            .text(data.followers_count + ' accounts are followed')
+                            .prop('outerHTML')
+                        + '</span>'
+                , {raw: true, flush: false});
+                term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
+                term.echo(rel, {raw: true, flush: false});
+                term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
+                term.echo('URL: ' + data.url, {raw: false, flush: false});
+
+                if (pinned.length > 0 && pinned[0].pinned) {
+                    term.echo('<br />', {raw: true, flush: false})
+                    term.echo('[[ub;;]Pinned statuses]', {flush: false});
+                    for (let i = 0; i < pinned.length; i++) {
+                        if (i > 2) {
+                            let more = $('<a />')
+                                .attr('name', 'cmd_link')
+                                .attr('data-uid', pinned[i].account.id)
+                                .attr('data-type', 'show_statuses_pinned')
+                                .text('... and more pinned status');
+                            term.echo(more.prop('outerHTML'), {raw: true, flush: false});
+                            break;
+                        }
+                        else {
+                            term.echo(makeStatus(pinned[i]), {raw: true, flush: false});
+                        }
+                    }
+                }
+                term.echo('[OK]', {flush: false});
+                term.flush();
+                term.resume();
+            }, (jqxhr, status, error) => {
+                console.log(jqxhr);
+                let response = JSON.parse(jqxhr.responseText);
+                term.echo('Getting user data failed.(' + jqxhr + ')');
+                term.resume();
+            });/*
+            .then((data, status, jqxhr) => {
+                term.flush();
+                term.resume();
+            }, (jqxhr, status, error) => {
+                console.log(jqxhr);
+
+                //let response = JSON.parse(jqxhr.responseText);
+                term.echo('Getting user data failed.(' + jqxhr + ')');
+                term.resume();
+            });*/
+        }
+        term.pause();
+        let uid;
+        if (typeof analyzer.line_parsed[2] === 'undefined' || analyzer.line_parsed[2].name === 'self') {
+            echo_user(ins.get().user.id);
+        }
+        else if (analyzer.line_parsed[2].name === 'name'){
+            callAPI('/api/v1/search', {
+                type: 'GET',
+                data: {
+                    q: analyzer.paramaters.account,
+                    limit: 1
+                }
+            }).then((data, status, jqxhr) => {
+                if (data.accounts.length > 0) {
+                    echo_user(data.accounts[0].id);
+                }
+                else {
+                    term.echo('No Accounts.');
+                    term.resume();
+                }
             });
         }
         else {
-            api_user = callAPI('/api/v1/accounts/' + analyzer.paramaters['userid'], {
-                type: 'GET',
-            });
-            api_rel = callAPI('/api/v1/accounts/relationships?id[]=' + analyzer.paramaters['userid'], {
-                type: 'GET',
-            });
+            echo_user(analyzer.paramaters.userid);
         }
-
-        $.when(api_user, api_rel)
-        .then((data_user, data_rel) => {
-            let data = data_user[0];
-            let jqxhr = data_user[2];
-            let relation = data_rel[0];
-            let jqxhr_r = data_rel[2];
-            let created = new Date(data.created_at);
-            let passing = parseInt((Date.now() - created.getTime()) / 60000);
-            let minutes = passing % 60;
-            let hours   = (passing = (passing - minutes) / 60) % 24;
-            let days    = (passing = (passing - hours) / 24) % 7;
-            let weeks   = (passing - days) / 7;
-            let rel = '<span>Relationship ';
-            if (relation[0].id === user.id) {
-                rel += 'self.</span>';
-            }
-            else {
-                rel += "others.<br />"
-                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
-                        + (relation[0].following ? 'unfollow">' : 'follow">No ') + 'following</a>, '
-                        + (relation[0].followed_by ? '' : 'No ') + 'followed, '
-                        + (relation[0].requested ? '' : 'No ') + 'requesting, '
-                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
-                        + (relation[0].muting ? 'unmute">' : 'mute">No ') + 'muting</a>, '
-                    + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
-                        + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
-            }
-            term.echo(data.display_name + ' ID:' + data.id
-                + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
-            term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
-            term.echo('Created at ' + created.toString(), {flush: false});
-            term.echo('Uptime is '
-                    + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
-                    + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
-            term.echo('<span>'
-                    + $('<a />')
-                        .attr('name', 'cmd_link')
-                        .attr('data-uid', data.id)
-                        .attr('data-type', 'show_statuses')
-                        .text(data.statuses_count  + ' statuses posted, ')
-                        .prop('outerHTML') + ', '
-                    + $('<a />')
-                        .attr('name', 'cmd_link')
-                        .attr('data-uid', data.id)
-                        .attr('data-type', 'show_following')
-                        .text(data.following_count + ' accounts are following')
-                        .prop('outerHTML') + ', '
-                    + $('<a />')
-                        .attr('name', 'cmd_link')
-                        .attr('data-uid', data.id)
-                        .attr('data-type', 'show_followed')
-                        .text(data.followers_count + ' accounts are followed')
-                        .prop('outerHTML')
-                    + '</span>'
-            , {raw: true, flush: false});
-            term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
-            term.echo(rel, {raw: true, flush: false});
-            term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
-            term.echo('URL: ' + data.url, {raw: false, flush: false});
-
-            return callAPI('/api/v1/accounts/' + data.id + '/statuses', {
-                data: { pinned: true }
-            });
-        }, (jqxhr, status, error) => {
-            console.log(jqxhr);
-            let response = JSON.parse(jqxhr.responseText);
-            term.echo('Getting user data failed.(' + jqxhr + ')');
-            term.resume();
-        })
-        .then((data, status, jqxhr) => {
-            if (data.length > 0 && data[0].pinned) {
-                term.echo('<br />', {raw: true, flush: false})
-                term.echo('[[ub;;]Pinned statuses]', {flush: false});
-                for (let i = 0; i < data.length; i++) {
-                    if (i > 2) {
-                        let more = $('<a />')
-                            .attr('name', 'cmd_link')
-                            .attr('data-uid', data[i].account.id)
-                            .attr('data-type', 'show_statuses_pinned')
-                            .text('... and more pinned status');
-                        term.echo(more.prop('outerHTML'), {raw: true, flush: false});
-                        break;
-                    }
-                    else {
-                        term.echo(makeStatus(data[i]), {raw: true, flush: false});
-                    }
-                }
-            }
-            term.echo('[OK]', {flush: false});
-            term.flush();
-            term.resume();
-        }, (jqxhr, status, error) => {
-            console.log(jqxhr);
-
-            //let response = JSON.parse(jqxhr.responseText);
-            term.echo('Getting user data failed.(' + jqxhr + ')');
-            term.resume();
-        });
-
     };
     InstanceModeElement.prototype.search_query = function (term, analyzer) {
         term.pause();
