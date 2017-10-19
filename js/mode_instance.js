@@ -231,30 +231,15 @@ let InstanceModeElement = (function () {
                                                 "name": "statuses",
                                                 "description": 'ユーザの最新トゥートを表示',
                                                 "execute": this.show_statuses,
-                                                "children": this._sh_stats_opt
-                                                /*"children": [ 固定トゥ表示は一旦廃止～
+                                                "children": this._sh_stats_opt.concat([
                                                     {
-                                                        "type": "command",
-                                                        "name": "limit",
-                                                        "description": 'トゥート表示件数を設定します。',
-                                                        "children": [
-                                                            {
-                                                                "type": "number",
-                                                                "name": "post_limits",
-                                                                "min": 1,
-                                                                "max": 40,
-                                                                "description": 'トゥート数(初期値20)',
-                                                                "execute": this.show_statuses
-                                                            }
-                                                        ]
-                                                    }, {
                                                         "type": "command",
                                                         "name": "pinned",
                                                         "optional": "pinned",
                                                         "description": '固定トゥートを表示します。',
                                                         "execute": this.show_statuses
                                                     }
-                                                ]*/
+                                                ])
                                             }, {
                                                 "type": "command",
                                                 "name": "following",
@@ -942,7 +927,7 @@ let InstanceModeElement = (function () {
                             is_desktop = {};
                         }
 
-                        if(beep_buf) {
+                        if(beep_buf && config.find(['instances', 'terminal', 'boop']) === true) {
                             let source = context.createBufferSource();
                             source.buffer = beep_buf;
                             source.connect(context.destination);

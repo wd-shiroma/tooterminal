@@ -175,6 +175,11 @@ var ConfigurationModeElement = (function () {
                                 ]
                             }, {
                                 "type": "command",
+                                "name": "boop",
+                                "description": "通知音を設定します。",
+                                "execute": this.set_true
+                            }, {
+                                "type": "command",
                                 "name": "length",
                                 "description": "トゥートの取得数について設定します。",
                                 "children": [
@@ -392,6 +397,11 @@ var ConfigurationModeElement = (function () {
                                                 "execute": this.set_default
                                             }
                                         ]
+                                    }, {
+                                        "type": "command",
+                                        "name": "boop",
+                                        "description": "通知音を無効にします。",
+                                        "execute": this.set_default
                                     }
                                 ]
                             }, {

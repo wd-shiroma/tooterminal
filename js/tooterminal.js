@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-18')),
-    version: '0.5.6',
+    modified: (new Date('2017-10-19')),
+    version: '0.5.7',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -100,6 +100,27 @@ let initConfig = (term) => {
         console.log('Initialization: read default config')
         config = defconf;
     }*/
+    let src_url = './sounds/boop.ogg';
+    let req = new XMLHttpRequest();
+    req.responseType = 'arraybuffer';
+    req.onreadystatechange = function() {
+        if (req.readyState === 4) {
+            if (req.status === 0 || req.status === 200) {
+                if (req.response) {
+                    context.decodeAudioData(req.response, function(buffer) {
+                        beep_buf = buffer;
+                    });
+                }
+                else {
+                    $.terminal.active().error('Error: ポコポコできません');
+                    console.log('error');
+                    beep_buf = undefined;
+                }
+            }
+        }
+    };
+    req.open('GET', src_url, true);
+    req.send('')
 
     config = new ConfigManager(defconf, st_conf ? JSON.parse(st_conf) : {});
     url_params = {};
@@ -181,28 +202,6 @@ let init_instance = function(term) {
             term.exec('terminal monitor');
         }
     }
-    return;
-    let src_url = 'https://' + _ins.domain + '/sounds/boop.ogg';
-    let req = new XMLHttpRequest();
-    req.responseType = 'arraybuffer';
-    req.onreadystatechange = function() {
-        if (req.readyState === 4) {
-            if (req.status === 0 || req.status === 200) {
-                if (req.response) {
-                    context.decodeAudioData(req.response, function(buffer) {
-                        beep_buf = buffer;
-                    });
-                }
-                else {
-                    $.terminal.active().error('Error: ポコポコできません');
-                    console.log('error');
-                    beep_buf = undefined;
-                }
-            }
-        }
-    };
-    req.open('GET', src_url, true);
-    req.send('')
 };
 
 let exit_instance = function() {
@@ -282,7 +281,13 @@ $(function() {
         onFocus:      (term) => { return true; },
         //onResume:     false,
         onCommandChange: parseCommand,
+    });/*
+    window.emojiPicker = new EmojiPicker({
+        emojiable_selector: '[data-emojiable=true]',
+        assetsPath: './img',
+        popupButtonClasses: 'fa fa-smile-o'
     });
+    window.emojiPicker.discover();*/
     $('#toot').on('keydown', (event) => {
         if (event.keyCode === 27) {
             closeTootbox();
@@ -401,7 +406,7 @@ $(function() {
     .on('dblclick', '.status', function(e){
         $.terminal.active().exec('show status id ' + $(this).data('sid'));
     })
-    .on('click', '.status_contents img', function(e) {
+    .on('click', '.status img', function(e) {
         let elem = $(this);
 
         $('#pre_view').attr('src', elem.attr('src')).fadeIn('first');
@@ -645,17 +650,19 @@ function makeStatus(payload, optional) {
     function parse_emojis(cont, emojis = [], type = '') {
         for (let i = 0; i < emojis.length; i++) {
             let url = emojis[i].url;
+            let tag = ':' + (type === 'profile' ? '@' : '')
+                + emojis[i].shortcode + ':';
             let e_tag = $('<img />')
-                .addClass('pemoji')
-                .attr('name', 'pemoji_' + emojis[i].shortcode)
+                .addClass('cemoji')
+                .attr('name', 'emoji_' + emojis[i].shortcode)
+                .attr('alt', tag)
                 .attr('src', url);
-            let re = new RegExp(':' + (type === 'profile' ? '@' : '')
-                + emojis[i].shortcode + ':', 'g')
+            let re = new RegExp(tag, 'g')
             cont = cont.replace(re, e_tag.prop('outerHTML'));
 
             let img = new Image();
             img.onload = () => {
-                $('[name=pemoji_' + emojis[i].shortcode + ']').attr('src', url);
+                $('[name=emoji_' + emojis[i].shortcode + ']').attr('src', url);
             };
             img.onerror = (e) => {
                 console.log(e);

@@ -16,10 +16,11 @@ body {
     text-decoration: underline;
 }
 
-.pemoji {
+.cemoji {
     height: 1em;
     width: 1em;
     display: inline;
+    vertical-align: middle;
 }
 
 .timeline {
