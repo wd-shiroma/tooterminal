@@ -427,7 +427,7 @@ let InstanceModeElement = (function () {
                                 "execute": this.search_query,
                             }
                         ]
-                    },/* { 早く対応したいなー
+                    }, {
                         "type": "command",
                         "name": "tootsearch",
                         "description": 'tootsearchエンジンを利用して検索します。',
@@ -439,7 +439,7 @@ let InstanceModeElement = (function () {
                                 "execute": this.search_query,
                             }
                         ]
-                    }*/
+                    }
                 ]
             }, {
                 "type": "command",
