@@ -238,6 +238,12 @@ let InstanceModeElement = (function () {
                                                         "optional": "pinned",
                                                         "description": '固定トゥートを表示します。',
                                                         "execute": this.show_statuses
+                                                    }, {
+                                                        "type": "command",
+                                                        "name": "media",
+                                                        "optional": "media",
+                                                        "description": 'メディアトゥートを表示します。',
+                                                        "execute": this.show_statuses
                                                     }
                                                 ])
                                             }, {
@@ -322,9 +328,9 @@ let InstanceModeElement = (function () {
                         "execute": this.show_instance,
                     }, {
                         "type": "command",
-                        "name": "authentication",
-                        "description": 'インスタンス情報を表示します。',
-                        "execute": this.show_authentication,
+                        "name": "application",
+                        "description": 'クライアント情報を表示します。',
+                        "execute": this.show_application,
                     }, {
                         "type": "command",
                         "name": "timeline",
@@ -421,7 +427,7 @@ let InstanceModeElement = (function () {
                                 "execute": this.search_query,
                             }
                         ]
-                    }, {
+                    },/* { 早く対応したいなー
                         "type": "command",
                         "name": "tootsearch",
                         "description": 'tootsearchエンジンを利用して検索します。',
@@ -433,7 +439,7 @@ let InstanceModeElement = (function () {
                                 "execute": this.search_query,
                             }
                         ]
-                    }
+                    }*/
                 ]
             }, {
                 "type": "command",
@@ -1506,9 +1512,9 @@ let InstanceModeElement = (function () {
             term.resume();
         });
     };
-    InstanceModeElement.prototype.show_authentication = function (term, analyzer) {
+    InstanceModeElement.prototype.show_application = function (term, analyzer) {
         term.pause();
-        callAPI('/api/v1/instance', {
+        callAPI('/api/v1/apps/verify_credentials', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
             let json_str = JSON.stringify(data, null, '    ');
@@ -1554,9 +1560,13 @@ let InstanceModeElement = (function () {
                 params = {
                     limit: limit,
                 }
-                if (analyzer.optional.hasOwnProperty('pinned')) {
+                if (analyzer.optional.pinned === true) {
                     params.pinned = true;
                 }
+                if (analyzer.optional.media === true) {
+                    params.only_media = true;
+                }
+
                 path = '/api/v1/accounts/' + userid + '/statuses'
             }
             else {

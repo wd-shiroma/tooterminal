@@ -17,8 +17,9 @@ body {
 }
 
 .cemoji {
-    height: 1em;
-    width: 1em;
+    margin-top: -2px;
+    width: calc(1em + 2px);
+    height: calc(1em + 2px);
     display: inline;
     vertical-align: middle;
 }

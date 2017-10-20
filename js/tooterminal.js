@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-19')),
-    version: '0.5.7',
+    modified: (new Date('2017-10-20')),
+    version: '0.5.8',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -394,14 +394,36 @@ $(function() {
             if ($($(this).find('.status_head i')[2]).hasClass('fa-envelope')) {
                 $('#toot_visibility').val('direct');
             }
+            else if ($($(this).find('.status_head i')[2]).hasClass('fa-lock')) {
+                $('#toot_visibility').val('private');
+            }
+            else if ($($(this).find('.status_head i')[2]).hasClass('fa-unlock')) {
+                $('#toot_visibility').val('unlisted');
+            }
+            else {
+                $('#toot_visibility').val('public');
+            }
         }
-
         if (e.ctrlKey) {
-            favorite(this);
+            favourite(this);
         }
         if (e.altKey) {
             boost(this);
         }
+    })
+    .on('click', '.status i', function(e){
+        console.log(e);
+        let target = $(e.target);
+        let status = target.parents('.status');
+        if (target.hasClass('fa-star') || target.hasClass('fa-star-o')) {
+            favourite(status);
+        }
+        else if (target.hasClass('fa-check-circle-o') || target.hasClass('fa-retweet')) {
+            boost(status);
+        }
+      /*+ $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle-o'
+                        : contents.reblogged ? 'check-circle-o' : 'retweet'))*/
     })
     .on('dblclick', '.status', function(e){
         $.terminal.active().exec('show status id ' + $(this).data('sid'));
@@ -415,6 +437,19 @@ $(function() {
             let video = $('#video_view')[0];
             video.src = elem.data('url');
             video.loop = true;
+            video.autoplay = true;
+            video.muted = true;
+            video.controls = true;
+            video.oncanplay = () => {
+                $('#pre_view').fadeOut('first');
+            };
+            $('#video_view').fadeIn('first');
+            $('.img_background').fadeIn('first');
+        }
+        else if (elem.data('type') === 'video') {
+            let video = $('#video_view')[0];
+            video.src = elem.data('url');
+            video.loop = false;
             video.autoplay = true;
             video.muted = true;
             video.controls = true;
@@ -705,7 +740,7 @@ function makeStatus(payload, optional) {
         + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
-        + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' ? 'times-circle-o'
+        + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle-o'
                         : contents.reblogged ? 'check-circle-o' : 'retweet'))
                 .attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (
@@ -1336,7 +1371,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
     });
 }
 
-function favorite(status, term) {
+function favourite(status, term) {
     let isFav = ($(status).data('fav') == 1);
     let head_fa = $(status).find('.status_head i');
     let api = '/api/v1/statuses/'
