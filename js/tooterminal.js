@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-20')),
-    version: '0.5.8',
+    modified: (new Date('2017-10-21')),
+    version: '0.5.9',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -439,9 +439,9 @@ $(function() {
                     limit: 1
                 }
             }).then((data, status, jqxhr) => {
-                if (data.accounts.length > 0) {
+                if (data.statuses.length > 0) {
                     term.resume();
-                    term.exec('show status id ' + data.accounts[0].id);
+                    term.exec('show status id ' + data.statuses[0].id);
                 }
                 else {
                     term.echo('No status found. (Perhaps status was deleted)');
