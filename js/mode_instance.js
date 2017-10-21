@@ -1369,7 +1369,7 @@ let InstanceModeElement = (function () {
                 size = statuses.length < size ? statuses.length : size;
                 for (let i = 0; i < size; i++) {
                     let stats = statuses.shift();
-                    term.echo(stats, {raw: raw, flush: false});
+                    term.echo(stats, {raw: true, flush: false});
                 }
                 term.flush();
             }
@@ -1394,13 +1394,17 @@ let InstanceModeElement = (function () {
                         timeout: 15000
                     }).then((data, status, jqxhr) => {
                         let hits = data.hits.hits;
+                        let s_uris = [];
                         if (hits.length > 0) {
                             for (let i = 0; i < hits.length; i++) {
                                 if (hits[i]._type !== 'toot') {
                                     continue;
                                 }
                                 hits[i]._source.id = 0;
-                                statuses.push(makeStatus(hits[i]._source));
+                                if (s_uris.indexOf(hits[i]._source.uri) < 0) {
+                                    statuses.push(makeStatus(hits[i]._source));
+                                    s_uris.push = hits[i]._source.uri;
+                                }
                             }
                             echo_statuses(limit);
                             from = hits.length;
@@ -1440,6 +1444,7 @@ let InstanceModeElement = (function () {
                                     dataType: 'json',
                                     timeout: 15000
                                 }).then((data, status, jqxhr) => {
+                                    let s_uris = [];
                                     let hits = data.hits.hits;
                                     if (hits.length === 0) {
                                         moreterm.pop();
@@ -1448,9 +1453,12 @@ let InstanceModeElement = (function () {
                                     statuses = [];
                                     for (let i = 0; i < hits.length; i++) {
                                         hits[i]._source.id = 0;
-                                        let s = makeStatus(hits[i]._source);
-                                        if (s) {
-                                            statuses.push(s);
+                                        if (s_uris.indexOf(hits[i]._source.uri) < 0) {
+                                            let s = makeStatus(hits[i]._source);
+                                            if (s) {
+                                                statuses.push(s);
+                                                s_uris.push = hits[i]._source.uri;
+                                            }
                                         }
                                     }
                                     echo_statuses(echo_size);
