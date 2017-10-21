@@ -15,7 +15,8 @@
   - [インスタンスログイン、terminal monitorを自動化する](#url_params)
   - [アイコン、サムネ画像、区切り線表示](#conf_status)
   - [正規表現フィルタ](#ins_filter)
-  - [デスクトップ通知](#desktop_notification)
+  - [各種通知設定(デスクトップ通知、ポコポコ通知音)](#desktop_notification)
+  - [トゥートの検索等について](#search_toots)
   - [便利なキーボードショートカット](#advance_shortcut)
 
 Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。
@@ -490,9 +491,11 @@ Standard Status access list 40
     permit regexp /LOCAL streaming updated/, color dark-red
 ```
 
-<h2 id="desktop_notification">デスクトップ通知</h2>
+<h2 id="desktop_notification">各種通知設定(デスクトップ通知、ポコポコ通知音)</h2>
 
-Tooterminalは公式クライアントと同様に、デスクトップ通知を表示することができます。。
+Tooterminalは公式クライアントと同様に、デスクトップ通知、ポコポコ通知音を設定することができます。。
+
+- デスクトップ通知
 
 ```
 Tooterminal# configure terminal
@@ -503,6 +506,73 @@ Exec commands:
   reblog                ブーストの通知を表示します。
   mention               リプライの通知を表示します。
   following             フォローの通知を表示します。
+```
+
+- ポコポコ通知音
+
+```
+Tooterminal# configure terminal
+Tooterminal(config)#
+Tooterminal(config)# instances terminal boop
+```
+
+<h2 id="search_toots">トゥートの検索等について</h2>
+
+Tooterminalでは、マストドンが提供しているトゥート検索機能に加え、外部トゥート検索サービスのAPIを利用したトゥート検索機能を搭載しています。
+
+###　利用させていただいている検索エンジン様
+
+- [tootsearch](https://tootsearch.chotto.moe)
+
+```
+shiroma@mstdn.jp# ! localのキーワード検索では、アカウントとハッシュタグを検索できます。
+shiroma@mstdn.jp#
+shiroma@mstdn.jp# search local ぐすくま
+Accounts:
+id       | account name            | display name
+------------------------------------------------------
+286224   | @shiroma@oransns.com    | ぐすくま ✅
+23938    | @shiroma                | ぐすくま ✅
+----------------------------------------------------------
+  該当件数：2件
+Hash tags:
+-----------------------------------
+-----------------------------------
+  該当件数：0件
+shiroma@mstdn.jp#
+shiroma@mstdn.jp#
+shiroma@mstdn.jp# ! localのステータス検索をすると、該当IDのトゥートを表示することが出来ます。
+shiroma@mstdn.jp#
+shiroma@mstdn.jp# search local https://mstdn.jp/@shiroma/988641090967
+80157
+Statuses:
+
+[ ぐすくま ✅ @shiroma    2017-10-21 09:43:06.592 ] via Tooterminal
+んなぁーはメイドインアビスに出てくるキャラのセリフだよ！Amazonプライムビデオで配信してるから見てね！
+---------------------------------------------------------------
+shiroma@mstdn.jp#
+shiroma@mstdn.jp# ! tootsearchのAPIエンジンを利用してトゥート検索もすることが出来ます。
+shiroma@mstdn.jp#
+shiroma@mstdn.jp# search tootsearch ナナチ
+Searching powered by tootsearch:
+
+[ Иagi @nagiept@mstdn.jp    2017-10-21 12:10:25.000 ]
+ぐすくまさんナナチになってしまった
+--------------------------------------------------------------------
+
+[ Иagi @nagiept@mstdn.jp    2017-10-21 12:09:55.000 ]
+ぐすぐまさんナナチになってしまった
+--------------------------------------------------------------------
+
+[ ななちくわ🔰 @Ckwneko@mstdn.jp    2017-10-21 11:54:25.000 ]
+ナナチ
+--------------------------------------------------------------------
+
+[ はかせさん🐳 @pantomimer@mstdn.jp    2017-10-21 11:49:29.000 ]
+神田でたまに見た
+「チャイルド・ケモ・ハウス」
+という単語が
+今はナナチしか浮かんでこない
 ```
 
 <h2 id="advance_shortcut">便利なキーボードショートカット</h2>
