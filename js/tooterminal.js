@@ -427,6 +427,12 @@ $(function() {
     })
     .on('dblclick', '.status', function(e){
         let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() !== 'instance') {
+            return;
+        }
         if ($(this).data('sid') > 0) {
             term.exec('show status id ' + $(this).data('sid'));
         }
