@@ -1362,6 +1362,11 @@ let InstanceModeElement = (function () {
             let from = 0;
             let statuses = [];
             let limit = parseInt(term.rows() / 5);
+            if (window.location.origin !== 'https://wd-shiroma.github.io') {
+                term.error('Sorry! tootsearch permit only acceess from "https://wd-shiroma.github.io"');
+                term.resume();
+                return false;
+            }
             function echo_statuses(size) {
                 if (!(size > 0)) {
                     return;
@@ -1403,7 +1408,7 @@ let InstanceModeElement = (function () {
                                 hits[i]._source.id = 0;
                                 if (s_uris.indexOf(hits[i]._source.uri) < 0) {
                                     statuses.push(makeStatus(hits[i]._source));
-                                    s_uris.push = hits[i]._source.uri;
+                                    s_uris.push(hits[i]._source.uri);
                                 }
                             }
                             echo_statuses(limit);
@@ -1457,7 +1462,7 @@ let InstanceModeElement = (function () {
                                             let s = makeStatus(hits[i]._source);
                                             if (s) {
                                                 statuses.push(s);
-                                                s_uris.push = hits[i]._source.uri;
+                                                s_uris.push(hits[i]._source.uri);
                                             }
                                         }
                                     }

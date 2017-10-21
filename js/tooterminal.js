@@ -426,7 +426,30 @@ $(function() {
                         : contents.reblogged ? 'check-circle-o' : 'retweet'))*/
     })
     .on('dblclick', '.status', function(e){
-        $.terminal.active().exec('show status id ' + $(this).data('sid'));
+        let term = $.terminal.active();
+        if ($(this).data('sid') > 0) {
+            term.exec('show status id ' + $(this).data('sid'));
+        }
+        else {
+            term.pause();
+            callAPI('/api/v1/search', {
+                type: 'GET',
+                data: {
+                    q: $(this).data('uri'),
+                    limit: 1
+                }
+            }).then((data, status, jqxhr) => {
+                if (data.accounts.length > 0) {
+                    term.resume();
+                    term.exec('show status id ' + data.accounts[0].id);
+                }
+                else {
+                    term.echo('No status found. (Perhaps status was deleted)');
+                    term.resume();
+                }
+            });
+        }
+
     })
     .on('click', '.status img', function(e) {
         let elem = $(this);
@@ -990,6 +1013,10 @@ function makeStatus(payload, optional) {
             .append(avatar)
             .append($(main)));
 
+    if (contents.id === 0) {
+        status.attr('data-uri', contents.uri);
+    }
+
     if (cfg_avatar === 'mouseover') {
         status.addClass('status_mouseover');
     }
@@ -1372,6 +1399,10 @@ function callMore(path, cb_mkmsg, optional = {}) {
 }
 
 function favourite(status, term) {
+    if ($(status).data('sid') <= 0) {
+        term.error('couldn\'t send a request (search engine status).');
+        return;
+    }
     let isFav = ($(status).data('fav') == 1);
     let head_fa = $(status).find('.status_head i');
     let api = '/api/v1/statuses/'
@@ -1412,6 +1443,10 @@ function closeTootbox() {
 }
 
 function boost(status) {
+    if ($(status).data('sid') <= 0) {
+        term.error('couldn\'t send a request (search engine status).');
+        return;
+    }
     let head_fa = $(status).find('.status_head i');
     if ($(head_fa[1]).hasClass('fa-times-circle-o')) {
         return;
