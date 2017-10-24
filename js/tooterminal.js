@@ -1140,7 +1140,13 @@ function make_notification(payload, notifies) {
 
 function post_status() {
     let status = $('#toot_box').val().trim();
+    let _ins = ins.get();
+    let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
     if (status.length === 0 || msg_size < 0) {
+        return false;
+    }
+    else if(typeof _ins === 'undefined'
+         && typeof _ins.access_token === 'undefined') {
         return false;
     }
     status = status.replace(/(:[a-zA-Z0-9_]{2,}:) /g, '$1' + String.fromCharCode(8203));
@@ -1151,12 +1157,6 @@ function post_status() {
         status: status,
         visibility: visibility
     };
-    let _ins = ins.get();
-    let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
-    else if(typeof _ins === 'undefined'
-         && typeof _ins.access_token === 'undefined') {
-        return false;
-    }
     if (cw.length !== 0) {
         data.spoiler_text = cw;
     }
