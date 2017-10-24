@@ -23,6 +23,19 @@ body {
     display: inline;
     vertical-align: middle;
 }
+.emoji_picker {
+    display: inline-block !important;
+    width: 2em;
+    margin: 0px;
+    padding: 3px;
+}
+.emoji_picker:hover {
+    background-color: #252525;
+}
+.emoji_picker>img {
+    width: 2em;
+    height: 2em;
+}
 
 .timeline {
     ime-mode: inactive;

@@ -270,6 +270,38 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.entry_instance = function (term, analyzer) {
+        function auth_account() {
+            let account = callAPI('/api/v1/accounts/verify_credentials');
+            let instance = callAPI('/api/v1/instance');
+            $.when(account, instance)
+            .then((data_acc, data_ins) => {
+                let data = data_acc[0];
+                term.echo('Hello! ' + data.display_name + ' @' + data.username);
+                _ins.user = data;
+                _ins.info = data_ins[0];
+
+                ins.save();
+                term.resume();
+
+                let prompt = _ins.user.username;
+                prompt += '@' + _ins.domain + '# ';
+
+                delete(_ins.auth_code);
+                term.push(enterCommand, {
+                    name:   'instance',
+                    prompt:  prompt,
+                    onStart: init_instance,
+                    onExit:  exit_instance,
+                    exit:    false
+                });
+                return this;
+            }, (data_acc, data_ins) => {
+                console.log(jqxhr);
+                term.error('Getting user status failed.(' + data_acc[0].status + ')');
+                term.resume();
+                return this;
+            });
+        }
         ins.name(analyzer.paramaters.instance_name);
         let _ins = ins.get();
         let domain = '';
@@ -307,35 +339,13 @@ var GlobalModeElement = (function () {
                 _ins.token_type = data.token_type;
                 delete(_ins.auth_code);
                 ins.save();
-                return callAPI('/api/v1/accounts/verify_credentials');
+                return auth_account;
             }, (jqxhr, status, error) => {
                 term.error('User token updating error.(' + jqxhr.status + ')');
                 delete(_ins.auth_code);
                 console.log(jqxhr);
-            }).then((data2, status, jqxhr) => {
-                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                _ins.user = data2;
-
-                ins.save();
-                term.resume();
-
-                let prompt = _ins.user.username;
-                prompt += '@' + _ins.domain + '# ';
-
-                term.push(enterCommand, {
-                    name:   'instance',
-                    prompt:  prompt,
-                    onStart: init_instance,
-                    onExit:  exit_instance,
-                    exit:    false
-                });
-
-            }, (jqxhr, status, error) => {
-                let prompt = '@' + _ins.domain + '# '
-                console.log(jqxhr);
-                term.error('Getting user status failed.(' + jqxhr.status + ')');
-                //term.echo('Enter \'login\' and reflesh your access_token');
-                term.resume();
+            }).then((data_acc, data_ins) => {
+            }, (data_acc, data_ins) => {
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
@@ -350,31 +360,7 @@ var GlobalModeElement = (function () {
         }
         else if (_ins.hasOwnProperty('access_token')){
             term.pause();
-            callAPI('/api/v1/accounts/verify_credentials')
-            .then((data2, status, jqxhr) => {
-                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
-                _ins.user = data2;
-
-                ins.save();
-                term.resume();
-
-                let prompt = _ins.user.username;
-                prompt += '@' + _ins.domain + '# ';
-
-                delete(_ins.auth_code);
-                term.push(enterCommand, {
-                    name:   'instance',
-                    prompt:  prompt,
-                    onStart: init_instance,
-                    onExit:  exit_instance,
-                    exit:    false
-                });
-
-            }, (jqxhr, status, error) => {
-                console.log(jqxhr);
-                term.error('Getting user status failed.(' + jqxhr.status + ')');
-                term.resume();
-            });
+            auth_account();
         }
         else {
             let prompt = '@' + _ins.domain + '# '

@@ -209,6 +209,42 @@ let InstanceModeElement = (function () {
                         "execute": this.show_terminal,
                     }, {
                         "type": "command",
+                        "name": "emojis",
+                        "description": '絵文字を表示します。',
+                        //"execute": this.show_emojis,
+                        "children": [
+                            /*{
+                                "type": "command",
+                                "name": "twemoji",
+                                "description": '標準の絵文字を表示します。',
+                                "execute": this.show_emojis,
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "keyword",
+                                        "optional": "keyword",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_emojis,
+                                    }
+                                ]
+                            },　*/{
+                                "type": "command",
+                                "name": "custom",
+                                "description": 'カスタム絵文字を表示します。',
+                                "execute": this.show_emojis_custom,/*
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "keyword",
+                                        "optional": "keyword",
+                                        "description": 'ユーザID',
+                                        "execute": this.show_emojis,
+                                    }
+                                ]*/
+                            }
+                        ]
+                    }, {
+                        "type": "command",
                         "name": "user",
                         "description": 'ユーザー情報を表示します。',
                         "execute": this.show_user,
@@ -1497,7 +1533,6 @@ let InstanceModeElement = (function () {
         callAPI('/api/v1/instance', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            console.log(data);
             term.echo('======== API Information ========', {flush: false});
             term.echo('Instance name: ' + data.title, {flush: false});
             term.echo('Version: ' + data.version, {flush: false});
@@ -1963,6 +1998,43 @@ let InstanceModeElement = (function () {
             onExit: (term) => {
                 setTimeout(() => { term.set_command(''); }, 10);
             }
+        });
+    };
+    InstanceModeElement.prototype.show_emojis_custom = function (term, analyzer) {
+        let _ins = ins.get();
+        let ver = _ins.info.version.split(".");
+        if (analyzer.optional.custom === true && ver[0] < 2) {
+            term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
+            return false;
+        }
+        term.pause();
+        callAPI('/api/v1/custom_emojis', {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            data = data.sort((a, b) => {
+                return (a.shortcode > b.shortcode ? 1 : -1);
+            })
+            let imgs = [];
+            let tag;
+            for (let i = 0; i < data.length; i++) {
+                tag = ':' + data[i].shortcode + ':';
+
+                imgs.push($('<div />')
+                    .addClass('emoji_picker')
+                    .attr('data-tag', tag)
+                    .append($('<img />')
+                        .attr('alt', tag)
+                        .attr('title', tag)
+                        .attr('src', data[i].url)
+                        )
+                    .prop('outerHTML'));
+            }
+            term.echo('<span>' + imgs.join('') + '</span>', {raw: true});
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
         });
     };
     /* template */

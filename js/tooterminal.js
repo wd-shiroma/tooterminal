@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-21')),
-    version: '0.5.9',
+    modified: (new Date('2017-10-24')),
+    version: '0.6.0',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -501,6 +501,27 @@ $(function() {
             $.terminal.active().disable();
             img.src = elem.data('url');
         }
+    })
+    .on('click', '.emoji_picker', function(e) {
+        let term = $.terminal.active();
+        if (term.name() !== 'instance') {
+            return;
+        }
+        if ($('#toot').is(':hidden')) {
+            term.exec('toot');
+        }
+        let elem = $(this);
+        let content = $('#toot_box').val();
+        let pos = $('#toot_box').prop('selectionStart');
+        let before = content.slice(0, pos);
+        let after = content.slice(pos);
+        if (before.length > 0 && before.slice(-1) !== ' ') {
+            before += ' ';
+        }
+        if (after.slice(0, 1) !== ' ') {
+            after = ' ' + after;
+        }
+        $('#toot_box').val(before + elem.data('tag') + after);
     })
     .on('click', '.a_acct', function(e) {
         let term = $.terminal.active();
