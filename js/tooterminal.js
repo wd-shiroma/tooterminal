@@ -904,11 +904,14 @@ function makeStatus(payload, optional) {
     }
     else {
         content = contents.content;
-        if ($(content).find('span.fa-spin').length) {
-            content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
-        }
         if (content.match(/^<.+>$/)) {
             content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
+        }
+        else {
+            content = $('<p />').append($('<span />').html(content));
+        }
+        if ($(content).find('span.fa-spin').length) {
+            content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
         }
     }
 
@@ -1137,6 +1140,11 @@ function make_notification(payload, notifies) {
 
 function post_status() {
     let status = $('#toot_box').val().trim();
+    if (status.length === 0 || msg_size < 0) {
+        return false;
+    }
+    status = status.replace(/(:[a-zA-Z0-9_]{2,}:) /g, '$1' + String.fromCharCode(8203));
+
     let cw = $('#toot_cw').val().trim();
     let visibility = $('#toot_visibility').val();
     let data = {
@@ -1145,9 +1153,6 @@ function post_status() {
     };
     let _ins = ins.get();
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length
-    if (status.length === 0 || msg_size < 0) {
-        return false;
-    }
     else if(typeof _ins === 'undefined'
          && typeof _ins.access_token === 'undefined') {
         return false;
