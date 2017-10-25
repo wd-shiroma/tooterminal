@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-24')),
-    version: '0.6.0',
+    modified: (new Date('2017-10-25')),
+    version: '0.6.1',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -521,7 +521,13 @@ $(function() {
         if (after.slice(0, 1) !== ' ') {
             after = ' ' + after;
         }
-        $('#toot_box').val(before + elem.data('tag') + after);
+        let inserted = before + elem.data('tag') + after;
+        pos = inserted.length - after.length + 1;
+        $('#toot_box')
+            .val(inserted)
+            .prop('selectionStart', pos)
+            .prop('selectionEnd', pos)
+            .focus();
     })
     .on('click', '.a_acct', function(e) {
         let term = $.terminal.active();
@@ -738,7 +744,7 @@ function makeStatus(payload, optional) {
             let tag = ':' + (type === 'profile' ? '@' : '')
                 + emojis[i].shortcode + ':';
             let e_tag = $('<img />')
-                .addClass('cemoji')
+                .addClass('emoji')
                 .attr('name', 'emoji_' + emojis[i].shortcode)
                 .attr('alt', tag)
                 .attr('src', url);
@@ -980,6 +986,9 @@ function makeStatus(payload, optional) {
     if (contents.hasOwnProperty('emojis') && contents.emojis.length > 0) {
         content = parse_emojis(content, contents.emojis);
     }
+    content = twemoji.parse(content, (icon, options) => {
+        return './72x72/' + icon + '.png';
+    });
 
     let content_visible = $('<div />')
         .addClass('status_contents')
