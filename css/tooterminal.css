@@ -364,7 +364,7 @@ body {
 
 .status_contents>p>span {
     width: 100%;
-    word-break: keep-all;
+    word-break: break-all;
     word-wrap: break-word;
 }
 
