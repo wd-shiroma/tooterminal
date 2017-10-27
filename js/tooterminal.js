@@ -515,7 +515,7 @@ $(function() {
         let pos = $('#toot_box').prop('selectionStart');
         let before = content.slice(0, pos);
         let after = content.slice(pos);
-        if (before.length > 0 && before.slice(-1) !== ' ') {
+        if (before.length > 0 && before.slice(-1).match(/[^ \n]/)) {
             before += ' ';
         }
         if (after.slice(0, 1) !== ' ') {
@@ -811,7 +811,10 @@ function makeStatus(payload, optional) {
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
-    head = '<span>' + head + '</span>'
+    head = twemoji.parse(head, (icon, options) => {
+        return './72x72/' + icon + '.png';
+    });
+    head = '<span>' + head + '</span>';
 
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
         head = parse_emojis(head, contents.account.profile_emojis, 'profile');
@@ -1179,7 +1182,9 @@ function post_status() {
          && typeof _ins.access_token === 'undefined') {
         return false;
     }
-    status = status.replace(/(:[a-zA-Z0-9_]{2,}:) /g, '$1' + String.fromCharCode(8203));
+    status = status
+        .replace(/(:[a-zA-Z0-9_]{2,}:) /g, '$1' + String.fromCharCode(8203))
+        .replace(/ (:[a-zA-Z0-9_]{2,}:)/g, String.fromCharCode(8203) + '$1');
 
     let cw = $('#toot_cw').val().trim();
     let visibility = $('#toot_visibility').val();
