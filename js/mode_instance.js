@@ -934,8 +934,7 @@ let InstanceModeElement = (function () {
             }
 
             let label =
-                (stream === 'home') ? '<i class="fa fa-home" aria-hidden="true"></i> HOME' :
-                (stream === 'notification') ? '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> NOTIFICATION' :
+                (stream === 'home' || stream === 'notification') ? '<i class="fa fa-home" aria-hidden="true"></i> USER' :
                 (stream === 'local') ? '<i class="fa fa-users" aria-hidden="true"></i> LOCAL' :
                 (stream === 'public') ? '<i class="fa fa-globe" aria-hidden="true"></i> GLOBAL' :
                 (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) : '???';
@@ -961,8 +960,13 @@ let InstanceModeElement = (function () {
                     }
                     else if(data.event === 'notification' && ws.monitor.notification === true) {
                         payload = JSON.parse(data.payload);
-                        let notification = make_notification(payload, notifies)
-                        term.echo(notification, {raw: true});
+                        let n = make_notification(payload, notifies)
+                        term.echo(n.html, {raw: true});
+
+                        if (n.hasOwnProperty('status')) {
+                            term.echo(n.html, {raw: true});
+
+                        }
 
                         let is_desktop = config.find(['instances', 'terminal', 'notification']);
                         if (typeof is_desktop === 'undefined') {
@@ -979,19 +983,19 @@ let InstanceModeElement = (function () {
 
                         let title;
                         let body;
-                        if (payload.type === 'favourite' && is_desktop.favourite && notification) {
+                        if (payload.type === 'favourite' && is_desktop.favourite && n.html) {
                             title =　'お気に入り： ';
                             body = payload.status.content;
                         }
-                        else if (payload.type === 'reblog' && is_desktop.reblog && notification) {
+                        else if (payload.type === 'reblog' && is_desktop.reblog && n.html) {
                             title = 'ブースト： ';
                             body = payload.status.content;
                         }
-                        else if (payload.type === 'mention' && is_desktop.mention && notification) {
+                        else if (payload.type === 'mention' && is_desktop.mention && n.html) {
                             title = 'リプライ： ';
                             body = payload.status.content;
                         }
-                        else if (payload.type === 'follow' && is_desktop.following && notification) {
+                        else if (payload.type === 'follow' && is_desktop.following && n.html) {
                             title = 'フォロー： ';
                         }
 
@@ -1004,7 +1008,7 @@ let InstanceModeElement = (function () {
 
                         if (typeof title !== 'undefined') {
                             title += payload.account.display_name + ' @' + payload.account.acct;
-                            var n = new Notification(title, {
+                            let n = new Notification(title, {
                                 body: body,
                                 icon: payload.account.avatar_static,
                                 data: payload
@@ -1018,7 +1022,26 @@ let InstanceModeElement = (function () {
                         payload = JSON.parse(data.payload);
 
                         let status = makeStatus(payload, {tl_name: label});
-                        term.echo(status, { raw: true });
+                        if (status.visibility) {
+                            term.echo(status.html, { raw: true });
+
+                            if (status.notification.voice) {
+                                var s = new SpeechSynthesisUtterance(status.notification.voice);
+                                s.rate = 1.3;
+                                s.lang = 'ja-JP';
+                                speechSynthesis.speak(s);
+                            }
+                            if (status.notification.desktop) {
+                                let n = new Notification(status.notification.desktop.title, {
+                                    body: status.notification.desktop.body,
+                                    icon: status.notification.desktop.icon,
+                                    data: status.payload
+                                });
+                                n.onclick = function(e) {
+                                    e.srcElement.close();
+                                };
+                            }
+                        }
                     }
                     reduce_status();
                 }
@@ -1036,7 +1059,26 @@ let InstanceModeElement = (function () {
                     else if(data.event === 'update') {
                         payload = JSON.parse(data.payload);
                         let status = makeStatus(payload, {tl_name: label});
-                        term.echo(status, { raw: true });
+                        if (status.visibility) {
+                            term.echo(status.html, { raw: true });
+
+                            if (status.notification.voice) {
+                                var s = new SpeechSynthesisUtterance(status.notification.voice);
+                                s.rate = 1.3;
+                                s.lang = 'ja-JP';
+                                speechSynthesis.speak(s);
+                            }
+                            if (status.notification.desktop) {
+                                let n = new Notification(status.notification.desktop.title, {
+                                    body: status.notification.desktop.body,
+                                    icon: status.notification.desktop.icon,
+                                    data: status.payload
+                                });
+                                n.onclick = function(e) {
+                                    e.srcElement.close();
+                                };
+                            }
+                        }
                     }
                     reduce_status();
                 };
@@ -1141,13 +1183,15 @@ let InstanceModeElement = (function () {
                             continue;
                         }
                         if (type === 'notification') {
-                            term.echo(make_notification(data[i], notifies), {
+                            let s = make_notification(data[i], notifies);
+                            term.echo(s.html, {
                                 raw: true,
                                 flush: false
                             });
                         }
                         else {
-                            term.echo(makeStatus(data[i]), {
+                            let s = makeStatus(data[i]);
+                            term.echo(s.html, {
                                 raw: true,
                                 flush: false
                             });
@@ -1281,7 +1325,8 @@ let InstanceModeElement = (function () {
                             break;
                         }
                         else {
-                            term.echo(makeStatus(pinned[i]), {raw: true, flush: false});
+                            let s = makeStatus(pinned[i]);
+                            term.echo(s.html, {raw: true, flush: false});
                         }
                     }
                 }
@@ -1352,7 +1397,7 @@ let InstanceModeElement = (function () {
                     term.echo('[[b;;]Statuses:]', {flush: false});
                     for (let i = 0; i < data.statuses.length; i++) {
                         let s = makeStatus(data.statuses[i]);
-                        term.echo(s, {raw: true, flush: false});
+                        term.echo(s.html, {raw: true, flush: false});
                     }
                     term.flush();
                 }
@@ -1443,7 +1488,8 @@ let InstanceModeElement = (function () {
                                 }
                                 hits[i]._source.id = 0;
                                 if (s_uris.indexOf(hits[i]._source.uri) < 0) {
-                                    statuses.push(makeStatus(hits[i]._source));
+                                    let s = makeStatus(hits[i]._source)
+                                    statuses.push(s.html);
                                     s_uris.push(hits[i]._source.uri);
                                 }
                             }
@@ -1496,8 +1542,8 @@ let InstanceModeElement = (function () {
                                         hits[i]._source.id = 0;
                                         if (s_uris.indexOf(hits[i]._source.uri) < 0) {
                                             let s = makeStatus(hits[i]._source);
-                                            if (s) {
-                                                statuses.push(s);
+                                            if (s.html.length) {
+                                                statuses.push(s.html);
                                                 s_uris.push(hits[i]._source.uri);
                                             }
                                         }
@@ -1636,7 +1682,8 @@ let InstanceModeElement = (function () {
                 return false;
             }
             else {
-                return makeStatus(data);
+                let s = makeStatus(data);
+                return s.html;
             }
         }, {params: params, term: term, limit: limit, footer: '[OK]'});
         return;
@@ -1656,9 +1703,10 @@ let InstanceModeElement = (function () {
             let s;
             for (let i = 0; i < context.ancestors.length; i++) {
                 s = makeStatus(context.ancestors[i]);
-                term.echo(s, { raw: true, flush: false });
+                term.echo(s.html, { raw: true, flush: false });
             }
-            term.echo(makeStatus(status), { raw: true, flush: false });
+            s = makeStatus(status);
+            term.echo(s.html, { raw: true, flush: false });
             if (card.hasOwnProperty('url')) {
                 let card_elem = $('<a />')
                         .attr('href', card.url)
@@ -1720,7 +1768,7 @@ let InstanceModeElement = (function () {
 
             for (let i = 0; i < context.descendants.length; i++) {
                 s = makeStatus(context.descendants[i]);
-                term.echo(s, { raw: true, flush: false });
+                term.echo(s.html, { raw: true, flush: false });
             }
             term.flush();
             term.resume();
@@ -1791,7 +1839,8 @@ let InstanceModeElement = (function () {
         }
         data.limit = limit;
         callMore(path, (data) => {
-            return make_notification(data, notifies);
+            let notification = make_notification(data, notifies);
+            return notification.html;
         }, {limit: limit, term: term});
         return true;
 

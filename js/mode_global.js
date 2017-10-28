@@ -276,7 +276,15 @@ var GlobalModeElement = (function () {
             $.when(account, instance)
             .then((data_acc, data_ins) => {
                 let data = data_acc[0];
-                term.echo('Hello! ' + data.display_name + ' @' + data.username);
+                let display_name = data.display_name;
+
+                if (data.hasOwnProperty('profile_emojis') && data.profile_emojis.length > 0) {
+                    display_name = parse_emojis(display_name, data.profile_emojis);
+                }
+                display_name = twemoji.parse(display_name, (icon, options) => {
+                    return './72x72/' + icon + '.png';
+                });
+                term.echo('<span>Hello! ' + display_name + ' @' + data.username + '</span>', { raw: true });
                 _ins.user = data;
                 _ins.info = data_ins[0];
 

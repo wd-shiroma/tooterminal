@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-27')),
-    version: '0.6.2',
+    modified: (new Date('2017-10-28')),
+    version: '1.0.0',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -738,30 +738,6 @@ function getConfig(config, index, d_conf) {
 }*/
 
 function makeStatus(payload, optional) {
-    function parse_emojis(cont, emojis = [], type = '') {
-        for (let i = 0; i < emojis.length; i++) {
-            let url = emojis[i].url;
-            let tag = ':' + (type === 'profile' ? '@' : '')
-                + emojis[i].shortcode + ':';
-            let e_tag = $('<img />')
-                .addClass('emoji')
-                .attr('name', 'emoji_' + emojis[i].shortcode)
-                .attr('alt', tag)
-                .attr('src', url);
-            let re = new RegExp(tag, 'g')
-            cont = cont.replace(re, e_tag.prop('outerHTML'));
-
-            let img = new Image();
-            img.onload = () => {
-                $('[name=emoji_' + emojis[i].shortcode + ']').attr('src', url);
-            };
-            img.onerror = (e) => {
-                console.log(e);
-            };
-            img.src = url;
-        }
-        return cont;
-    }
     let date = new Date(payload.created_at);
     let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
@@ -775,6 +751,20 @@ function makeStatus(payload, optional) {
     let ins_name = (typeof optional.ins_name === 'undefined') ? ins.name() : optional.ins_name;
 
     let _ins = ins.get(optional.ins_name);
+
+    let result = {
+        html: '',
+        is_reblog: is_reblog,
+        is_mention: is_mention,
+        instance: ins_name,
+        visibility: true,
+        payload: payload,
+        notification: {
+            voice: false,
+            desktop: false,
+            color: false
+        }
+    }
 
     let app;
     if (contents.application === null) {
@@ -817,7 +807,7 @@ function makeStatus(payload, optional) {
     head = '<span>' + head + '</span>';
 
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
-        head = parse_emojis(head, contents.account.profile_emojis, 'profile');
+        head = parse_emojis(head, contents.account.profile_emojis);
     }
 
     let reply = '';
@@ -984,7 +974,7 @@ function makeStatus(payload, optional) {
     }
 
     if (contents.hasOwnProperty('profile_emojis') && contents.profile_emojis.length > 0) {
-        content = parse_emojis(content, contents.profile_emojis, 'profile');
+        content = parse_emojis(content, contents.profile_emojis);
     }
     if (contents.hasOwnProperty('emojis') && contents.emojis.length > 0) {
         content = parse_emojis(content, contents.emojis);
@@ -1072,7 +1062,8 @@ function makeStatus(payload, optional) {
     if (typeof optional.tl_name === 'string') {
         let name = 'stream_' + contents.id;
         if ($('[name=' + name + ']').length > 0) {
-            return '';
+            result.visibility = false;
+            return result;
         }
         let n_stream = ws.stream.length - (!ws.monitor.home && ws.monitor.notification ? 1 : 0);
         if (n_stream > 1) {
@@ -1088,7 +1079,8 @@ function makeStatus(payload, optional) {
             let acl = ins.acls[ins_name][acl_num];
             if (status.text().match(acl.regexp)) {
                 if(acl.type === 'deny') {
-                    return '';
+                    result.visibility = false;
+                    break;
                 }
                 else if (acl.type === 'drop') {
                     break;
@@ -1097,6 +1089,7 @@ function makeStatus(payload, optional) {
                 _params = _params.split(',');
                 if (acl.type === "permit" && acl.hasOwnProperty('color') && _params.indexOf('col') < 0) {
                     status.addClass('status_' + acl.color);
+                    result.notification.color = acl.color;
                 }
                 let cfg_notify = config.find(['instances', 'terminal', 'monitor', 'notification'])
                 if (acl.type === "permit" && acl.notify && _params.indexOf('not') < 0) {
@@ -1106,20 +1099,14 @@ function makeStatus(payload, optional) {
                     if (body.length > 100) {
                         body = body.slice(0, 100);
                     }
-                    let n = new Notification(title, {
+                    result.notification.desktop = {
+                        title: title,
                         body: body,
-                        icon: contents.account.avatar_static,
-                        data: contents
-                    });
-                    n.onclick = function(e) {
-                        e.srcElement.close();
+                        icon: contents.account.avatar_static
                     };
                 }
                 if (acl.type === "permit" && acl.hasOwnProperty('voice') && _params.indexOf('voi') < 0) {
-                    var s = new SpeechSynthesisUtterance(acl.voice);
-                    s.rate = 1.3;
-                    s.lang = 'ja-JP';
-                    speechSynthesis.speak(s);
+                    result.notification.voice = acl.voice;
                 }
                 break;
             }
@@ -1136,7 +1123,8 @@ function makeStatus(payload, optional) {
         .addClass('status_all')
         .css('display', 'none')
         .text(JSON.stringify(payload)));
-    return status.prop('outerHTML');
+    result.html = status.prop('outerHTML');
+    return result;
 }
 
 function make_notification(payload, notifies) {
@@ -1144,6 +1132,10 @@ function make_notification(payload, notifies) {
     let is_reb = (payload.type === 'reblog') && notifies.reblog;
     let is_fol = (payload.type === 'follow') && notifies.following;
     let is_men = (payload.type === 'mention') && notifies.mention;
+
+    let result = {
+        html: ''
+    }
 
     let msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
@@ -1165,10 +1157,46 @@ function make_notification(payload, notifies) {
             + (payload.status ? content : '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
         if (payload.type === 'mention') {
-            msg += makeStatus(payload);
+            result.status = makeStatus(payload);
+            msg += result.status.html;
         }
+        if (payload.account.hasOwnProperty('profile_emojis') && payload.account.profile_emojis.length > 0) {
+            msg = parse_emojis(msg, payload.status.account.profile_emojis);
+        }
+        if (payload.hasOwnProperty('emojis') && payload.emojis.length > 0) {
+            msg = parse_emojis(msg, contents.emojis);
+        }
+        msg = twemoji.parse(msg, (icon, options) => {
+            return './72x72/' + icon + '.png';
+        });
     }
-    return msg;
+    result.html = msg;
+    return result;
+}
+
+
+function parse_emojis(cont, emojis = []) {
+    for (let i = 0; i < emojis.length; i++) {
+        let url = emojis[i].url;
+        let tag = ':' + emojis[i].shortcode + ':';
+        let e_tag = $('<img />')
+            .addClass('emoji')
+            .attr('name', 'emoji_' + emojis[i].shortcode)
+            .attr('alt', tag)
+            .attr('src', url);
+        let re = new RegExp(tag, 'g')
+        cont = cont.replace(re, e_tag.prop('outerHTML'));
+
+        let img = new Image();
+        img.onload = () => {
+            $('[name=emoji_' + emojis[i].shortcode + ']').attr('src', url);
+        };
+        img.onerror = (e) => {
+            console.log(e);
+        };
+        img.src = url;
+    }
+    return cont;
 }
 
 function post_status() {
