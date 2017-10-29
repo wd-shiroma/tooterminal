@@ -1156,10 +1156,6 @@ function make_notification(payload, notifies) {
             + $.terminal.format('[[!;;]@' + payload.account.acct + ']') + "<br />"
             + (payload.status ? content : '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
-        if (payload.type === 'mention') {
-            result.status = makeStatus(payload);
-            msg += result.status.html;
-        }
         if (payload.account.hasOwnProperty('profile_emojis') && payload.account.profile_emojis.length > 0) {
             msg = parse_emojis(msg, payload.status.account.profile_emojis);
         }
@@ -1169,6 +1165,10 @@ function make_notification(payload, notifies) {
         msg = twemoji.parse(msg, (icon, options) => {
             return './72x72/' + icon + '.png';
         });
+        if (payload.type === 'mention') {
+            result.status = makeStatus(payload);
+            msg += result.status.html;
+        }
     }
     result.html = msg;
     return result;

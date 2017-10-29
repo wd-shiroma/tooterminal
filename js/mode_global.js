@@ -347,7 +347,7 @@ var GlobalModeElement = (function () {
                 _ins.token_type = data.token_type;
                 delete(_ins.auth_code);
                 ins.save();
-                return auth_account;
+                return auth_account();
             }, (jqxhr, status, error) => {
                 term.error('User token updating error.(' + jqxhr.status + ')');
                 delete(_ins.auth_code);
