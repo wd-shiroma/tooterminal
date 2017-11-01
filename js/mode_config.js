@@ -282,6 +282,18 @@ var ConfigurationModeElement = (function () {
                 ]
             }, {
                 "type": "command",
+                "name": "emojis",
+                "description": "絵文字関連の設定をします。",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "visible_in_picker",
+                        "description": "unlistedカスタム絵文字を表示します。",
+                        "execute": this.set_true
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "no",
                 "optional": "is_no",
                 "description": "設定の削除を行います。",
@@ -431,6 +443,18 @@ var ConfigurationModeElement = (function () {
                                         "execute": this.set_default
                                     }
                                 ]
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "emojis",
+                        "description": "絵文字関連の設定をします。",
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "visible_in_picker",
+                                "description": "unlistedカスタム絵文字を非表示にします。",
+                                "execute": this.set_default
                             }
                         ]
                     }

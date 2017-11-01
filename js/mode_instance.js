@@ -231,16 +231,16 @@ let InstanceModeElement = (function () {
                                 "type": "command",
                                 "name": "custom",
                                 "description": 'カスタム絵文字を表示します。',
-                                "execute": this.show_emojis_custom,/*
+                                "execute": this.show_emojis_custom,
                                 "children": [
                                     {
                                         "type": "paramater",
                                         "name": "keyword",
                                         "optional": "keyword",
-                                        "description": 'ユーザID',
-                                        "execute": this.show_emojis,
+                                        "description": '検索ワード',
+                                        "execute": this.show_emojis_custom,
                                     }
-                                ]*/
+                                ]
                             }
                         ]
                     }, {
@@ -540,9 +540,9 @@ let InstanceModeElement = (function () {
                                 "type": "command",
                                 "name": "monitor",
                                 "description": 'ストリーミングを無効にします。',
-                                "execute": this.terminal_monitor,
+                                "execute": this.terminal_monitor,/*
                                 "children": [
-                                ]
+                                ]*/
                             }
                         ]
                     }
@@ -2052,9 +2052,13 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_emojis_custom = function (term, analyzer) {
         let _ins = ins.get();
         let ver = _ins.info.version.split(".");
+        let re;
         if (analyzer.optional.custom === true && ver[0] < 2) {
             term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
             return false;
+        }
+        if (analyzer.optional.keyword) {
+            re = new RegExp(analyzer.paramaters.keyword);
         }
         term.pause();
         callAPI('/api/v1/custom_emojis', {
@@ -2066,6 +2070,12 @@ let InstanceModeElement = (function () {
             let imgs = [];
             let tag;
             for (let i = 0; i < data.length; i++) {
+                if (config.find(['emojis', 'visible_in_picker']) !== true && data[i].visible_in_picker === false) {
+                    continue;
+                }
+                else if (re && !data[i].shortcode.match(re)) {
+                    continue;
+                }
                 tag = ':' + data[i].shortcode + ':';
 
                 imgs.push($('<div />')
