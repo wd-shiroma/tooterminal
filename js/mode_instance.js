@@ -1683,7 +1683,7 @@ let InstanceModeElement = (function () {
             }
             else {
                 let s = makeStatus(data);
-                return s.html;
+                return s.visibility ? s.html : '';
             }
         }, {params: params, term: term, limit: limit, footer: '[OK]'});
         return;

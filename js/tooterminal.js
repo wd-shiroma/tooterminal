@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-10-29')),
-    version: '1.0.1',
+    modified: (new Date('2017-11-02')),
+    version: '1.1.0',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -806,10 +806,6 @@ function makeStatus(payload, optional) {
     });
     head = '<span>' + head + '</span>';
 
-    if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
-        head = parse_emojis(head, contents.account.profile_emojis);
-    }
-
     let reply = '';
     if (contents.mentions.length > 0) {
         for (let i = 0; i < contents.mentions.length; i++) {
@@ -973,25 +969,31 @@ function makeStatus(payload, optional) {
         }
     }
 
+    let content_visible = $('<div />')
+        .addClass('status_contents')
+        .attr('id', 'status_contents');
+    let content_more;
+    let spoiler_text = contents.spoiler_text;
+
+    if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
+        head = parse_emojis(head, contents.account.profile_emojis);
+    }
     if (contents.hasOwnProperty('profile_emojis') && contents.profile_emojis.length > 0) {
         content = parse_emojis(content, contents.profile_emojis);
+        spoiler_text = parse_emojis(spoiler_text, contents.profile_emojis);
     }
     if (contents.hasOwnProperty('emojis') && contents.emojis.length > 0) {
         content = parse_emojis(content, contents.emojis);
+        spoiler_text = parse_emojis(spoiler_text, contents.emojis);
     }
     content = twemoji.parse(content, (icon, options) => {
         return './72x72/' + icon + '.png';
     });
 
-    let content_visible = $('<div />')
-        .addClass('status_contents')
-        .attr('id', 'status_contents');
-    let content_more;
-
     if (contents.sensitive) {
         content_more = $('<div />');
-        if (contents.spoiler_text.length > 0) {
-            content_visible.append($.terminal.format(contents.spoiler_text));
+        if (spoiler_text.length > 0) {
+            content_visible.append('<span>' + spoiler_text + '</span>');
             content_more.append(content);
         }
         else {
@@ -1003,8 +1005,8 @@ function makeStatus(payload, optional) {
         }
     }
     else {
-        if (contents.spoiler_text.length > 0) {
-            content_visible.append($.terminal.format(contents.spoiler_text));
+        if (spoiler_text.length > 0) {
+            content_visible.append('<span>' + spoiler_text + '</span>');
             content_more = $('<div />');
             content_more.append(content);
         }
@@ -1221,6 +1223,9 @@ function post_status() {
         visibility: visibility
     };
     if (cw.length !== 0) {
+        cw = cw
+            .replace(/(:[a-zA-Z0-9_]{2,}:) /g, '$1' + String.fromCharCode(8203))
+            .replace(/ (:[a-zA-Z0-9_]{2,}:)/g, String.fromCharCode(8203) + '$1');
         data.spoiler_text = cw;
     }
 

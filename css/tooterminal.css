@@ -18,7 +18,6 @@ body {
 
 .emoji {
     margin-top: -2px;
-    width: calc(1em + 2px);
     height: calc(1em + 2px);
     display: inline;
     vertical-align: middle;
@@ -33,7 +32,6 @@ body {
     background-color: #252525;
 }
 .emoji_picker>img {
-    width: 2em;
     height: 2em;
 }
 
