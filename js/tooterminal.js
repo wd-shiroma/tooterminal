@@ -460,6 +460,8 @@ $(function() {
     .on('click', '.status img', function(e) {
         let elem = $(this);
 
+        $.terminal.active().disable();
+        $('.img_background').fadeIn('first');
         $('#pre_view').attr('src', elem.attr('src')).fadeIn('first');
 
         if (elem.data('type') === 'gifv') {
@@ -473,7 +475,6 @@ $(function() {
                 $('#pre_view').fadeOut('first');
             };
             $('#video_view').fadeIn('first');
-            $('.img_background').fadeIn('first');
         }
         else if (elem.data('type') === 'video') {
             let video = $('#video_view')[0];
@@ -486,9 +487,8 @@ $(function() {
                 $('#pre_view').fadeOut('first');
             };
             $('#video_view').fadeIn('first');
-            $('.img_background').fadeIn('first');
         }
-        else {
+        else if (typeof elem.data('url') !== 'undefined') {
             let img = new Image();
             img.onload = () => {
                 $('#img_view').attr('src', elem.data('url'));
@@ -497,8 +497,6 @@ $(function() {
                 console.log(elem);
                 console.log(e);
             };
-            $('.img_background').fadeIn('first');
-            $.terminal.active().disable();
             img.src = elem.data('url');
         }
     })
