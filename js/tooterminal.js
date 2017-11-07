@@ -916,7 +916,7 @@ function makeStatus(payload, optional) {
                             .css('width', enquete.ratios[i].toString() + '%')))
             }
         }
-        content.append(enquete_items);
+        content = content.append(enquete_items).prop('outerHTML');
     }
     else {
         content = contents.content;
@@ -1181,11 +1181,12 @@ function make_notification(payload, notifies) {
 
 function parse_emojis(cont, emojis = []) {
     for (let i = 0; i < emojis.length; i++) {
+        let img_name = 'emoji_' + emojis[i].shortcode.replace(/^@/, 'p-');
         let url = emojis[i].url;
         let tag = ':' + emojis[i].shortcode + ':';
         let e_tag = $('<img />')
             .addClass('emoji')
-            .attr('name', 'emoji_' + emojis[i].shortcode)
+            .attr('name', img_name)
             .attr('alt', tag)
             .attr('src', url);
         let re = new RegExp(tag, 'g')
@@ -1193,7 +1194,7 @@ function parse_emojis(cont, emojis = []) {
 
         let img = new Image();
         img.onload = () => {
-            $('[name=emoji_' + emojis[i].shortcode + ']').attr('src', url);
+            $('[name=' + img_name + ']').attr('src', url);
         };
         img.onerror = (e) => {
             console.log(e);
