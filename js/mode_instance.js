@@ -409,7 +409,33 @@ let InstanceModeElement = (function () {
                                 "name": "notifications",
                                 "description": '通知タイムライン',
                                 "execute": this.show_notifications,
-                                "children": this._sh_stats_opt
+                                "children": this._sh_stats_opt.concat([
+                                    {
+                                        "type": "command",
+                                        "name": "mention",
+                                        "optional": "exclude_types",
+                                        "description": 'リプライのみ表示',
+                                        "execute": this.show_notifications
+                                    }, {
+                                        "type": "command",
+                                        "name": "reblog",
+                                        "optional": "exclude_types",
+                                        "description": 'ブーストのみ表示',
+                                        "execute": this.show_notifications
+                                    }, {
+                                        "type": "command",
+                                        "name": "favourite",
+                                        "optional": "exclude_types",
+                                        "description": 'お気に入りのみ表示',
+                                        "execute": this.show_notifications
+                                    }, {
+                                        "type": "command",
+                                        "name": "follow",
+                                        "optional": "exclude_types",
+                                        "description": 'フォローのみ表示',
+                                        "execute": this.show_notifications
+                                    }
+                                ])
                             }
                         ]
                     }, {
@@ -1264,12 +1290,20 @@ let InstanceModeElement = (function () {
                 let days    = (passing = (passing - hours) / 24) % 7;
                 let weeks   = (passing - days) / 7;
                 let rel = '<span>Relationship ';
-                if (relation[0].id === user_id) {
+                let display_name = twemoji.parse(data.display_name, (icon, options) => {
+                    return './72x72/' + icon + '.png';
+                });
+                let note = twemoji.parse(data.note, (icon, options) => {
+                    return './72x72/' + icon + '.png';
+                });
+                if (relation[0].id === user.id) {
                     rel += 'self.</span>';
                 }
                 else {
-                    rel += "others.<br />"
-                        + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
+                    rel += (relation[0].following && relation[0].followed_by ? 'friendly'
+                            : relation[0].following ? 'following'
+                            : relation[0].followed_by ? 'followed' : 'others')
+                        + '.<br /><a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
                             + (relation[0].following ? 'unfollow">' : 'follow">No ') + 'following</a>, '
                             + (relation[0].followed_by ? '' : 'No ') + 'followed, '
                             + (relation[0].requested ? '' : 'No ') + 'requesting, '
@@ -1278,8 +1312,8 @@ let InstanceModeElement = (function () {
                         + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
                             + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
                 }
-                term.echo(data.display_name + ' ID:' + data.id
-                    + (data.locked ? ' is locked' : ' is unlocked'), {flush: false});
+                term.echo('<span>' + display_name + ' ID:' + data.id
+                    + (data.locked ? ' is locked' : ' is unlocked') + '</span>', {raw: true, flush: false});
                 term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
                 term.echo('Created at ' + created.toString(), {flush: false});
                 term.echo('Uptime is '
@@ -1308,7 +1342,7 @@ let InstanceModeElement = (function () {
                 , {raw: true, flush: false});
                 term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
                 term.echo(rel, {raw: true, flush: false});
-                term.echo($.terminal.format('Note:' + data.note), {raw: true, flush: false});
+                term.echo('<span>Note:' + note + '</span>', {raw: true, flush: false});
                 term.echo('URL: ' + data.url, {raw: false, flush: false});
 
                 if (pinned.length > 0 && pinned[0].pinned) {
@@ -1828,7 +1862,7 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_notifications = function (term, analyzer) {
         term.pause();
-        let data = {};
+        let params = {};
         let notifies = config_notify();
         let path = '/api/v1/notifications';
         let current_sid;
@@ -1837,11 +1871,16 @@ let InstanceModeElement = (function () {
         if (analyzer.paramaters.post_limits) {
             limit = analyzer.paramaters.post_limits;
         }
-        data.limit = limit;
+        if (analyzer.optional.exclude_types) {
+            params.exclude_types = ['follow', 'reblog', 'mention', 'favourite'].filter((e, i, r) => {
+                return (analyzer.line_parsed[3].name !== e);
+            })
+        }
+        params.limit = limit;
         callMore(path, (data) => {
             let notification = make_notification(data, notifies);
             return notification.html;
-        }, {limit: limit, term: term});
+        }, {limit: limit, term: term, params: params});
         return true;
 
     };
