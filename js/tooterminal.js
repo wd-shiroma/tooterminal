@@ -752,6 +752,7 @@ function makeStatus(payload, optional) {
 
     let result = {
         html: '',
+        text: '',
         is_reblog: is_reblog,
         is_mention: is_mention,
         instance: ins_name,
@@ -799,10 +800,11 @@ function makeStatus(payload, optional) {
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
+    head = '<span>' + head + '</span>';
+    result.text = $(head).text();
     head = twemoji.parse(head, (icon, options) => {
         return './72x72/' + icon + '.png';
     });
-    head = '<span>' + head + '</span>';
 
     let reply = '';
     if (contents.mentions.length > 0) {
@@ -973,6 +975,8 @@ function makeStatus(payload, optional) {
     let content_more;
     let spoiler_text = contents.spoiler_text;
 
+    result.text += (spoiler_text.length ? $(spoiler_text).text() : '') + $(content).text();
+
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
         head = parse_emojis(head, contents.account.profile_emojis);
     }
@@ -1077,7 +1081,7 @@ function makeStatus(payload, optional) {
     if (ins.acls.hasOwnProperty(ins_name)) {
         for (let acl_num in ins.acls[ins_name]) {
             let acl = ins.acls[ins_name][acl_num];
-            if (status.text().match(acl.regexp)) {
+            if (result.text.match(acl.regexp)) {
                 if(acl.type === 'deny') {
                     result.visibility = false;
                     break;

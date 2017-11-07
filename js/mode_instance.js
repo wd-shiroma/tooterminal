@@ -1712,7 +1712,7 @@ let InstanceModeElement = (function () {
             return;
         }
         callMore(path, (data) => {
-            if (analyzer.optional.pinned && !data.pinned) {
+            if (analyzer.optional.pinned === true && data.pinned !== true) {
                 return false;
             }
             else {
