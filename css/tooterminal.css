@@ -19,6 +19,7 @@ body {
 .emoji {
     margin-top: -2px;
     height: calc(1em + 2px);
+    max-width: calc(1em + 2px);
     display: inline;
     vertical-align: middle;
 }
@@ -33,6 +34,7 @@ body {
 }
 .emoji_picker>img {
     height: 2em;
+    max-width: 2em;
 }
 
 .timeline {
