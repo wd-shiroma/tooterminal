@@ -307,30 +307,21 @@ let InstanceModeElement = (function () {
                                         "name": "statuses",
                                         "description": 'ユーザの最新トゥートを表示',
                                         "execute": this.show_statuses,
-                                        "children": this._sh_stats_opt
-                                        /*"children": [
+                                        "children": this._sh_stats_opt.concat([
                                             {
-                                                "type": "command",
-                                                "name": "limit",
-                                                "description": 'トゥート表示件数を設定します。',
-                                                "children": [
-                                                    {
-                                                        "type": "number",
-                                                        "name": "post_limits",
-                                                        "min": 1,
-                                                        "max": 40,
-                                                        "description": 'トゥート数(初期値20)',
-                                                        "execute": this.show_statuses
-                                                    }
-                                                ]
-                                            }, {
                                                 "type": "command",
                                                 "name": "pinned",
                                                 "optional": "pinned",
                                                 "description": '固定トゥートを表示します。',
                                                 "execute": this.show_statuses
+                                            }, {
+                                                "type": "command",
+                                                "name": "media",
+                                                "optional": "media",
+                                                "description": 'メディアトゥートを表示します。',
+                                                "execute": this.show_statuses
                                             }
-                                        ]*/
+                                        ])
                                     }, {
                                         "type": "command",
                                         "name": "following",
@@ -1069,7 +1060,7 @@ let InstanceModeElement = (function () {
                             }
                         }
                     }
-                    reduce_status();
+                    reduce_output();
                 }
                 : function(e) {
                     let data = JSON.parse(e.data);
@@ -1106,7 +1097,7 @@ let InstanceModeElement = (function () {
                             }
                         }
                     }
-                    reduce_status();
+                    reduce_output();
                 };
 
             let _ws = new WebSocket(url);
