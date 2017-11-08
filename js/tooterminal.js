@@ -1190,7 +1190,7 @@ function parse_emojis(cont, emojis = []) {
             .attr('name', img_name)
             .attr('alt', tag)
             .attr('src', url);
-        let re = new RegExp(tag, 'g')
+        let re = new RegExp(tag + '(?!")', 'g')
         cont = cont.replace(re, e_tag.prop('outerHTML'));
 
         let img = new Image();
