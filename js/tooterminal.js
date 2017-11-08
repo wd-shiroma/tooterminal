@@ -976,7 +976,7 @@ function makeStatus(payload, optional) {
     let content_more;
     let spoiler_text = contents.spoiler_text;
 
-    result.text += (spoiler_text.length ? $(spoiler_text).text() : '') + $(content).text();
+    result.text += (spoiler_text.length ? $('<div />').html(spoiler_text).text() : '') + $(content).text();
 
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
         head = parse_emojis(head, contents.account.profile_emojis);
