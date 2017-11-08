@@ -64,6 +64,7 @@ let client_info = {
 let enterCommand = (command, term) => {
     command = command.trim();
     term.resize(window.innerWidth - 36, window.innerHeight - 36);
+    reduce_output();
 
     if (command.length === 0) {
         return;
@@ -924,7 +925,7 @@ function makeStatus(payload, optional) {
             content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
         }
         else {
-            content = $('<p />').append($('<span />').html(content));
+            content = $('<p />').append($('<span />').html(content)).prop('outerHTML');
         }
         if ($(content).find('span.fa-spin').length) {
             content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
@@ -1272,11 +1273,11 @@ function post_status() {
     });
 }
 
-function reduce_status() {
-    let statuses = $('.status').parent().parent();
-    let old_stats = statuses.length - 200;
-    for (let i = 0; i < old_stats; i++) {
-        $(statuses[i]).remove();
+function reduce_output() {
+    let outputs = $('.terminal-output>div');
+    let old_outputs = outputs.length - 220;
+    for (let i = 0; i < old_outputs; i++) {
+        $(outputs[i]).remove();
     }
 }
 
@@ -1349,7 +1350,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
         raw = optional.raw;
     }
 
-    term.push(function(command, moreterm){},{
+    term.push(function(command, moreterm){ reduce_output(); },{
         name: 'more',
         //prompt: '[[;#111111;#DDDDDD]-- More --]',
         prompt: '--More-- ',
@@ -1475,6 +1476,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
                     }
                     setTimeout(() => { moreterm.set_command(''); }, 10);
             }
+            reduce_output();
             return true;
         }
     });
