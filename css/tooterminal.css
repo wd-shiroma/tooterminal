@@ -36,6 +36,17 @@ body {
     height: 2em;
     max-width: 2em;
 }
+.emoji_picker>span {
+    display: none !important;
+}
+
+.emoji_summary:hover {
+    background-color: #252525;
+}
+.emoji_summary>img {
+    height: calc(1em + 2px);
+    margin: 0px 0.5em;
+}
 
 .timeline {
     ime-mode: inactive;

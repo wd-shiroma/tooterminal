@@ -234,11 +234,43 @@ let InstanceModeElement = (function () {
                                 "execute": this.show_emojis_custom,
                                 "children": [
                                     {
-                                        "type": "paramater",
-                                        "name": "keyword",
-                                        "optional": "keyword",
-                                        "description": '検索ワード',
+                                        "type": "command",
+                                        "name": "picker",
+                                        "description": '絵文字パレットを表示します。',
                                         "execute": this.show_emojis_custom,
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "keyword",
+                                                "description": '検索ワード',
+                                                "execute": this.show_emojis_custom
+                                            }
+                                        ]
+                                    }, {
+                                        "type": "command",
+                                        "name": "summary",
+                                        "description": 'カスタム絵文字の一覧を表示します。',
+                                        "execute": this.show_emojis_custom,
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "keyword",
+                                                "description": '検索ワード',
+                                                "execute": this.show_emojis_custom
+                                            }
+                                        ]
+                                    }, {
+                                        "type": "command",
+                                        "name": "detail",
+                                        "description": 'カスタム絵文字の詳細を表示します。',
+                                        "children": [
+                                            {
+                                                "type": "paramater",
+                                                "name": "shortcode",
+                                                "description": 'ショートコード',
+                                                "execute": this.show_emojis_custom_detail
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -2082,13 +2114,11 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_emojis_custom = function (term, analyzer) {
         let _ins = ins.get();
         let ver = _ins.info.version.split(".");
-        let re;
+        let type = (typeof analyzer.line_parsed[3] === 'undefined' ? 'picker' : analyzer.line_parsed[3].name);
+        let re = analyzer.paramaters.hasOwnProperty('keyword') ? new RegExp(analyzer.paramaters.keyword) : null;
         if (analyzer.optional.custom === true && ver[0] < 2) {
             term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
             return false;
-        }
-        if (analyzer.optional.keyword) {
-            re = new RegExp(analyzer.paramaters.keyword);
         }
         term.pause();
         callAPI('/api/v1/custom_emojis', {
@@ -2109,17 +2139,70 @@ let InstanceModeElement = (function () {
                 tag = ':' + data[i].shortcode + ':';
 
                 imgs.push($('<div />')
-                    .addClass('emoji_picker')
+                    .addClass('emoji_' + type)
                     .attr('data-tag', tag)
                     .append($('<img />')
                         .attr('alt', tag)
                         .attr('title', tag)
-                        .attr('src', data[i].url)
-                        )
+                        .attr('src', data[i].url))
+                    .append($('<span />')
+                        .text(data[i].shortcode))
                     .prop('outerHTML'));
             }
-            term.echo('<span>' + imgs.join('') + '</span>', {raw: true});
+            if (type === 'summary') {
+                more(term, imgs, {
+                    echo_opt: {raw: true}
+                });
+            }
+            else {
+                term.echo('<span>' + imgs.join('') + '</span>', {raw: true});
+                term.resume();
+            }
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
             term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_emojis_custom_detail = function (term, analyzer) {
+        let _ins = ins.get();
+        let ver = _ins.info.version.split(".");
+        let shortcode = analyzer.paramaters.shortcode;
+        if (analyzer.optional.custom === true && ver[0] < 2) {
+            term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
+            return false;
+        }
+        term.pause();
+        callAPI('/api/v1/custom_emojis', {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            data = data.sort((a, b) => {
+                return (a.shortcode > b.shortcode ? 1 : -1);
+            });
+            let emoji = data.find((e, i, r) => { return e.shortcode === shortcode; });
+            if (typeof emoji === 'undefined') {
+                term.error('No emoji\'s shortcode.');
+                term.resume();
+                return;
+            }
+
+            let img = new Image();
+            img.onload = (e) => {
+                term.echo($(e.path[0]).css('max-height', '4em').prop('outerHTML'), {raw: true, flush: false});
+                term.echo('shortcode is ' + emoji.shortcode, {flush: false});
+                term.echo('size is width: ' + e.path[0].width + ', height: ' + e.path[0].height, {flush: false});
+                term.echo('static image url: ' + emoji.static_url, {flush: false})
+                term.echo('image url: ' + emoji.url, {flush: false});
+                term.echo('[OK]');
+                term.flush();
+                term.resume();
+            };
+            img.onerror = (e) => {
+                term.error('Custom emoji couldn\'t get.');
+                term.resume();
+                console.log(e);
+            };
+            img.src = emoji.url;
         }, (jqxhr, status, error) => {
             term.error('Getting data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);

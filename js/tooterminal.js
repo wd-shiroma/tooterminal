@@ -153,7 +153,7 @@ let filterKey = (event, term) => {
         });
         lines.unshift(term.get_prompt() + term.get_command() + '?');
         lines.push('');
-        more(term, lines, true);
+        more(term, lines, {reverse: true});
         let cmd = term.get_command();
         term.set_command('');
         setTimeout(() => {
@@ -527,6 +527,17 @@ $(function() {
             .prop('selectionStart', pos)
             .prop('selectionEnd', pos)
             .focus();
+    })
+    .on('click', '.emoji_summary', function(e) {
+        let term = $.terminal.active();
+        if (term.name() === 'more') {
+            term.pop();
+        }
+        if (term.name() !== 'instance') {
+            return;
+        }
+        let shortcode = $(this).children('span').text();
+        term.exec('show emojis custom detail ' + shortcode);
     })
     .on('click', '.a_acct', function(e) {
         let term = $.terminal.active();
@@ -1630,7 +1641,7 @@ function OutputText(text, fileName) {
     }
 }
 
-function more(term, lines, reverse){
+function more(term, lines, optional = {}){
     let rows = term.rows();
     let command = term.get_command();
     let i = 0;
@@ -1639,11 +1650,11 @@ function more(term, lines, reverse){
         //prompt: '[[;#111111;#DDDDDD]-- More --]',
         prompt: '--More-- ',
         onStart: function(moreterm){
-            moreterm.echo(lines.slice(i, i + rows).join("\n"));
+            moreterm.echo(lines.slice(i, i + rows).join("\n"), optional.echo_opt);
             i += rows;
             if(i > lines.length){
                 moreterm.pop();
-                if(reverse) moreterm.set_command(command);
+                if(optional.reverse) moreterm.set_command(command);
             }
             moreterm.resume();
         },
@@ -1651,22 +1662,22 @@ function more(term, lines, reverse){
             switch(event.keyCode){
                 case 81:
                     moreterm.pop();
-                    if(reverse) moreterm.set_command(command);
+                    if(optional.reverse) moreterm.set_command(command);
                     break;
                 case 13:
-                    moreterm.echo(lines.slice(i, i + 1).join("\n"));
+                    moreterm.echo(lines.slice(i, i + 1).join("\n"), optional.echo_opt);
                     i++;
                     if(i > lines.length){
                         moreterm.pop();
-                        if(reverse) moreterm.set_command(command);
+                        if(optional.reverse) moreterm.set_command(command);
                     }
                     break
                 default:
-                    moreterm.echo(lines.slice(i, i + rows).join("\n"));
+                    moreterm.echo(lines.slice(i, i + rows).join("\n"), optional.echo_opt);
                     i += rows;
                     if(i > lines.length){
                         moreterm.pop();
-                        if(reverse) moreterm.set_command(command);
+                        if(optional.reverse) moreterm.set_command(command);
                     }
                     moreterm.set_command("");
                     break;
