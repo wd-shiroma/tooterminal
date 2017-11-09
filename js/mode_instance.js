@@ -1313,12 +1313,8 @@ let InstanceModeElement = (function () {
                 let days    = (passing = (passing - hours) / 24) % 7;
                 let weeks   = (passing - days) / 7;
                 let rel = '<span>Relationship ';
-                let display_name = twemoji.parse(data.display_name, (icon, options) => {
-                    return './72x72/' + icon + '.png';
-                });
-                let note = twemoji.parse(data.note, (icon, options) => {
-                    return './72x72/' + icon + '.png';
-                });
+                let display_name = parse_twemoji(data.display_name);
+                let note = parse_twemoji(data.note);
                 if (relation[0].id === user.id) {
                     rel += 'self.</span>';
                 }

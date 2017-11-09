@@ -281,9 +281,7 @@ var GlobalModeElement = (function () {
                 if (data.hasOwnProperty('profile_emojis') && data.profile_emojis.length > 0) {
                     display_name = parse_emojis(display_name, data.profile_emojis);
                 }
-                display_name = twemoji.parse(display_name, (icon, options) => {
-                    return './72x72/' + icon + '.png';
-                });
+                display_name = parse_twemoji(display_name);
                 term.echo('<span>Hello! ' + display_name + ' @' + data.username + '</span>', { raw: true });
                 _ins.user = data;
                 _ins.info = data_ins[0];

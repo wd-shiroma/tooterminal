@@ -814,9 +814,7 @@ function makeStatus(payload, optional) {
         + ('0' + date.getSeconds()).slice(-2) + '.' + ('00' + date.getMilliseconds()).slice(-3) + ' ]' + app;
     head = '<span>' + head + '</span>';
     result.text = $(head).text();
-    head = twemoji.parse(head, (icon, options) => {
-        return './72x72/' + icon + '.png';
-    });
+    head = parse_twemoji(head);
 
     let reply = '';
     if (contents.mentions.length > 0) {
@@ -1000,9 +998,7 @@ function makeStatus(payload, optional) {
         content = parse_emojis(content, contents.emojis);
         spoiler_text = parse_emojis(spoiler_text, contents.emojis);
     }
-    content = twemoji.parse(content, (icon, options) => {
-        return './72x72/' + icon + '.png';
-    });
+    content = parse_twemoji(content);
 
     if (contents.sensitive) {
         content_more = $('<div />');
@@ -1178,9 +1174,7 @@ function make_notification(payload, notifies) {
         if (payload.hasOwnProperty('emojis') && payload.emojis.length > 0) {
             msg = parse_emojis(msg, contents.emojis);
         }
-        msg = twemoji.parse(msg, (icon, options) => {
-            return './72x72/' + icon + '.png';
-        });
+        msg = parse_twemoji(msg);
         if (payload.type === 'mention') {
             result.status = makeStatus(payload);
             msg += result.status.html;
@@ -1200,6 +1194,7 @@ function parse_emojis(cont, emojis = []) {
             .addClass('emoji')
             .attr('name', img_name)
             .attr('alt', tag)
+            .attr('title', tag)
             .attr('src', url);
         let re = new RegExp(tag + '(?!")', 'g')
         cont = cont.replace(re, e_tag.prop('outerHTML'));
@@ -1214,6 +1209,19 @@ function parse_emojis(cont, emojis = []) {
         img.src = url;
     }
     return cont;
+}
+
+function parse_twemoji(content) {
+    return twemoji.parse(content, {
+        callback: (icon, options) => {
+            return './72x72/' + icon + '.png';
+        },
+        attributes: (icon, code) => {
+            return {
+                title: code
+            };
+        }
+    });
 }
 
 function post_status() {
