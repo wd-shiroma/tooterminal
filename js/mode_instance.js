@@ -1012,11 +1012,6 @@ let InstanceModeElement = (function () {
                         let n = make_notification(payload, notifies)
                         term.echo(n.html, {raw: true});
 
-                        if (n.hasOwnProperty('status')) {
-                            term.echo(n.html, {raw: true});
-
-                        }
-
                         let is_desktop = config.find(['instances', 'terminal', 'notification']);
                         if (typeof is_desktop === 'undefined') {
                             is_desktop = {};
