@@ -1,5 +1,25 @@
 # 更新履歴
 
+## v1.2.0 (2017-11-10)
+
+### 機能追加
+
+- show emoji custom <summary|detail>コマンド追加  
+→カスタム絵文字の一覧表示および詳細表示が出来ます。
+- show timeline notification <mention|reblog|favourite|follow>コマンド追加  
+→通知タイムラインから、「リプライ、ブースト、お気に入り、フォロー」それぞれの通知のみ表示することができます。
+- jQueryTerminalEmulatorPluginをアップデート(→ v1.10.0)
+
+### 不具合修正
+
+- カスタム絵文字のshortcodeをaccess-listに引っかかるように修正
+- 一部カスタム絵文字の表示不具合を修正
+- プロフィール絵文字取得時のエラーを修正
+- 一部の古い出力がいつまでも残ってしまう不具合を修正
+- show user id xxx status ... にあってshow user self status ... に無かったコマンドを追加しました。
+- show user コマンドの表示内容を若干ゃ修正
+- terminal monitor notification通知が2重に表示されてしまう不具合を修正
+
 ## v1.1.0 (2017-11-02)
 
 ### 機能追加
