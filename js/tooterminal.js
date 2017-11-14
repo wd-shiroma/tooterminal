@@ -598,7 +598,7 @@ $(function() {
     })
     .on('click', '.status_enquete span', function(e) {
         let enquete = $(e.target).parent();
-        let index = $(e.target).children().index(e.target);
+        let index = $(enquete).children().index(e.target);
         let status = enquete.parents('.status');
         let time_limit = Date.now() - Date.parse($(enquete).data('created'));
         let term = $.terminal.active();
