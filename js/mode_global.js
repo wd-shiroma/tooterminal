@@ -185,24 +185,28 @@ var GlobalModeElement = (function () {
         return true;
     };
     GlobalModeElement.prototype.show_version = function (term, analyzer) {
-        term.echo('Mastodon Client Tooterminal, Version ' + client_info.version + ', RELEASE SERVICE(Beta)');
-        term.echo('Technical Support: ' + client_info.website);
-        term.echo('Copyright (c) ' + client_info.modified.getFullYear() + ' by ' + client_info.auther);
-        term.echo('Updated ' + client_info.modified.toDateString() + ' by ' + client_info.acct);
-        term.echo('<br>', {raw: true});
-        term.echo('Powered by:');
-        term.echo('jQuery (' + $.fn.jquery + ')');
-        term.echo('https://jquery.org');
-        term.echo('jQuery Terminal Emulator Plugin (' + $.terminal.version + ')');
-        term.echo('http://terminal.jcubic.pl');
-        term.echo('autosize (4.0.0)');
-        term.echo('http://www.jacklmoore.com/autosize');
-        term.echo('cryptico');
-        term.echo('http://wwwtyro.github.io/cryptico/');
-        term.echo('<br>', {raw: true});
-        term.echo('License info:');
-        term.echo('Tooterminal, jQuery, jQuery Terminal Emulator Plugin, autosize is licensed by MIT LICENSE');
-        term.echo('https://tldrlegal.com/license/mit-license');
+        term.echo([
+            'Mastodon Client Tooterminal, Version ' + client_info.version + ', RELEASE SERVICE(Beta)',
+            'Technical Support: ' + client_info.website,
+            'Copyright (c) ' + client_info.modified.getFullYear() + ' by ' + client_info.auther,
+            'Updated ' + client_info.modified.toDateString() + ' by ' + client_info.acct,
+            '',
+            'Powered by:',
+            'jQuery (' + $.fn.jquery + ')',
+            'https://jquery.org',
+            'jQuery Terminal Emulator Plugin (' + $.terminal.version + ')',
+            'http://terminal.jcubic.pl',
+            'autosize (4.0.0)',
+            'http://www.jacklmoore.com/autosize',
+            'cryptico',
+            'http://wwwtyro.github.io/cryptico/',
+            'twemoji(v2.3)',
+            'https://twitter.github.io/twemoji/',
+            '',
+            'License info:',
+            'Tooterminal, jQuery, jQuery Terminal Emulator Plugin, autosize is licensed by MIT LICENSE',
+            'https://tldrlegal.com/license/mit-license'
+        ].join('\n'));
 
         return true;
     };
