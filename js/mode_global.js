@@ -534,7 +534,7 @@ var regist_instance = (input, term) => {
         if (!is_redirect) {
             uri = 'urn:ietf:wg:oauth:2.0:oob';
         }
-        let data = {
+        let form_data = {
             client_name: config.find('application.name'),
             redirect_uris: uri,
             website: config.find('application.website'),
@@ -547,11 +547,14 @@ var regist_instance = (input, term) => {
             url: path,
             dataType: 'json',
             type: 'POST',
-            data: data
+            data: form_data
         })
         .then((data, status, jqxhr) => {
             let redirect_uri = data.redirect_uri;
             let ins_name = ins.name();
+            if (typeof redirect_uri === 'undefined') {
+                redirect_uri = form_data.redirect_uris;
+            }
             if (is_redirect) {
                 redirect_uri += '?instance_name=' + ins_name;
             }
