@@ -301,9 +301,9 @@ var GlobalModeElement = (function () {
                     exit:    false
                 });
                 return this;
-            }, (data_acc, data_ins) => {
+            }, (jqxhr, error, status) => {
                 console.log(jqxhr);
-                term.error('Getting user status failed.(' + data_acc[0].status + ')');
+                term.error('Getting user status failed.(' + jqxhr.status + ')');
                 term.resume();
                 return this;
             });
@@ -351,7 +351,7 @@ var GlobalModeElement = (function () {
                 delete(_ins.auth_code);
                 console.log(jqxhr);
             }).then((data_acc, data_ins) => {
-            }, (data_acc, data_ins) => {
+            }, (jqxhr, status, error) => {
                 term.push(enterCommand, {
                     name:   'instance',
                     prompt:  prompt,
