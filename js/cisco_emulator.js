@@ -406,7 +406,7 @@ let InstanceManager = (function () {
                 let filter_r = filter.match(/^\/(.+)\/([igym]*)$/);
                 let re;
                 if (filter_r) {
-                    re = new RegExp(filter_r[1], filter_r[2])
+                    re = new RegExp(filter_r[1], filter_r[2]);
                 }
                 else {
                     re = new RegExp(filter);
@@ -424,6 +424,52 @@ let InstanceManager = (function () {
                 }
             }
         }
+    }
+
+    InstanceManager.prototype.ck_version = function(version) {
+        let result = {
+            is_checked: false,
+            type: '',
+            compared: 0,
+            version: ''
+        };
+
+        if(typeof version === 'undefined' || typeof this._ins === 'undefined') {
+            return result;
+        }
+
+        let vers;
+        if (!this._ins.info.hasOwnProperty('version')){
+            result.is_checked = true;
+            result.type = 'mastodon';
+            result.compared = -1;
+            return result;
+        }
+        else if (vers = this._ins.info.version.match(/^Pleroma (\S+)/)) {
+            result.is_checked = true;
+            result.type = 'pleroma';
+            result.version = vers[1];
+            result.compared = (vers[1] === version ? 0 : -1);
+            return result;
+        }
+        else if (vers = this._ins.info.version.match(/(\d+)\.(\d+)\.(\d+)/)) {
+            result.is_checked = true;
+            result.type = 'mastodon';
+            result.version = vers[0];
+        }
+        else {
+            return result;
+        }
+
+        let arg_vers = version.match(/(\d+)\.(\d+)\.(\d+)/);
+        for (let i = 3; i > 0; i--) {
+            result.compared =
+                ( arg_vers[i] > vers[i] ? 1
+                : arg_vers[i] < vers[i] ? -1
+                : result.compared);
+        }
+
+        return result;
     }
 
     InstanceManager.prototype.name = function (name) {

@@ -677,6 +677,15 @@ let InstanceModeElement = (function () {
                                 "max": this._user_max,
                                 "description": 'ユーザーID',
                                 "execute": this.request_relationship,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "notification",
+                                        "optional": "notifications",
+                                        "description": '通知もミュートします',
+                                        "execute": this.request_relationship,
+                                    }
+                                ]
                             }
                         ]
                     }, {
@@ -2008,13 +2017,20 @@ let InstanceModeElement = (function () {
             term.error('Request ID is yourself.');
             return false;
         }
+        let opts;
+        if (analyzer.line_parsed[1].name.slice(-4) === 'mute') {
+            opts = {
+                notifications: analyzer.optional.hasOwnProperty('notifications')
+                    ? analyzer.optional.notifications : false
+            };
+        }
         term.pause();
         let path = '/api/v1/accounts/' + analyzer.paramaters.user_id
             + '/' + analyzer.line_parsed[1].name;
         callAPI(path, {
             type: 'POST',
+            data: opts
         }).then((data, status, jqxhr) => {
-            console.log(data);
             term.echo("Request was accepted.\n"
                 + tab('Following', (data.following ? 'Yes' : 'No'), 14) + "\n"
                 + tab('Followed', (data.followed_by ? 'Yes' : 'No'), 14) + "\n"
@@ -2104,11 +2120,11 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_emojis_custom = function (term, analyzer) {
         let _ins = ins.get();
-        let ver = _ins.info.version.split(".");
+        let vers = ins.ck_version('2.0.0');
         let type = (typeof analyzer.line_parsed[3] === 'undefined' ? 'picker' : analyzer.line_parsed[3].name);
         let re = analyzer.paramaters.hasOwnProperty('keyword') ? new RegExp(analyzer.paramaters.keyword) : null;
-        if (analyzer.optional.custom === true && ver[0] < 2) {
-            term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
+        if (analyzer.optional.custom === true && (vers.type !== 'mastodon' || vers.compared < 0)) {
+            term.error('This instance version has no support for Custom Emojis.(< Mastodon 2.0.0)');
             return false;
         }
         term.pause();
@@ -2157,10 +2173,10 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.show_emojis_custom_detail = function (term, analyzer) {
         let _ins = ins.get();
-        let ver = _ins.info.version.split(".");
+        let vers = ins.ck_version('2.0.0');
         let shortcode = analyzer.paramaters.shortcode;
-        if (analyzer.optional.custom === true && ver[0] < 2) {
-            term.error('This instance version has no support for Custom Emojis.(< 2.0.0)');
+        if (analyzer.optional.custom === true && (vers.type !== 'mastodon' || vers.compared < 0)) {
+            term.error('This instance version has no support for Custom Emojis.(< Mastodon 2.0.0)');
             return false;
         }
         term.pause();
