@@ -748,12 +748,12 @@ function getConfig(config, index, d_conf) {
 }*/
 
 function makeStatus(payload, optional) {
-    let date = new Date(payload.created_at);
-    let is_reblog = (typeof payload.reblog !== 'undefined' && payload.reblog !== null);
+    let is_reblog = (payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
     let contents = is_reblog  ? payload.reblog
                  : is_mention ? payload.status
                  : payload;
+    let date = new Date(contents.created_at);
 
     if (typeof optional !== 'object') {
         optional = {};
@@ -1159,10 +1159,10 @@ function make_notification(payload, notifies) {
         }
 
         msg = '<i class="fa fa-' + (
-            (payload.type === 'favourite') ? 'star' :
-            (payload.type === 'reblog') ? 'retweet' :
-            (payload.type === 'mention') ? 'commenting' :
-            (payload.type === 'follow') ? 'handshake-o' : 'bell')
+                (payload.type === 'favourite') ? 'star' :
+                (payload.type === 'reblog') ? 'retweet' :
+                (payload.type === 'mention') ? 'commenting' :
+                (payload.type === 'follow') ? 'handshake-o' : 'bell')
             + '" aria-hidden="true"></i> '
             + payload.account.display_name + ' '
             + $.terminal.format('[[!;;]@' + payload.account.acct + ']') + "<br />"
@@ -1183,7 +1183,6 @@ function make_notification(payload, notifies) {
     result.html = msg;
     return result;
 }
-
 
 function parse_emojis(cont, emojis = []) {
     for (let i = 0; i < emojis.length; i++) {
