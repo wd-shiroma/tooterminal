@@ -748,6 +748,7 @@ function getConfig(config, index, d_conf) {
 }*/
 
 function makeStatus(payload, optional) {
+    // 初期化とか
     let is_reblog = (payload.reblog !== null);
     let is_mention = (payload.type === 'mention');
     let contents = is_reblog  ? payload.reblog
@@ -777,6 +778,7 @@ function makeStatus(payload, optional) {
         }
     }
 
+    // ヘッダー部作るよ
     let app;
     if (contents.application === null) {
         app = '';
@@ -824,6 +826,7 @@ function makeStatus(payload, optional) {
         reply = reply.replace('@' + _ins.user.acct + ' ', '');
     }
 
+    // アイコン部作るよ
     let avatar = $('<div />').addClass('status_cell status_avatar');
     let cfg_avatar = config.find('instances.status.avatar');
     if (typeof cfg_avatar === 'undefined') {
@@ -890,9 +893,11 @@ function makeStatus(payload, optional) {
         }
     }
 
+    // 本文部作るよ(ここから)
     let content;
     let enquete;
 
+    // ニコフレアンケート機能だよ
     if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
         enquete = JSON.parse(contents.enquete);
         question = enquete.question;
@@ -928,6 +933,7 @@ function makeStatus(payload, optional) {
         }
         content = content.append(enquete_items).prop('outerHTML');
     }
+    // その他の機能だよ
     else {
         content = contents.content;
         if (content.match(/^<.+>$/)) {
@@ -950,6 +956,7 @@ function makeStatus(payload, optional) {
         }
     }
 */
+    // サムネ作るよ
     let thumb;
     if (contents.media_attachments.length > 0) {
         thumb = $('<div />').addClass('status_thumbnail');
@@ -979,6 +986,7 @@ function makeStatus(payload, optional) {
         }
     }
 
+    // コンテンツを隠しつつ絵文字をパースするよ
     let content_visible = $('<div />')
         .addClass('status_contents')
         .attr('id', 'status_contents');
@@ -987,6 +995,7 @@ function makeStatus(payload, optional) {
 
     result.text += (spoiler_text.length ? $('<div />').html(spoiler_text).text() : '') + $(content).text();
 
+    // 絵文字をパースするよ
     if (contents.account.hasOwnProperty('profile_emojis') && contents.account.profile_emojis.length > 0) {
         head = parse_emojis(head, contents.account.profile_emojis);
     }
@@ -1000,6 +1009,7 @@ function makeStatus(payload, optional) {
     }
     content = parse_twemoji(content);
 
+    // コンテンツを隠すよ
     if (contents.sensitive) {
         content_more = $('<div />');
         if (spoiler_text.length > 0) {
@@ -1036,6 +1046,7 @@ function makeStatus(payload, optional) {
             .append(content_more.hide());
     }
 
+    // DOM構造を作るよ
     let main = $('<div />')
         .addClass('status_cell status_main')
         .append($('<div />').addClass('status_head').html(head))
@@ -1083,9 +1094,13 @@ function makeStatus(payload, optional) {
                 .attr('name', name)
                 .append($('<span />')
                     .html(optional.tl_name + ' streaming updated.'));
+            result.text = tl.text() + result.text;
             status.prepend(tl);
         }
     }
+    // 本文部作るよ(ここまで)
+
+    // ACL処理するよ
     if (ins.acls.hasOwnProperty(ins_name)) {
         for (let acl_num in ins.acls[ins_name]) {
             let acl = ins.acls[ins_name][acl_num];
@@ -1124,6 +1139,8 @@ function makeStatus(payload, optional) {
             }
         }
     }
+
+    // 後処理して終了
     if (config.find('instances.status.separator')) {
         status.append(
             '<div><span>'
