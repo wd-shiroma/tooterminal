@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2017-11-17')),
-    version: '1.2.2',
+    modified: (new Date('2017-11-20')),
+    version: '1.2.3',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
