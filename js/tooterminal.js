@@ -563,6 +563,7 @@ $(function() {
         let term = $.terminal.active();
         let type = $(e.target).data('type');
         let len = parseInt(term.rows() / 5);
+        let sid = parse_sid($(e.target).data('sid'));
         let command
             = (type === 'show_followed')
                 ? 'show user id ' + $(e.target).data('uid') + ' followers'
@@ -575,13 +576,15 @@ $(function() {
             : (type === 'request')
                 ? 'request ' + $(e.target).data('req') + ' ' + $(e.target).data('uid')
             : (type === 'show_faved')
-                ? 'show statuses id ' + $(e.target).data('sid') + ' favourited'
-            : (type === 'show_att')
-                ? 'show timeline local max_id ' + ($(e.target).data('sid') + 1)
+                ? 'show statuses id ' + sid.id + ' favourited'
+            : (type === 'show_att' && sid.type === 'unix_id')
+                ? 'show timeline local max_id ' + sid.front + ('000000' + (parseInt(sid.rear) + 1)).slice(-6)
+            : (type === 'show_att' && sid.type === 'number')
+                ? 'show timeline local max_id ' + (parseInt(sid.id) + 1)
             : (type === 'show_rebbed')
-                ? 'show statuses id ' + $(e.target).data('sid') + ' reblogged'
+                ? 'show statuses id ' + sid.id + ' reblogged'
             : (type === 'del_status')
-                ? 'request delete ' + ($(e.target).data('sid'))
+                ? 'request delete ' + sid.id
             : false;
 
         if (term.name() === 'more') {
@@ -1238,6 +1241,27 @@ function parse_twemoji(content) {
             };
         }
     });
+}
+
+function parse_sid(sid) {
+    let b16 = Math.pow(2, 16);
+    let str_id = new String(sid);
+    let parsed = {};
+    if (str_id.length > 16) {
+        parsed.type = 'unix_id';
+        parsed.unix = parseInt(str_id / b16);
+        parsed.front = str_id.slice(0, -6);
+        parsed.rear = str_id.slice(-6);
+        parsed.id = str_id.toString();
+    }
+    else if(parseInt(str_id.toString())) {
+        parsed.type = 'number';
+        parsed.id = str_id.toString();
+    }
+    else {
+        parsed.type = 'error'
+    }
+    return parsed;
 }
 
 function post_status() {
