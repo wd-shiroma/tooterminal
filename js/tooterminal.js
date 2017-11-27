@@ -1196,7 +1196,7 @@ function make_notification(payload, notifies) {
         }
         msg = parse_twemoji(msg);
         if (payload.type === 'mention') {
-            result.status = makeStatus(payload);
+            result.status = makeStatus(payload.status);
             msg += result.status.html;
         }
     }
