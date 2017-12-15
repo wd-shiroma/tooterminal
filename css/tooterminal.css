@@ -374,10 +374,18 @@ body {
     padding-bottom: 1em;
 }
 
-.status_contents>p>span {
+ {
     width: 100%;
     word-break: break-all;
     word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.status_contents>p>span,.status_contents>span,.status_contents>div>p>span {
+    width: 100%;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .status_contents a {
