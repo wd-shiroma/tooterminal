@@ -1011,6 +1011,7 @@ function makeStatus(payload, optional) {
         spoiler_text = parse_emojis(spoiler_text, contents.emojis);
     }
     content = parse_twemoji(content);
+    spoiler_text = parse_twemoji(spoiler_text);
 
     // コンテンツを隠すよ
     if (contents.sensitive) {
