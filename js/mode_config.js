@@ -294,6 +294,18 @@ var ConfigurationModeElement = (function () {
                 ]
             }, {
                 "type": "command",
+                "name": "debug",
+                "description": "デバッグ関連の設定をします。",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "development",
+                        "description": "開発者モードを有効にします。",
+                        "execute": this.set_true
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "no",
                 "optional": "is_no",
                 "description": "設定の削除を行います。",
@@ -454,6 +466,18 @@ var ConfigurationModeElement = (function () {
                                 "type": "command",
                                 "name": "visible_in_picker",
                                 "description": "unlistedカスタム絵文字を非表示にします。",
+                                "execute": this.set_default
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "debug",
+                        "description": "デバッグ関連の設定をします。",
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "development",
+                                "description": "開発者モードを無効にします。",
                                 "execute": this.set_default
                             }
                         ]

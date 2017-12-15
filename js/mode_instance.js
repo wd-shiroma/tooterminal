@@ -168,6 +168,30 @@ let InstanceModeElement = (function () {
                 ]
             }
         ];
+        this._request_api = [
+            {
+                "type": "paramater",
+                "name": "path",
+                "description": "APIのパスを指定します。",
+                "execute": this.request_api,
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "json",
+                        "optional": "json",
+                        "description": 'JSON形式のデータを指定します。',
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "json",
+                                "description": 'JSON形式のデータを指定します。',
+                                "execute": this.request_api
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
         this._dataset = [
             {
                 "type": "command",
@@ -752,6 +776,28 @@ let InstanceModeElement = (function () {
                                 "name": "status_id",
                                 "description": 'トゥートID',
                                 "execute": this.request_delete_status,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "api",
+                        "description": '直接APIを発行します(要開発者モード)',
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "get",
+                                "description": 'GETメソッドでリクエストします。',
+                                "children": this._request_api
+                            }, {
+                                "type": "command",
+                                "name": "post",
+                                "description": 'POSTメソッドでリクエストします。',
+                                "children": this._request_api
+                            }, {
+                                "type": "command",
+                                "name": "delete",
+                                "description": 'DELETEメソッドでリクエストします。',
+                                "children": this._request_api
                             }
                         ]
                     }
@@ -2210,6 +2256,31 @@ let InstanceModeElement = (function () {
                 console.log(e);
             };
             img.src = emoji.url;
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.request_api = function (term, analyzer) {
+        if (config.find(['debug', 'development']) !== true) {
+            term.error('you are no development mode...');
+            return false;
+        }
+        term.pause();
+
+        let _api = analyzer.paramaters.path;
+        let _method = analyzer.line_parsed[2].name;
+        let _data = analyzer.optional.json ? analyzer.paramaters.json : '';
+
+        callAPI(_api, {
+            type: _method,
+            data: _data
+        }).then((data, status, jqxhr) => {
+            let json_str = JSON.stringify(data, null, '    ');
+            term.echo('request ok! (' + jqxhr.status + ')');
+            term.echo(json_str);
+            term.resume();
         }, (jqxhr, status, error) => {
             term.error('Getting data is failed.(' + jqxhr.status + ')');
             console.log(jqxhr);
