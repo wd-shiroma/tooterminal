@@ -13,6 +13,7 @@ let InstanceModeElement = (function () {
     function InstanceModeElement() {
         this._cmd_mode = "global";
         this._user_max = 9999999;
+        this._list_max = 99999;
         this._sh_stats_opt = [
             {
                 "type": "command",
@@ -186,6 +187,56 @@ let InstanceModeElement = (function () {
                                 "name": "json",
                                 "description": 'JSON形式のデータを指定します。',
                                 "execute": this.request_api
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+        this._lists = [
+            {
+                "type": "command",
+                "name": "delete",
+                "description": "リストを削除します。",
+                "execute": this.list_delete
+            }, {
+                "type": "command",
+                "name": "add_account",
+                "description": "リストにアカウントを追加します。",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "id",
+                        "description": 'ユーザーIDを指定',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "max": this._user_max,
+                                "min": 1,
+                                "description": 'ユーザーID',
+                                "execute": this.list_account
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "remove_account",
+                "description": "リストからアカウントを削除します。",
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "id",
+                        "description": 'ユーザーIDを指定',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "user_id",
+                                "max": this._user_max,
+                                "min": 1,
+                                "description": 'ユーザーID',
+                                "execute": this.list_account
                             }
                         ]
                     }
@@ -483,6 +534,21 @@ let InstanceModeElement = (function () {
                                         "execute": this.show_notifications
                                     }
                                 ])
+                            }, {
+                                "type": "command",
+                                "name": "list",
+                                "description": 'リスト',
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "list_id",
+                                        "max": this._list_max,
+                                        "min": 1,
+                                        "description": 'リストID',
+                                        "execute": this.show_statuses,
+                                        "children": this._sh_stats_opt
+                                    }
+                                ]
                             }
                         ]
                     }, {
@@ -513,6 +579,29 @@ let InstanceModeElement = (function () {
                                                 "execute": this.show_follows
                                             }
                                         ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "lists",
+                        "description": 'リストの情報を表示します。',
+                        "execute": this.show_lists,
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "list_id",
+                                "max": this._list_max,
+                                "min": 1,
+                                "description": 'リストID',
+                                "execute": this.show_list_accounts,
+                                "children": [
+                                    {
+                                        "type": "command",
+                                        "name": "accounts",
+                                        "description": 'リストID',
+                                        "execute": this.show_list_accounts,
                                     }
                                 ]
                             }
@@ -557,6 +646,39 @@ let InstanceModeElement = (function () {
                 "execute": this.login,
             }, {
                 "type": "command",
+                "name": "list",
+                "description": 'リストに関する設定を行います。',
+                "children": [
+                    {
+                        "type": "command",
+                        "name": "create",
+                        "description": 'リストを新規作成します。',
+                        "children": [
+                            {
+                                "type": "paramater",
+                                "name": "list_name",
+                                "description": 'リスト名',
+                                "execute": this.list_create,
+                            }
+                        ]
+                    }, {
+                        "type": "command",
+                        "name": "id",
+                        "description": '作成済みのリストIDを設定します。',
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "list_id",
+                                "max": this._list_max,
+                                "min": 1,
+                                "description": 'リストID',
+                                "children": this._lists
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
                 "name": "terminal",
                 "description": 'ストリーミングの設定を行います。',
                 "execute": this.terminal_monitor,
@@ -597,6 +719,18 @@ let InstanceModeElement = (function () {
                                         "type": "paramater",
                                         "name": "hashtag",
                                         "description": 'ハッシュタグ文字列',
+                                        "execute": this.terminal_monitor,
+                                    }
+                                ]
+                            }, {
+                                "type": "command",
+                                "name": "list",
+                                "description": 'リストをモニターします。',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "list_id",
+                                        "description": 'リストID',
                                         "execute": this.terminal_monitor,
                                     }
                                 ]
@@ -1747,6 +1881,9 @@ let InstanceModeElement = (function () {
             else if (type === 'tag') {
                 path += '/' + analyzer.paramaters.tag_name;
             }
+            else if (type === 'list') {
+                path += '/' + analyzer.paramaters.list_id;
+            }
         }
         else if (analyzer.line_parsed[1].name === 'user'){
             let userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
@@ -2280,6 +2417,109 @@ let InstanceModeElement = (function () {
             let json_str = JSON.stringify(data, null, '    ');
             term.echo('request ok! (' + jqxhr.status + ')');
             term.echo(json_str);
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_lists = function (term, analyzer) {
+        term.pause();
+        callAPI('/api/v1/lists', {
+            type: 'GET',
+        }).then((data, status, jqxhr) => {
+            if (data.length === 0) {
+                term.echo('no lists...');
+                term.resume();
+                return;
+            }
+            let _commands;
+            let lines = [ 'id    | title', '----------------------------------'];
+            for (let i = 0; i < data.length; i++) {
+                /*_commands
+                    = $('<a />')
+                        .attr('name', 'cmd_link')
+                        .attr('data-type', 'show_list_timeline')
+                        .attr('data-id', data[i].id)
+                        .text('TLN')
+                        .prop('outerHTML') + ' '
+                    + $('<a />')
+                        .attr('name', 'cmd_link')
+                        .attr('data-type', 'terminal_monitor_list')
+                        .attr('data-id', data[i].id)
+                        .text('MON')
+                        .prop('outerHTML') + ' '
+                    + $('<a />')
+                        .attr('name', 'cmd_link')
+                        .attr('data-type', 'show_list_accounts')
+                        .attr('data-id', data[i].id)
+                        .text('ACC')
+                        .prop('outerHTML') + ' '
+                    + $('<a />')
+                        .attr('name', 'cmd_link')
+                        .attr('data-type', 'show_list_delete')
+                        .attr('data-id', data[i].id)
+                        .text('DEL')
+                        .prop('outerHTML');*/
+                lines.push(('| ' + data[i].title).addTab(data[i].id, 6));
+            }
+            //more(term, lines, { echo_opt: {raw: true} });
+            more(term, lines);
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.show_list_accounts = function (term, analyzer) {
+        term.pause();
+        let api = '/api/v1/lists/' + analyzer.paramaters.list_id + '/accounts';
+        callMore(api, function(data) {
+            return ("| " + data.acct).addTab('| ' + data.display_name, 30).addTab(data.id, 7);
+        }, {
+            raw: false,
+            header: "id     | display_name" + Array(17).join(' ') + "| acct\n" + Array(48).join('-')
+        });
+    };
+    InstanceModeElement.prototype.list_create = function (term, analyzer) {
+        term.pause();
+        callAPI('/api/v1/lists', {
+            type: 'POST',
+            data: { title: analyzer.paramaters.list_name }
+        }).then((data, status, jqxhr) => {
+            term.echo('Created new list \'' + data.title + "'\nList ID is: " + data.id);
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.list_delete = function (term, analyzer) {
+        term.pause();
+        let list_id = analyzer.paramaters.list_id;
+        callAPI('/api/v1/lists/' + list_id, {
+            type: 'DELETE',
+        }).then((data, status, jqxhr) => {
+            term.echo('Deleted list ID is: ' + list_id);
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting data is failed.(' + jqxhr.status + ')');
+            console.log(jqxhr);
+            term.resume();
+        });
+    };
+    InstanceModeElement.prototype.list_account = function (term, analyzer) {
+        term.pause();
+        let _type = (analyzer.line_parsed[3].name === 'remove_account') ? 'DELETE' : 'POST';
+        callAPI('/api/v1/lists/' + analyzer.paramaters.list_id  + '/accounts', {
+            type: _type,
+            data: { account_ids: [ analyzer.paramaters.user_id ] }
+        }).then((data, status, jqxhr) => {
+            let _msg = (_type === 'DELETE' ? 'Removed' : 'Appended')
+                     + ' account, ID is: ' + analyzer.paramaters.user_id;
+            term.echo(_msg);
             term.resume();
         }, (jqxhr, status, error) => {
             term.error('Getting data is failed.(' + jqxhr.status + ')');
