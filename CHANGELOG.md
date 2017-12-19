@@ -1,5 +1,37 @@
 # 更新履歴
 
+## v1.3.0 (2017-12-19)
+
+### 不具合修正
+
+- トゥート内の空白が詰められてしまう不具合を修正
+- CW表示のUnicode絵文字がTwemojiに変換されていない不具合を修正
+
+### 機能追加
+
+- 開発者モード追加  
+以下のコマンドを打つことでパスとパラメータを直打ちすることでAPIを発行し、戻り値を確認できます。
+    1. コンフィグモードからdebug developmentコンフィグ打ち開発者モードになる。
+    2. インスタンスモードからrequest apiコマンドが打てるようになります。
+- リスト機能を暫定実装
+以下のコマンドを新規追加しました。
+    - show lists  
+    作成済みリスト一覧を表示
+    - show lists [list\_id] accounts  
+    [list\_id]の登録アカウント一覧を表示
+    - show timeline list [list\_id]  
+    [list\_id]のタイムラインを表示
+    - list create [list\_name]  
+    名前[list_name]のリストを作成
+    - list id [list\_id] delete  
+    [list\_id]のリストを削除
+    - list id [list\_id] add\_account id [user\_id]  
+    [list\_id]のリストに[user\_id]のユーザを追加
+    - list id [list\_id] remove\_account id [user\_id]  
+    [list\_id]のリストから[user\_id]のユーザを削除
+
+※リスト機能については、ストリーミング再生にまだ対応していません。
+
 ## v1.2.4 (2017-11-27)
 
 ### 不具合修正
