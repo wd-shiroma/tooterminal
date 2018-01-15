@@ -1327,6 +1327,7 @@ let InstanceModeElement = (function () {
 
             _ws.onerror = (e, t, a) => {
                 term.error(stream + ' Streaming error. closed.');
+                term_error('streaming error', e);
                 //console.log(e);
             };
 
