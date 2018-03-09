@@ -1090,7 +1090,7 @@ let InstanceModeElement = (function () {
                 term.error('User token updating error.(' + jqxhr.status + ')');
                 console.log(jqxhr);
             }).then((data2, status, jqxhr) => {
-                term.echo('Hello! ' + data2.display_name + ' @' + data2.username);
+                term.echo('Hello! ' + escapeHtml(data2.display_name) + ' @' + data2.username);
                 _ins.user = data2;
 
                 ins.save();
@@ -1516,7 +1516,7 @@ let InstanceModeElement = (function () {
                         + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
                             + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
                 }
-                term.echo('<span>' + display_name + ' ID:' + data.id
+                term.echo('<span>' + escapeHtml(display_name) + ' ID:' + data.id
                     + (data.locked ? ' is locked' : ' is unlocked') + '</span>', {raw: true, flush: false});
                 term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
                 term.echo('Created at ' + created.toString(), {flush: false});

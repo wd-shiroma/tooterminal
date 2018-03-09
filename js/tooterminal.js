@@ -49,8 +49,8 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2018-01-16')),
-    version: '1.3.1',
+    modified: (new Date('2018-03-09')),
+    version: '1.3.2',
     auther: 'Gusk-ma(Shiroma)',
     acct: 'shiroma@mstdn.jp',
     website: 'https://wd-shiroma.github.io/'
@@ -798,8 +798,8 @@ function makeStatus(payload, optional) {
         app = ' via ' + app;
     }
 
-    let head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + payload.account.display_name + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
-        + (typeof contents.account.display_name === 'undefined' ? '' : contents.account.display_name)
+    let head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + escapeHtml(payload.account.display_name) + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
+        + (typeof contents.account.display_name === 'undefined' ? '' : escapeHtml(contents.account.display_name))
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle-o'
@@ -1688,6 +1688,22 @@ function OutputText(text, fileName) {
         a[0].click();
         a.remove();
     }
+}
+
+function escapeHtml(string) {
+    if(typeof string !== 'string') {
+        return string;
+    }
+    return string.replace(/[&'`"<>]/g, function(match) {
+        return {
+            '&': '&amp;',
+            "'": '&#x27;',
+            '`': '&#x60;',
+            '"': '&quot;',
+            '<': '&lt;',
+            '>': '&gt;',
+        }[match]
+    });
 }
 
 function more(term, lines, optional = {}){

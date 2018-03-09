@@ -286,7 +286,7 @@ var GlobalModeElement = (function () {
                     display_name = parse_emojis(display_name, data.profile_emojis);
                 }
                 display_name = parse_twemoji(display_name);
-                term.echo('<span>Hello! ' + display_name + ' @' + data.username + '</span>', { raw: true });
+                term.echo('<span>Hello! ' + escapeHtml(display_name) + ' @' + data.username + '</span>', { raw: true });
                 _ins.user = data;
                 _ins.info = data_ins[0];
 
