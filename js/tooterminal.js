@@ -49,10 +49,10 @@ let beep_buf;
 let context = new AudioContext();
 
 let client_info = {
-    modified: (new Date('2018-03-09')),
-    version: '1.3.2',
-    auther: 'Gusk-ma(Shiroma)',
-    acct: 'shiroma@mstdn.jp',
+    modified: (new Date('2018-06-11')),
+    version: '1.3.3',
+    auther: 'Guskma',
+    acct: 'guskma@abyss.fun',
     website: 'https://wd-shiroma.github.io/'
 }
 
@@ -1005,6 +1005,9 @@ function makeStatus(payload, optional) {
     if (contents.hasOwnProperty('profile_emojis') && contents.profile_emojis.length > 0) {
         content = parse_emojis(content, contents.profile_emojis);
         spoiler_text = parse_emojis(spoiler_text, contents.profile_emojis);
+    }
+    if (contents.account.hasOwnProperty('emojis') && contents.account.emojis.length > 0) {
+        head = parse_emojis(head, contents.account.emojis);
     }
     if (contents.hasOwnProperty('emojis') && contents.emojis.length > 0) {
         content = parse_emojis(content, contents.emojis);
