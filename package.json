@@ -1,0 +1,36 @@
+{
+  "name": "tooterminal",
+  "version": "2.0.0",
+  "description": "Mastodon web client like IOS",
+  "main": "main.js",
+  "repository": "https://github.com/wd-shiroma/tooterminal.git",
+  "author": "guskma",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build",
+    "deploy": "node main.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.1",
+    "@babel/preset-env": "^7.0.0",
+    "autosize": "^4.0.2",
+    "babel-preset-minify": "^0.4.3",
+    "browser-sync": "^2.24.7",
+    "common-js": "^0.3.8",
+    "gh-pages": "^1.2.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean-css": "^3.10.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-plumber": "^1.2.0",
+    "gulp-sass": "^4.0.1",
+    "gulp-scss": "^1.4.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify": "^3.0.1",
+    "jquery": "^3.3.1",
+    "jquery.mousewheel": "^3.1.9",
+    "run-sequence": "^2.2.1",
+    "twemoji": "^11.0.1"
+  }
+}

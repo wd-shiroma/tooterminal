@@ -1,5 +1,26 @@
 # 更新履歴
 
+## v2.0.0 (2018-09-30)
+
+### 不具合修正
+
+- 一部HTMLタグがそのまま表示される箇所を修正
+- 表示した画像が消える不具合を修正
+- 表示名の制御文字が入っている際の表示崩れを修正
+- 空の \-\-More\-\- に対応
+- NSFWチェックボタンが表示されない不具合を修正
+
+### 機能追加
+
+- 開発環境にgulpを導入
+- 投稿プレビュー表示
+- URLパラメータオプションにタグストリームとリストストリームを追加
+- 絵文字ピッカー
+- twemojiアップデート (v6 -> v11.0)
+- Fontawesomeアップデート
+- jQuery Terminal Emulator Pluginアップデート (v1.10.0 -> v1.22.0)
+- MacOSX 対応
+
 ## v1.3.3 (2018-06-11)
 
 ### 不具合修正
@@ -21,25 +42,25 @@
 
 ### 機能追加
 
-- 開発者モード追加
+- 開発者モード追加  
 以下のコマンドを打つことでパスとパラメータを直打ちすることでAPIを発行し、戻り値を確認できます。
     1. コンフィグモードからdebug developmentコンフィグ打ち開発者モードになる。
     2. インスタンスモードからrequest apiコマンドが打てるようになります。
-- リスト機能を暫定実装
+- リスト機能を暫定実装  
 以下のコマンドを新規追加しました。
-    - show lists
+    - show lists  
     作成済みリスト一覧を表示
-    - show lists [list\_id] accounts
+    - show lists [list\_id] accounts  
     [list\_id]の登録アカウント一覧を表示
-    - show timeline list [list\_id]
+    - show timeline list [list\_id]  
     [list\_id]のタイムラインを表示
-    - list create [list\_name]
+    - list create [list\_name]  
     名前[list_name]のリストを作成
-    - list id [list\_id] delete
+    - list id [list\_id] delete  
     [list\_id]のリストを削除
-    - list id [list\_id] add\_account id [user\_id]
+    - list id [list\_id] add\_account id [user\_id]  
     [list\_id]のリストに[user\_id]のユーザを追加
-    - list id [list\_id] remove\_account id [user\_id]
+    - list id [list\_id] remove\_account id [user\_id]  
     [list\_id]のリストから[user\_id]のユーザを削除
 
 ※リスト機能については、ストリーミング再生にまだ対応していません。
@@ -62,7 +83,7 @@
 
 ### 機能追加
 
-- request mute xxx notificationコマンド追加
+- request mute xxx notificationコマンド追加  
 →Mastodon v2.0.1以降の通知ミュート機能
 
 ### 不具合修正
@@ -74,19 +95,23 @@
 ### 不具合修正
 
 - 一部カスタム絵文字の幅がずれる不具合を修正
-- Pleromaにログインできるように修正
+- Pleromaにログインできるように修正  
 →とりあえずログイン確認だけです。細かいAPIの差異は後ほど少しずつ修正していきます。
 - ニコフレアンケート機能の投票が出来ない不具合を修正
 - Ajaxエラー時にプロンプトが戻ってこない不具合を修正
+- 正方形でないカスタム絵文字が混在した時のズレを修正
+- Pleromaにログインできなかった不具合(?)を修正
+- ニコフレアンケート機能の投票不具合を修正
+- 一部のAjaxリクエスト時にエラー後プロンプトが戻ってこない不具合を修正
 - show versionにtwemojiの項目追加
 
 ## v1.2.0 (2017-11-10)
 
 ### 機能追加
 
-- show emoji custom <summary|detail>コマンド追加
+- show emoji custom <summary|detail>コマンド追加  
 →カスタム絵文字の一覧表示および詳細表示が出来ます。
-- show timeline notification <mention|reblog|favourite|follow>コマンド追加
+- show timeline notification <mention|reblog|favourite|follow>コマンド追加  
 →通知タイムラインから、「リプライ、ブースト、お気に入り、フォロー」それぞれの通知のみ表示することができます。
 - jQueryTerminalEmulatorPluginをアップデート(→ v1.10.0)
 
@@ -104,9 +129,9 @@
 
 ### 機能追加
 
-- [Instance] show emojis custom <keyword> コマンド追加
+- [Instance] show emojis custom <keyword> コマンド追加  
 →表示する絵文字をキーワードで絞れるようになりました。
-- [Config] emojis visible\_in\_pickerコマンド追加。
+- [Config] emojis visible\_in\_pickerコマンド追加。  
 →unlistedカスタム絵文字を表示します。(デフォルト非表示)
 
 ### 不具合修正
@@ -126,14 +151,14 @@
 
 ### 機能追加
 
-- トゥート整形時の処理及びデータ構造を一部変更しました。
+- トゥート整形時の処理及びデータ構造を一部変更しました。  
 →ter mon 時のみ通知が出るようになりました。
-- バージョン管理方法を変更しました。
-→今回を正式版として1.0.0にしました。(不具合多数だけど)
+- バージョン管理方法を変更しました。  
+→今回を正式版として1.0.0にしました。(不具合多数だけど)  
 →git管理、バージョン管理方法などを今回から変更します。
 
 ### 不具合修正
 
 - twemojiに変換されていない表示があったので修正しました。
-- 複数ストリーム再生時の表示を変更
+- 複数ストリーム再生時の表示を変更  
 →「HOME」「NOTIFICATION」を一つに合わせて「USER」に変更しました。
