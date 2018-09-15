@@ -11,8 +11,23 @@
     "build": "gulp build",
     "deploy": "node main.js"
   },
+  "babel": {
+    "presets": [
+      [
+        "@babel/env", {
+          "modules": "commonjs"
+        }
+      ], [
+        "minify"
+      ]
+    ],
+    "plugins": [
+      "@babel/plugin-transform-modules-commonjs"
+    ]
+  },
   "devDependencies": {
     "@babel/core": "^7.0.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "autosize": "^4.0.2",
     "babel-preset-minify": "^0.4.3",
@@ -27,7 +42,6 @@
     "gulp-sass": "^4.0.1",
     "gulp-scss": "^1.4.0",
     "gulp-sourcemaps": "^2.6.4",
-    "gulp-uglify": "^3.0.1",
     "jquery": "^3.3.1",
     "jquery.mousewheel": "^3.1.9",
     "run-sequence": "^2.2.1",

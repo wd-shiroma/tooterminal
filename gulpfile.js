@@ -27,7 +27,7 @@ gulp.task('minify-js', function() {
         "./node_modules/jquery/dist/jquery.js",
         "./node_modules/jquery.mousewheel/jquery.mousewheel.js",
         "./src/javascript/jquery.terminal_tooterminal.js",
-        "./node_modules/autosize/src/autosize.js",
+        "./node_modules/autosize/dist/autosize.js",
         "./node_modules/twemoji/2/twemoji.js",
         "./src/javascript/cisco_emulator.js",
         "./src/javascript/mode_global.js",
@@ -36,8 +36,8 @@ gulp.task('minify-js', function() {
         "./src/javascript/tooterminal.js",
         ])
         .pipe(sourcemaps.init())
-        .pipe(concat('main.js'))
         .pipe(babel())
+        .pipe(concat('main.js'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('./dist/js'));
 });
@@ -83,5 +83,10 @@ gulp.task('scss-watch', ['minify-scss','browser-sync'], function(){
     });
 });
 
-gulp.task('default', ['scss-watch','browser-sync']);
+gulp.task('default', function() {
+    return runSequence(
+        ['minify-js', 'minify-scss'],
+        ['scss-watch','browser-sync']
+    )
+});
 gulp.task('build',['minify-scss','minify-js']);
