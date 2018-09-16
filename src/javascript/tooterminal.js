@@ -46,8 +46,6 @@ let mode_config_instance;
 let instance_name;
 let beep_buf;
 
-let context = new AudioContext();
-
 let client_info = {
     modified: (new Date('2018-09-14')),
     version: '2.0.0',
