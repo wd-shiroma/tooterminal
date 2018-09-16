@@ -1,38 +1,3 @@
-/*****************************
- * 設定
- *****************************/
-
-let defconf = {
-    application: {
-        name: 'Tooterminal',
-        website: 'https://blog.drdr.work/',
-        uris: 'urn:ietf:wg:oauth:2.0:oob',
-        scopes: {
-            read:   true,
-            write:  true,
-            follow: true
-        }
-    },
-    terminal: {
-        length: 0
-    },
-    instances: {
-        terminal: {
-            logging: {
-                favourite: true,
-                reblog: true,
-                mention: true,
-                following: true
-            },
-            monitor: [
-                'local',
-                'notification'
-            ]
-        },
-        status: {},
-    }
-};
-
 let config;
 let ins;
 let url_params;
@@ -45,19 +10,6 @@ let mode_instance;
 let mode_config_instance;
 let instance_name;
 let beep_buf;
-
-let client_info = {
-    modified: (new Date('2018-09-14')),
-    version: '2.0.0',
-    auther: 'Guskma',
-    acct: 'guskma@abyss.fun',
-    website: 'https://wd-shiroma.github.io/'
-}
-
-
-/*****************************
- * 本処理
- *****************************/
 
 let enterCommand = (command, term) => {
     command = command.trim();

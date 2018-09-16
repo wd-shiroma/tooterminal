@@ -26,13 +26,16 @@ gulp.task('minify-js', function() {
     return gulp.src([
         "./node_modules/jquery/dist/jquery.js",
         "./node_modules/jquery.mousewheel/jquery.mousewheel.js",
-        "./src/javascript/jquery.terminal_tooterminal.js",
+        "./lib/jquery.terminal_tooterminal.js",
         "./node_modules/autosize/dist/autosize.js",
         "./node_modules/twemoji/2/twemoji.js",
-        "./src/javascript/cisco_emulator.js",
-        "./src/javascript/mode_global.js",
-        "./src/javascript/mode_config.js",
-        "./src/javascript/mode_instance.js",
+        "./src/javascript/lib/cisco_emulator.js",
+        "./src/javascript/mode/01_global.js",
+        "./src/javascript/mode/11_config.js",
+        "./src/javascript/mode/12_config_instance.js",
+        "./src/javascript/mode/20_instance.js",
+        "./config/client_info.js",
+        "./config/default_config.js",
         "./src/javascript/tooterminal.js",
         ])
         .pipe(sourcemaps.init())
