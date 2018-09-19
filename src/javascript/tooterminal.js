@@ -360,7 +360,7 @@ $(function() {
                 $('#toot_visibility').val('public');
             }
         }
-        if (e.ctrlKey) {
+        if (e.ctrlKey || e.metaKey) {
             favourite(this);
         }
         if (e.altKey) {
