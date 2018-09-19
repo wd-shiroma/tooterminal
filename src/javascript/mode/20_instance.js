@@ -1090,7 +1090,8 @@ let InstanceModeElement = (function () {
                 term.error('User token updating error.(' + jqxhr.status + ')');
                 console.log(jqxhr);
             }).then((data2, status, jqxhr) => {
-                term.echo('Hello! ' + escapeHtml(data2.display_name) + ' @' + data2.username);
+                let account = parse_account(data2);
+                term.echo(`<span>Hello! ${account.parsed_display_name} @${account.acct_full}</span>`, {raw: true});
                 _ins.user = data2;
 
                 ins.save();
@@ -1485,7 +1486,7 @@ let InstanceModeElement = (function () {
             });
             $.when(api_user, api_rel, api_pinned)
             .then((data_user, data_rel, data_pinned) => {
-                let data = data_user[0];
+                let data = parse_account(data_user[0]);
                 let jqxhr = data_user[2];
                 let relation = data_rel[0];
                 let jqxhr_r = data_rel[2];
@@ -1498,8 +1499,6 @@ let InstanceModeElement = (function () {
                 let days    = (passing = (passing - hours) / 24) % 7;
                 let weeks   = (passing - days) / 7;
                 let rel = '<span>Relationship ';
-                let display_name = parse_twemoji(data.display_name);
-                let note = parse_twemoji(data.note);
                 if (relation[0].id === user.id) {
                     rel += 'self.</span>';
                 }
@@ -1516,13 +1515,10 @@ let InstanceModeElement = (function () {
                         + '<a name="cmd_link" data-uid="' + data.id + '" data-type="request" data-req="'
                             + (relation[0].blocking ? 'unblock">' : 'block">No ') + 'blocking</a></span>';
                 }
-                term.echo('<span>' + escapeHtml(display_name) + ' ID:' + data.id
-                    + (data.locked ? ' is locked' : ' is unlocked') + '</span>', {raw: true, flush: false});
-                term.echo('Username is ' + data.username + ', Fullname is ' + data.acct, {flush: false});
-                term.echo('Created at ' + created.toString(), {flush: false});
-                term.echo('Uptime is '
-                        + weeks + ' weeks, ' + days + ' days, ' + hours + ' hours, '
-                        + minutes + ' minutes (' + passing + ' days have passed)', {flush: false});
+                term.echo(`<span>${data.parsed_display_name} ID:${data.id} is ${data.locked ? 'locked' : 'unlocked'}</span>`, {raw: true, flush: false});
+                term.echo(`Username is ${data.username}, Fullname is ${data.acct_full}`, {flush: false});
+                term.echo(`Created at ${created.toString()}`, {flush: false});
+                term.echo(`Uptime is ${weeks} weeks, ${days} days, ${hours} hours, ${minutes} minutes (${passing} days have passed)`, {flush: false});
                 term.echo('<span>'
                         + $('<a />')
                             .attr('name', 'cmd_link')
@@ -1546,7 +1542,15 @@ let InstanceModeElement = (function () {
                 , {raw: true, flush: false});
                 term.echo('1 day toot rate ' + parseInt(data.statuses_count / passing) + ' posts/day', {flush: false});
                 term.echo(rel, {raw: true, flush: false});
-                term.echo('<span>Note:' + note + '</span>', {raw: true, flush: false});
+                term.echo(`<span>Note: ${data.parsed_note}</span>`, {raw: true, flush: false});
+
+                if (data.fields && data.fields.length > 0) {
+                    term.echo('[[ub;;]Fields]', {flush: false});
+                    for (let i in data.fields) {
+                        let f = data.fields[i];
+                        term.echo(`<span class="fields">${f.name.column_text(20)} ${f.value}</span>`, {raw: true, flush: false});
+                    }
+                }
                 term.echo('URL: ' + data.url, {raw: false, flush: false});
 
                 if (pinned.length > 0 && pinned[0].pinned) {
@@ -1555,6 +1559,7 @@ let InstanceModeElement = (function () {
                     for (let i = 0; i < pinned.length; i++) {
                         if (i > 2) {
                             let more = $('<a />')
+                                .attr('target', '_blank')
                                 .attr('name', 'cmd_link')
                                 .attr('data-uid', pinned[i].account.id)
                                 .attr('data-type', 'show_statuses_pinned')
@@ -1817,10 +1822,10 @@ let InstanceModeElement = (function () {
         callAPI('/api/v1/instance', {
             type: 'GET',
         }).then((data, status, jqxhr) => {
-            term.echo('======== API Information ========', {flush: false});
+            let account = parse_account(data.contact_account);
+            term.echo('======== Instance Information ========', {flush: false});
             term.echo('Instance name: ' + data.title, {flush: false});
             term.echo('Version: ' + data.version, {flush: false});
-            term.echo('Description: ' + data.description, {flush: false});
             term.echo('E-mail: ' + data.email, {flush: false});
             term.echo('URI: ' + data.uri, {flush: false});
             if (data.hasOwnProperty('stats')) {
@@ -1829,6 +1834,8 @@ let InstanceModeElement = (function () {
                 term.echo('Registed users: ' + data.stats.user_count, {flush: false});
             }
             term.echo('Streaming uri: ' + data.urls.streaming_api, {flush: false});
+            term.echo(`Contact: ${account.parsed_display_name} @${account.acct_full}`, {flush: false, raw: true});
+            term.echo('Description: ' + data.description, {flush: false});
             term.echo('[OK]', {flush: false});/*
             term.echo('<br >======== User Information ========', { raw: true, flush: false});
             term.echo('Instance name: ' + data.title, {flush: false});

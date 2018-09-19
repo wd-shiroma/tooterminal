@@ -210,8 +210,13 @@ $(function() {
     //mode_config_instance = new ModeManager(new InstanceConfigModeElement);
     ins = new InstanceManager();
     term_mode          = mode_global;
-    let greetings = "=== CLI画面風 マストドンクライアント \"Tooterminal\" ===\n"
-        + "                    Version " + client_info.version + ", modified "
+    let greetings = "=== CiscoIOSコンソール風 マストドンクライアント ===\n"
+        + " _____           _                      _             _ \n"
+        + "|_   _|__   ___ | |_ ___ _ __ _ __ ___ (_)_ __   __ _| |\n"
+        + "  | |/ _ \\ / _ \\| __/ _ \\ '__| '_ ` _ \\| | '_ \\ / _` | |\n"
+        + "  | | (_) | (_) | ||  __/ |  | | | | | | | | | | (_| | |\n"
+        + "  |_|\\___/ \\___/ \\__\\___|_|  |_| |_| |_|_|_| |_|\\__,_|_|\n"
+        + "                      Version " + client_info.version + ", modified "
         + client_info.modified.getFullYear() + "/"
         + ('0' + (client_info.modified.getMonth() + 1)).slice(-2) + "/"
         + ('0' + client_info.modified.getDate()).slice(-2) + "\n\n"
@@ -362,14 +367,14 @@ $(function() {
             boost(this);
         }
     })
-    .on('click', '.status i', function(e){
+    .on('click', '.status .actions', function(e){
         console.log(e);
         let target = $(e.target);
         let status = target.parents('.status');
-        if (target.hasClass('fa-star') || target.hasClass('fa-star-o')) {
+        if (target.hasClass('fa-star')) {
             favourite(status);
         }
-        else if (target.hasClass('fa-check-circle-o') || target.hasClass('fa-retweet')) {
+        else if (target.hasClass('fa-check-circle') || target.hasClass('fa-retweet')) {
             boost(status);
         }
       /*+ $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
@@ -604,12 +609,16 @@ $(function() {
     })
     .on('click', 'a', (e) => {
         let link = $(e.currentTarget).prop('href');
+        let target = $(e.currentTarget).prop('target');
         let path = link.replace(/https?:\/\//, '').split('/');
         let status = $(e.currentTarget).parents('.status:first');
         let params = {};
         let command = '';
         if (path[0] === '') {
             return false;
+        }
+        if (target === '_blank') {
+            return true;
         }
         if (path[1] === 'users') {
             params.user = path[2];
@@ -752,9 +761,9 @@ function makeStatus(payload, optional) {
     let head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + escapeHtml(payload.account.display_name) + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
         + (typeof contents.account.display_name === 'undefined' ? '' : escapeHtml(contents.account.display_name))
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
-        + $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
-        + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle-o'
-                        : contents.reblogged ? 'check-circle-o' : 'retweet'))
+        + $('<i />').addClass((contents.favourited ? 'fas' : 'far') + ' fa-star actions').attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + $('<i />').addClass('fas fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle'
+                        : contents.reblogged ? 'check-circle actions' : 'retweet actions'))
                 .attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (
                     contents.visibility === 'public'   ? 'globe'
@@ -762,8 +771,9 @@ function makeStatus(payload, optional) {
                   : contents.visibility === 'private'  ? 'lock'
                   : contents.visibility === 'direct'   ? 'envelope'
                   : 'question'))
-            .attr('aria-hidden', 'true').prop('outerHTML')
-        + (contents.in_reply_to_id ? ' ' + $($('<i />').addClass('fa fa-commenting'))
+            .attr('aria-hidden', 'true').prop('outerHTML') + ' '
+        + (contents.account.bot === true ? '<i class="fas fa-robot" aria-hidden="true"></i> ' : '')
+        + (contents.in_reply_to_id ? $($('<i />').addClass('fas fa-comment-dots'))
                   .attr('aria-hidden', 'true').prop('outerHTML') + ' ' : '')
         + ' ' + date.getFullYear() + '-' + ('0' + (date.getMonth()+1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
         + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':'
@@ -968,39 +978,27 @@ function makeStatus(payload, optional) {
     spoiler_text = parse_twemoji(spoiler_text);
 
     // コンテンツを隠すよ
-    if (contents.sensitive) {
-        content_more = $('<div />');
-        if (spoiler_text.length > 0) {
-            content_visible.append('<span>' + spoiler_text + '</span>');
-            content_more.append(content);
-        }
-        else {
-            content_visible.append(content);
-        }
-
-        if(typeof thumb !== 'undefined') {
-            content_more.append(thumb);
-        }
+    content_more = $('<div />');
+    if (spoiler_text.length > 0) {
+        content_visible.append('<span>' + spoiler_text + '</span>');
+        content_more.append(content);
     }
     else {
-        if (spoiler_text.length > 0) {
-            content_visible.append('<span>' + spoiler_text + '</span>');
-            content_more = $('<div />');
-            content_more.append(content);
-        }
-        else {
-            content_visible.append(content);
-        }
-        if (typeof thumb !== 'undefined') {
-            content_visible.append(thumb);
-        }
+        content_visible.append(content);
     }
 
-    if (typeof content_more !== 'undefined') {
+    if(typeof thumb !== 'undefined' && contents.sensitive) {
+        content_more.append(thumb);
+    }
+    else if(typeof thumb !== 'undefined') {
+        content_visible.append(thumb);
+    }
+
+    if (content_more.children().length > 0) {
         content_visible
             .append($('<div />')
                 .addClass('read_more')
-                .append($.terminal.format('[[bu;black;gray]-- More --]')))
+                .append($('<span/>').text('-- More --')))
             .append(content_more.hide());
     }
 
@@ -1100,11 +1098,7 @@ function makeStatus(payload, optional) {
 
     // 後処理して終了
     if (config.find('instances.status.separator')) {
-        status.append(
-            '<div><span>'
-            + Array($.terminal.active().cols() - 5).join('-')
-            + '</span></div>'
-        );
+        status.addClass('separator');
     }
     status.append($('<div />')
         .addClass('status_all')
@@ -1126,30 +1120,20 @@ function make_notification(payload, notifies) {
 
     let msg = '';
     if (is_fav || is_reb || is_fol || is_men) {
-        let content = payload.status
-                ? $.terminal.escape_brackets($(payload.status.content).text())
-                : '(Status was deleted)';
-        if (content.length > 100) {
-            content = content.slice(0,100) + ' ...';
-        }
+        let content = '(Status was deleted)';
+        let emojis = [];
+        let status = payload.status ? parse_status(payload.status) : undefined;
 
-        msg = '<i class="fa fa-' + (
+        msg = '<i class="fas fa-' + (
                 (payload.type === 'favourite') ? 'star' :
                 (payload.type === 'reblog') ? 'retweet' :
-                (payload.type === 'mention') ? 'commenting' :
-                (payload.type === 'follow') ? 'handshake-o' : 'bell')
+                (payload.type === 'mention') ? 'comment-dots' :
+                (payload.type === 'follow') ? 'handshake' : 'bell')
             + '" aria-hidden="true"></i> '
-            + payload.account.display_name + ' '
-            + $.terminal.format('[[!;;]@' + payload.account.acct + ']') + "<br />"
-            + (payload.status ? content : '');
+            + status.account.parsed_display_name + ' '
+            + $.terminal.format('[[!;;]@' + status.account.acct_full + ']') + "<br />"
+            + (status.parsed_content || '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
-        if (payload.account.hasOwnProperty('profile_emojis') && payload.account.profile_emojis.length > 0) {
-            msg = parse_emojis(msg, payload.status.account.profile_emojis);
-        }
-        if (payload.hasOwnProperty('emojis') && payload.emojis.length > 0) {
-            msg = parse_emojis(msg, contents.emojis);
-        }
-        msg = parse_twemoji(msg);
         if (payload.type === 'mention') {
             result.status = makeStatus(payload.status);
             msg += result.status.html;
@@ -1183,6 +1167,52 @@ function parse_emojis(cont, emojis = []) {
         img.src = url;
     }
     return cont;
+}
+
+function parse_account(account) {
+    let acct_full = account.acct;
+    let parsed_display_name = escapeHtml(account.display_name);
+    let parsed_note  = account.note;
+    let matches = account.url.match(/https?:\/\/([^\/]+)\/@([^\/]+)/);
+
+    parsed_display_name = parse_twemoji(parsed_display_name);
+    parsed_note  = parse_twemoji(parsed_note);
+    if (matches) {
+        acct_full = `${matches[2]}@${matches[1]}`;
+    }
+
+    let emojis = account.emojis || [];
+    emojis = emojis.concat(account.profile_emojis || [])
+    if (emojis.length > 0) {
+        parsed_display_name = parse_emojis(parsed_display_name, emojis);
+        parsed_note = parse_emojis(parsed_note, emojis);
+    }
+
+    account.acct_full = acct_full;
+    account.parsed_display_name = parsed_display_name;
+    account.parsed_note = parsed_note;
+    return account;
+}
+
+function parse_status(status) {
+    let parsed_content = status.content;
+    let parsed_spoiler_text = status.spoiler_text || '';
+
+    parsed_content = parse_twemoji(parsed_content);
+    parsed_spoiler_text  = parse_twemoji(parsed_spoiler_text);
+
+    let emojis = status.emojis || [];
+    emojis = emojis.concat(status.profile_emojis || [])
+    if (emojis.length > 0) {
+        parsed_content = parse_emojis(parsed_content, emojis);
+        parsed_spoiler_text = parse_emojis(parsed_spoiler_text, emojis);
+    }
+
+    status.parsed_content = parsed_content;
+    status.parsed_spoiler_text = parsed_spoiler_text;
+    status.account = parse_account(status.account);
+
+    return status;
 }
 
 function parse_twemoji(content) {
@@ -1507,7 +1537,7 @@ function favourite(status, term) {
         term = $.terminal.active();
     }
 
-    $(head_fa[0]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $(head_fa[0]).removeClass().addClass('fas fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
@@ -1516,7 +1546,7 @@ function favourite(status, term) {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
             $(head_fa[0])
                 .removeClass()
-                .addClass('fa fa-' + (data.favourited ? 'star' : 'star-o'))
+                .addClass((data.favourited ? 'fas' : 'far') + ' fa-star actions')
             $(elem).data('fav', data.favourited ? '1' : '0');
         });
         if (isFav === data.favourited) {
@@ -1524,7 +1554,7 @@ function favourite(status, term) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Favorite failed.(' + jqxhr.status + ')');
-        $(head_fa[0]).removeClass().addClass('fa fa-' + (isFav ? 'star' : 'star-o'));
+        $(head_fa[0]).removeClass().addClass((isFav ? 'fas' : 'far') + ' fa-star actions');
         console.log(jqxhr);
     });
 }
@@ -1543,7 +1573,7 @@ function boost(status) {
         return;
     }
     let head_fa = $(status).find('.status_head i');
-    if ($(head_fa[1]).hasClass('fa-times-circle-o')) {
+    if ($(head_fa[1]).hasClass('fa-times-circle')) {
         return;
     }
     let isReb = ($(status).data('reb') == 1);
@@ -1554,7 +1584,7 @@ function boost(status) {
         term = $.terminal.active();
     }
 
-    $(head_fa[1]).removeClass().addClass('fa fa-spinner fa-pulse');
+    $(head_fa[1]).removeClass().addClass('fas fa-spinner fa-pulse');
 
     callAPI(api, {
         instance_name: $(status).data('instance'),
@@ -1563,7 +1593,7 @@ function boost(status) {
         $('[name=id_' + $(status).data('sid').toString() + ']').each((index, elem) => {
             $(head_fa[1])
                 .removeClass()
-                .addClass('fa fa-' + (data.reblogged ? 'check-circle-o' : 'retweet'))
+                .addClass('actions fas fa-' + (data.reblogged ? 'check-circle' : 'retweet'))
             $(elem).data('reb', data.reblogged ? '1' : '0');
         });
         if (isReb === data.reblogged) {
@@ -1571,7 +1601,7 @@ function boost(status) {
         }
     }, (jqxhr, stat, error) => {
         $.terminal.active().error('Reblogged failed.(' + jqxhr.status + ')');
-        $(head_fa[1]).removeClass().addClass('fa fa-' + (isReb ? 'check-circle-o' : 'retweet'));
+        $(head_fa[1]).removeClass().addClass('actions fas fa-' + (isReb ? 'check-circle' : 'retweet'));
         console.log(jqxhr);
     });
 }

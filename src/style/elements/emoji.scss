@@ -1,0 +1,33 @@
+.emoji {
+    margin-top: -2px;
+    height: calc(1em + 2px);
+    width: calc(1em + 2px);
+    display: inline;
+    vertical-align: middle;
+    object-fit: contain;
+}
+.emoji_picker {
+    display: inline-block !important;
+    width: 2em;
+    margin: 0px;
+    padding: 3px;
+}
+.emoji_picker:hover {
+    background-color: #252525;
+}
+.emoji_picker>img {
+    height: 2em;
+    max-width: 2em;
+}
+.emoji_picker>span {
+    display: none !important;
+}
+
+.emoji_summary:hover {
+    background-color: #252525;
+}
+.emoji_summary>img {
+    height: calc(1em + 2px);
+    margin: 0px 0.5em;
+}
+

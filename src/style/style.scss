@@ -1,0 +1,81 @@
+@import 'lib/jquery.terminal.css';
+@import 'fontawesome';
+@import 'regular';
+@import 'solid';
+@import 'brands';
+@import 'elements/status';
+@import 'elements/emoji';
+@import 'elements/tootbox';
+@import 'elements/help';
+
+body {
+    background-color: #333;
+}
+/*
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Code Pro'), local('SourceCodePro-Regular'), url(https://fonts.gstatic.com/s/sourcecodepro/v7/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPevT.ttf) format('truetype');
+}
+*/
+a {
+    cursor: pointer;
+    * {
+        color: var(--link-color,#0f60ff) !important;
+        font-style: underline !important;
+    }
+    &:hover *{
+        color: #000 !important;
+        background-color: var(--link-color,#0f60ff);
+    }
+}
+
+.raw p {
+    margin: 0px;
+}
+
+.timeline {
+    ime-mode: inactive;
+}
+
+.img_background {
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    margin: 0;
+    padding: 0;
+}
+
+.media_view {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    margin: auto;
+    opacity: 1;
+    max-width: 90vw;
+    max-height: 94vh;
+}
+
+.fields {
+    white-space: pre-wrap;
+}
+
+.terminal .terminal-output>div:not(.raw) div{
+    white-space: pre-wrap;
+}
+/*
+* {
+    font-family: 'Source Code Pro', 'Osaka−等幅', 'Osaka-mono', 'Courier New', Courier, monospace;
+}
+
+.terminal, .cmd, .cmd *, .terminal-wrapper *, .terminal .terminal-output div div, .cmd .prompt {
+    font-family: 'Source Code Pro', 'Osaka−等幅', 'Osaka-mono', 'Courier New', Courier, monospace;
+}
+*/

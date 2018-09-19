@@ -26,14 +26,10 @@ gulp.task('minify-js', function() {
     return gulp.src([
         "./node_modules/jquery/dist/jquery.js",
         "./node_modules/jquery.mousewheel/jquery.mousewheel.js",
-        "./lib/jquery.terminal_tooterminal.js",
         "./node_modules/autosize/dist/autosize.js",
         "./node_modules/twemoji/2/twemoji.js",
-        "./src/javascript/lib/cisco_emulator.js",
-        "./src/javascript/mode/01_global.js",
-        "./src/javascript/mode/11_config.js",
-        "./src/javascript/mode/12_config_instance.js",
-        "./src/javascript/mode/20_instance.js",
+        "./src/javascript/lib/*.js",
+        "./src/javascript/mode/*.js",
         "./config/client_info.js",
         "./config/default_config.js",
         "./src/javascript/tooterminal.js",
@@ -46,7 +42,9 @@ gulp.task('minify-js', function() {
 });
 
 gulp.task('minify-scss', function(){
-    return gulp.src('./src/style/*.scss')
+    return gulp.src([
+        './src/style/*.scss',
+        ])
         .pipe(plumber({
             handleError: function (err) {
                 console.log(err);
@@ -54,10 +52,12 @@ gulp.task('minify-scss', function(){
             }
         }))
         .pipe(sourcemaps.init())
-        .pipe(scss())
+        .pipe(scss({
+            includePaths: ['./node_modules/@fortawesome/fontawesome-free/scss']
+        }))
         .pipe(cleanCSS())
-        .pipe(concat('style.css'))
         .pipe(sourcemaps.write('./'))
+        .pipe(concat('style.css'))
         .pipe(gulp.dest('./dist/css/'));
 });
 
@@ -70,15 +70,20 @@ gulp.task('minify-css', function() {
         .pipe(gulp.dest('./dist/css'));
 });
 
+gulp.task('webfonts', function() {
+    return gulp.src('./node_modules/@fortawesome/fontawesome-free/webfonts/*')
+        .pipe(gulp.dest('./dist/webfonts'));
+});
+
 gulp.task('scss-watch', ['minify-scss','browser-sync'], function(){
     gulp.watch("./dist/*.html",['bs-reload']);
-    gulp.watch("./src/style/*.scss", function() {
+    gulp.watch(["./src/style/*.scss", "./src/style/*/*.scss"], function() {
         return runSequence(
             'minify-scss',
             'bs-reload'
         );
     });
-    gulp.watch("./src/javascript/*.js",function() {
+    gulp.watch(["./src/javascript/*.js", "./src/javascript/*/*.js"],function() {
         return runSequence(
             'minify-js',
             'bs-reload'
@@ -92,4 +97,4 @@ gulp.task('default', function() {
         ['scss-watch','browser-sync']
     )
 });
-gulp.task('build',['minify-scss','minify-js']);
+gulp.task('build',['minify-scss', 'minify-js', 'webfonts']);

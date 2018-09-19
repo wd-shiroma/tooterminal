@@ -1,0 +1,28 @@
+.help h1 {
+    margin: 2em 0em 1em 0em;
+    text-decoration: underline;
+}
+.help h2 {
+    margin: 2em 0em 1em 0em;
+}
+.help h3 {
+    margin: 2em 0em 1em 0em;
+}
+.help p {
+    margin-left: 2em;
+    margin-right: 2em;
+}
+.help .cmdline {
+    font-family: monospace;
+    padding: 5px;
+    background-color: #000;
+    border-radius: 3px;
+    border: 1px solid #666;
+}
+.help a {
+    color: #0F60FF;
+}
+.help a:hover {
+    color: red;
+}
+

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0">
 
     <link rel="shortcut icon" href="./favicon.ico" />
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
     <link href="./css/style.css" rel="stylesheet"/>
     <script type="text/javascript">
 
@@ -25,19 +24,21 @@
             </div>
             <input type="text" id="toot_cw" placeholder="contents warning...">
             <textarea id="toot_box" placeholder="toot message..." dropzone="copy"></textarea>
-            <select id="toot_visibility">
-                <option value="public">公開</option>
-                <option value="unlisted">未収載</option>
-                <option value="private">非公開</option>
-                <option value="direct">ダイレクト</option>
-            </select>
-            <div id="toot_size">500</div>
-            <button id="toot_post">Toot!</button>
-            <div class="toot_media" id="toot_media">
+            <div class="commands">
+                <select id="toot_visibility">
+                    <option value="public">公開</option>
+                    <option value="unlisted">未収載</option>
+                    <option value="private">非公開</option>
+                    <option value="direct">ダイレクト</option>
+                </select>
+                <div id="toot_size">500</div>
                 <div class="nsfw">
                     <input type="checkbox" id="nsfw">
                     <label for="nsfw">NSFW</label>
                 </div>
+                <button id="toot_post">Toot!</button>
+            </div>
+            <div class="toot_media" id="toot_media">
             </div>
         </div>
         <div class="img_background">

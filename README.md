@@ -7,7 +7,7 @@ Tooterminal is Mastodon web client like CLI interface of CiscoIOS.
 
 **For out of Japanese speakers**
 
-This client's text is written by Japanese. If you hope any language, please write issue and contribute our repository.
+This client's text is written by Japanese. If you hope any another language, please write issue and join to contribute our repository.
 
 **一般ユーザの方**
 

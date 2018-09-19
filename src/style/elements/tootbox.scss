@@ -1,0 +1,122 @@
+.window {
+    max-width: 25em;
+    display: none;
+    background-color: #222;
+    position: absolute;
+    padding: 3px;
+    top: 3vh;
+    right: 5vw;
+    margin: auto;
+    color: #bbb;
+    border-radius: 5px;
+    border: 1px solid #353535;
+    font-size: 12px;
+    max-width: 90vw;
+    max-height: 94vh;
+    overflow-y: auto;
+    overflow-x: none;
+}
+.toot {
+    height: auto;
+    ime-mode: active;
+    overflow: none;
+    font-family: monospace;
+
+    textarea, select, button, input{
+        font-family: monospace;
+        box-sizing: border-box;
+        margin: 2px;
+        background-color: #000;
+        color: inherit;
+        border-radius: inherit;
+        border: inherit;
+        font-size: inherit;
+        padding: 2px 6px;
+    }
+    .commands {
+        vertical-align: middle;
+    }
+    textarea {
+        width: 21em;
+        height: 5em;
+        line-height: 1.2em;
+        resize: none;
+    }
+    textarea, input[type="text"] {
+        display: block;
+        width: 21em;
+    }
+    select {
+        height: 1.5em;
+    }
+    button {
+        float: right;
+        &:hover {
+            color: #eee;
+        }
+    }
+}
+
+.toot_media {
+    clear: both;
+    display: none;
+}
+
+.nsfw {
+    display: inline-block;
+    &>input {
+        display: none;
+    }
+    &:hover {
+        color: #eee;
+    }
+    input:checked + label:before {
+        content: '✔ ';
+    }
+    input + label:before {
+        content: '✖ ';
+    }
+    label {
+        padding: 3px 3px 3px 8px;
+    }
+}
+
+.toot_media input{
+    display: none;
+}
+
+.toot_media img{
+    width: 10em;
+    height: 4em;
+    border: solid 1px #333;
+    object-fit: cover;
+}
+
+.toot_imghover {
+    background: #666 !important;
+    content: "Drop Files...";
+    border: 5px dashed #222;
+    color: #000;
+}
+
+#toot_size {
+    display: inline-block;
+}
+
+.reply {
+    display: none;
+    margin: 2px;
+    border-radius: 5px;
+    border: 1px solid #353535;
+}
+
+.reply_head {
+    background-color: #111;
+}
+.reply_close {
+    width: 1.5em;
+    text-align: center;
+    float: right;
+    margin-left: auto;
+    background-color: #333;
+}
