@@ -210,13 +210,13 @@ $(function() {
     //mode_config_instance = new ModeManager(new InstanceConfigModeElement);
     ins = new InstanceManager();
     term_mode          = mode_global;
-    let greetings = "=== CiscoIOSコンソール風 マストドンクライアント ===\n"
-        + " _____           _                      _             _ \n"
-        + "|_   _|__   ___ | |_ ___ _ __ _ __ ___ (_)_ __   __ _| |\n"
-        + "  | |/ _ \\ / _ \\| __/ _ \\ '__| '_ ` _ \\| | '_ \\ / _` | |\n"
-        + "  | | (_) | (_) | ||  __/ |  | | | | | | | | | | (_| | |\n"
-        + "  |_|\\___/ \\___/ \\__\\___|_|  |_| |_| |_|_|_| |_|\\__,_|_|\n"
-        + "                      Version " + client_info.version + ", modified "
+    let greetings = "=== CiscoIOS風 マストドンクライアント ===\n"
+        + " _____      _                 _          _ \n"
+        + "|_   _|_ __| |_ ____ _ _ __ _(_) __  __ | |\n"
+        + "  | / _ / _| __/ _| '_| '_ ` || '_ \\/ _`| |\n"
+        + "  || (_) (_| ||  _| | | | | ||| | || (_|| |\n"
+        + "  |_\\___\\___\\__\\__|_| |_| |_|||_|_|_\\__,|_|\n"
+        + "         Version " + client_info.version + ", modified "
         + client_info.modified.getFullYear() + "/"
         + ('0' + (client_info.modified.getMonth() + 1)).slice(-2) + "/"
         + ('0' + client_info.modified.getDate()).slice(-2) + "\n\n"
