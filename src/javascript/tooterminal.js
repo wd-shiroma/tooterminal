@@ -1122,7 +1122,8 @@ function make_notification(payload, notifies) {
     if (is_fav || is_reb || is_fol || is_men) {
         let content = '(Status was deleted)';
         let emojis = [];
-        let status = payload.status ? parse_status(payload.status) : undefined;
+        let status = payload.status ? parse_status(payload.status) : {};
+        let account = payload.account ? parse_account(payload.account) : {};
 
         msg = '<i class="fas fa-' + (
                 (payload.type === 'favourite') ? 'star' :
@@ -1130,8 +1131,8 @@ function make_notification(payload, notifies) {
                 (payload.type === 'mention') ? 'comment-dots' :
                 (payload.type === 'follow') ? 'handshake' : 'bell')
             + '" aria-hidden="true"></i> '
-            + status.account.parsed_display_name + ' '
-            + $.terminal.format('[[!;;]@' + status.account.acct_full + ']') + "<br />"
+            + account.parsed_display_name + ' '
+            + $.terminal.format('[[!;;]@' + account.acct_full + ']') + "<br />"
             + (status.parsed_content || '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
         if (payload.type === 'mention') {
