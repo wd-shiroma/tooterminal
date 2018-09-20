@@ -3,13 +3,14 @@
 <head>
     <title>Tooterminal</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0">
 
     <link rel="shortcut icon" href="./favicon.ico" />
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
-    <link href="./css/tooterminal.min.css" rel="stylesheet"/>
+    <link href="./css/style.css" rel="stylesheet"/>
+    <script type="text/javascript">
 
-    <script src="./js/tooterminal.min.js"></script>
-
+        var context = new (window.AudioContext || window.webkitAudioContext);
+    </script>
 </head>
 <body>
     <div class="tooterminal">
@@ -23,19 +24,21 @@
             </div>
             <input type="text" id="toot_cw" placeholder="contents warning...">
             <textarea id="toot_box" placeholder="toot message..." dropzone="copy"></textarea>
-            <select id="toot_visibility">
-                <option value="public">公開</option>
-                <option value="unlisted">未収載</option>
-                <option value="private">非公開</option>
-                <option value="direct">ダイレクト</option>
-            </select>
-            <div id="toot_size">500</div>
-            <button id="toot_post">Toot!</button>
-            <div class="toot_media" id="toot_media">
+            <div class="commands">
+                <select id="toot_visibility">
+                    <option value="public">公開</option>
+                    <option value="unlisted">未収載</option>
+                    <option value="private">非公開</option>
+                    <option value="direct">ダイレクト</option>
+                </select>
+                <div id="toot_size">500</div>
                 <div class="nsfw">
                     <input type="checkbox" id="nsfw">
                     <label for="nsfw">NSFW</label>
                 </div>
+                <button id="toot_post">Toot!</button>
+            </div>
+            <div class="toot_media" id="toot_media">
             </div>
         </div>
         <div class="img_background">
@@ -44,7 +47,7 @@
             <video class="media_view" id="video_view" src="" />
         </div>
         <div class="help window" id="help">
-            <div class="head" id="help_head">コンソール画面風 マストドンクライアント「Tooterminal」</div>
+            <div class="head" id="help_head">CiscoIOSコンソール画面風 マストドンクライアント「Tooterminal」</div>
             <div class="body" id="help_body">
                 <h1>Tooterminalについて</h1>
                 <p>Tooterminalは、jQuery拡張プラグインjQueryTerminalEmulatorPluginを利用して作られたCiscoIOSライクな操作ができるマストドンクライアントです。完全に俺得ジョーククライアントです。</p>
@@ -122,5 +125,6 @@
             <button id="help_close">閉じる</button>
         </div>
     </div>
+    <script src="./js/main.js"></script>
 </body>
 </html>
