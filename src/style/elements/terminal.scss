@@ -1,12 +1,17 @@
-body {
-    background-color: #333;
+@font-face{
+    font-family: 'Source Code Pro';
+    font-weight: normal bold;
+    font-style: normal oblique;
+    font-stretch: normal expanded;
+    src: url('/webfonts/SourceCodePro-Regular.eot') format('embedded-opentype'),
+         url('/webfonts/SourceCodePro-Regular.ttf.woff2') format('woff2'),
+         url('/webfonts/SourceCodePro-Regular.otf.woff') format('woff'),
+         url('/webfonts/SourceCodePro-Regular.otf') format('opentype'),
+         url('/webfonts/SourceCodePro-Regular.ttf') format('truetype');
 }
 
-@font-face {
-  font-family: 'Source Code Pro';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Source Code Pro'), local('SourceCodePro-Regular'), url(https://fonts.gstatic.com/s/sourcecodepro/v7/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPevT.ttf) format('truetype');
+body {
+    background-color: #333;
 }
 
 a {

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "gulp",
     "build": "gulp build",
-    "deploy": "node main.js"
+    "deploy": "gh-pages -d dist"
   },
   "babel": {
     "presets": [
@@ -48,6 +48,7 @@
     "jquery": "^3.3.1",
     "jquery.mousewheel": "^3.1.9",
     "run-sequence": "^2.2.1",
+    "source-code-pro": "^2.30.1",
     "twemoji": "^11.0.1"
   }
 }

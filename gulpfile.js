@@ -71,7 +71,11 @@ gulp.task('minify-css', function() {
 });
 
 gulp.task('webfonts', function() {
-    return gulp.src('./node_modules/@fortawesome/fontawesome-free/webfonts/*')
+    return gulp.src([
+        './node_modules/@fortawesome/fontawesome-free/webfonts/*',
+        './node_modules/source-code-pro/*/SourceCodePro-Regular*',
+        './node_modules/source-code-pro/*/*/SourceCodePro-Regular*',
+        ])
         .pipe(gulp.dest('./dist/webfonts'));
 });
 
@@ -93,7 +97,7 @@ gulp.task('scss-watch', ['minify-scss','browser-sync'], function(){
 
 gulp.task('default', function() {
     return runSequence(
-        ['minify-js', 'minify-scss'],
+        ['build'],
         ['scss-watch','browser-sync']
     )
 });

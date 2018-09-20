@@ -1,5 +1,5 @@
 let client_info = {
-    modified: (new Date('2018-09-14')),
+    modified: (new Date('2018-09-20')),
     version: '2.0.0',
     auther: 'Guskma',
     acct: 'guskma@abyss.fun',
