@@ -617,8 +617,9 @@ $(function() {
         if (path[0] === '') {
             return false;
         }
-        if (target === '_blank') {
-            return true;
+        if (target === 'out_of_term') {
+            window.open(link);
+            return false;
         }
         if (path[1] === 'users') {
             params.user = path[2];

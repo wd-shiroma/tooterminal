@@ -1559,7 +1559,7 @@ let InstanceModeElement = (function () {
                     for (let i = 0; i < pinned.length; i++) {
                         if (i > 2) {
                             let more = $('<a />')
-                                .attr('target', '_blank')
+                                .attr('target', 'out_of_term')
                                 .attr('name', 'cmd_link')
                                 .attr('data-uid', pinned[i].account.id)
                                 .attr('data-type', 'show_statuses_pinned')
@@ -1958,7 +1958,7 @@ let InstanceModeElement = (function () {
             if (card.hasOwnProperty('url')) {
                 let card_elem = $('<a />')
                         .attr('href', card.url)
-                        .attr('target', '_blank')
+                        .attr('target', 'out_of_term')
                         .addClass('status_card')
                         .append($('<div />')
                             .append($('<span />').text('[ ' + card.title + ' ]'))
