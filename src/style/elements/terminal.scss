@@ -11,6 +11,8 @@
 }
 
 body {
+    margin: 0px;
+    padding: 0px;
     background-color: #333;
 }
 
@@ -60,6 +62,11 @@ a {
 
 .fields {
     white-space: pre-wrap;
+}
+
+.tooterminal {
+    margin: 8px;
+    min-width: 15em;
 }
 
 .terminal .terminal-output>div:not(.raw) div{

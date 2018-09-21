@@ -11,10 +11,17 @@ let mode_config_instance;
 let instance_name;
 let beep_buf;
 
+let resize_term = function(term) {
+    let _width = window.innerWidth - 36;
+    let _height = window.innerHeight - 36;
+    _width = _width < 200 ? 200 : _width;
+    term.resize(_width, _height);
+};
+
 let enterCommand = (command, term) => {
     command = command.trim();
-    term.resize(window.innerWidth - 36, window.innerHeight - 36);
     reduce_output();
+    resize_term(term);
 
     if (command.length === 0) {
         return;
@@ -229,7 +236,7 @@ $(function() {
         prompt:       'Tooterminal# ',
         completion:   completion,
         height:       window.innerHeight - 18,
-        onResize:     (term) => { term.resize($(window).width() - 36, $(window).height() - 36); },
+        onResize:     resize_term,
         exit:         false,
         clear:        false,
         scrollOnEcho: false,
@@ -617,8 +624,9 @@ $(function() {
         if (path[0] === '') {
             return false;
         }
-        if (target === '_blank') {
-            return true;
+        if (target === 'out_of_term') {
+            window.open(link);
+            return false;
         }
         if (path[1] === 'users') {
             params.user = path[2];
