@@ -6,7 +6,8 @@ var ws = {
         local: false,
         public: false,
         tag: false,
-        notification: false
+        notification: false,
+        list: false
     },
 };
 let InstanceModeElement = (function () {
@@ -2192,6 +2193,7 @@ let InstanceModeElement = (function () {
         term.echo(tab('Local:', ws.monitor.local ? 'ON' : 'OFF', 15));
         term.echo(tab('Public:', ws.monitor.public ? 'ON' : 'OFF', 15));
         term.echo(tab('Tags:', ws.monitor.tag ? 'ON' : 'OFF', 15));
+        term.echo(tab('Lists:', ws.monitor.list ? 'ON' : 'OFF', 15));
         term.echo('\n', {raw: true});
         term.echo('WebSocket objects');
         for (let i = 0; i < ws.stream.length; i++) {
