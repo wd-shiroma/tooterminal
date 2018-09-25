@@ -6,7 +6,8 @@ var ws = {
         local: false,
         public: false,
         tag: false,
-        notification: false
+        notification: false,
+        list: false
     },
 };
 let InstanceModeElement = (function () {
@@ -1141,6 +1142,16 @@ let InstanceModeElement = (function () {
                 _stream.type = 'tag';
                 _stream.name = hashtag;
             }
+            else if (stream === 'list') {
+                for (let i = 0; i < ws.stream.length; i++) {
+                    if (ws.stream[i].type === 'list' && ws.stream[i].list_id === list_id) {
+                        ws.monitor['list'] = true;
+                        return true;
+                    }
+                }
+                _stream.type = 'list';
+                _stream.list_id = list_id;
+            }
             else {
                 for (let i = 0; i < ws.stream.length; i++) {
                     if (ws.stream[i].type === stream) {
@@ -1179,7 +1190,8 @@ let InstanceModeElement = (function () {
                 (stream === 'home' || stream === 'notification') ? '<i class="fa fa-home" aria-hidden="true"></i> USER' :
                 (stream === 'local') ? '<i class="fa fa-users" aria-hidden="true"></i> LOCAL' :
                 (stream === 'public') ? '<i class="fa fa-globe" aria-hidden="true"></i> GLOBAL' :
-                (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) : '???';
+                (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) :
+                (stream === 'list') ? ('<i class="fa fa-list" aria-hidden="true"></i> LIST: ' + list_id) : '???';
 
             ws.monitor[stream] = true;
 
@@ -2192,6 +2204,7 @@ let InstanceModeElement = (function () {
         term.echo(tab('Local:', ws.monitor.local ? 'ON' : 'OFF', 15));
         term.echo(tab('Public:', ws.monitor.public ? 'ON' : 'OFF', 15));
         term.echo(tab('Tags:', ws.monitor.tag ? 'ON' : 'OFF', 15));
+        term.echo(tab('Lists:', ws.monitor.list ? 'ON' : 'OFF', 15));
         term.echo('\n', {raw: true});
         term.echo('WebSocket objects');
         for (let i = 0; i < ws.stream.length; i++) {
