@@ -1190,7 +1190,8 @@ let InstanceModeElement = (function () {
                 (stream === 'home' || stream === 'notification') ? '<i class="fa fa-home" aria-hidden="true"></i> USER' :
                 (stream === 'local') ? '<i class="fa fa-users" aria-hidden="true"></i> LOCAL' :
                 (stream === 'public') ? '<i class="fa fa-globe" aria-hidden="true"></i> GLOBAL' :
-                (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) : '???';
+                (stream === 'tag') ? ('<i class="fa fa-tag" aria-hidden="true"></i> HASHTAG: ' + hashtag) :
+                (stream === 'list') ? ('<i class="fa fa-list" aria-hidden="true"></i> LIST: ' + list_id) : '???';
 
             ws.monitor[stream] = true;
 
