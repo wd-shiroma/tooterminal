@@ -1115,7 +1115,7 @@ let InstanceModeElement = (function () {
     };
     InstanceModeElement.prototype.terminal_monitor = function (term, analyzer) {
 
-        function push_monitor(stream, hashtag) {
+        function push_monitor(stream, hashtag, list_id) {
             if (stream === 'tag' && typeof hashtag !== 'string') {
                 term.error('Hashtag is undefined.')
                 return false;
@@ -1166,6 +1166,9 @@ let InstanceModeElement = (function () {
             }
             else if (stream === 'tag') {
                 url += '&stream=hashtag&tag=' + hashtag;
+            }
+            else if (stream === 'list') {
+                url += '&stream=list&list=' + list_id;
             }
             else {
                 term.error('Monitor stream type error.');
@@ -1345,6 +1348,7 @@ let InstanceModeElement = (function () {
             let _ins = ins.get();
             let monitor = [];
             let hashtag;
+            let list_id;
             let startup = ws.startup;
             if (typeof analyzer.line_parsed[2] === 'undefined') {
                 let conf_mon = config.find('instances.terminal.monitor');
@@ -1378,6 +1382,14 @@ let InstanceModeElement = (function () {
                 startup = analyzer.line_parsed[2].name;
                 hashtag = analyzer.paramaters.hashtag;
             }
+            else if (analyzer.line_parsed[2].name === 'list') {
+                monitor.push({
+                    type: analyzer.line_parsed[2].name,
+                    list_id: analyzer.paramaters.list_id
+                });
+                startup = analyzer.line_parsed[2].name;
+                list_id = analyzer.paramaters.list_id;
+            }
             else {
                 monitor.push({
                     type: analyzer.line_parsed[2].name
@@ -1392,7 +1404,7 @@ let InstanceModeElement = (function () {
             }
 
             for (let i = 0; i < monitor.length; i++) {
-                push_monitor(monitor[i].type, monitor[i].hashtag);
+                push_monitor(monitor[i].type, monitor[i].hashtag, monitor[i].list_id);
             }
             if (startup) {
                 let type = startup;
@@ -1405,6 +1417,9 @@ let InstanceModeElement = (function () {
                 }
                 else if (type === 'tag') {
                     path += '/' + hashtag;
+                }
+                else if (type === 'list') {
+                    path += '/' + list_id;
                 }
                 else if (type === 'notification') {
                     path = '/api/v1/notifications';
