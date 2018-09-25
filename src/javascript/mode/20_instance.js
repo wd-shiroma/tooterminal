@@ -1142,6 +1142,16 @@ let InstanceModeElement = (function () {
                 _stream.type = 'tag';
                 _stream.name = hashtag;
             }
+            else if (stream === 'list') {
+                for (let i = 0; i < ws.stream.length; i++) {
+                    if (ws.stream[i].type === 'list' && ws.stream[i].list_id === list_id) {
+                        ws.monitor['list'] = true;
+                        return true;
+                    }
+                }
+                _stream.type = 'list';
+                _stream.list_id = list_id;
+            }
             else {
                 for (let i = 0; i < ws.stream.length; i++) {
                     if (ws.stream[i].type === stream) {
