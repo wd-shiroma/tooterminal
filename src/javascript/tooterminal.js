@@ -1356,12 +1356,11 @@ function callAPI(path, opts = {}) {
             },
             data: typeof opts.data ? opts.data : '',
             dataType: 'json',
-            timeout: 5000
+            timeout: 10000
         })
-        .done((data, status, jqxhr) => {
+        .then((data, status, jqxhr) => {
             return jqxhr;
-        })
-        .fail((jqxhr, status, error) => {
+        }, (jqxhr, status, error) => {
             term_error('API Request Error', {
                 path: path,
                 opts: opts
