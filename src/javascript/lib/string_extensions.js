@@ -82,30 +82,6 @@ String.prototype.escape_html = function() {
     });
 };
 
-Date.prototype.passing_total_seconds = function() {
-    return parseInt((Date.now() - this.getTime()) / 1000);
-};
-
-Date.prototype.passing_total_days = function() {
-    return parseInt(this.passing_total_seconds() / 86400);
-};
-
-Date.prototype.passing_minutes = function() {
-    return parseInt(this.passing_total_seconds() / 60) % 60;
-};
-
-Date.prototype.passing_hours = function() {
-    return parseInt(this.passing_total_seconds() / 3600) % 24;
-};
-
-Date.prototype.passing_days = function() {
-    return parseInt(this.passing_total_seconds() / 86400) % 7;
-};
-
-Date.prototype.passing_weeks = function() {
-    return parseInt(this.passing_total_seconds() / 604800);
-};
-
 Object.defineProperty(String.prototype, "mlength", {
     get: function () {
         return this.mdash().length;
