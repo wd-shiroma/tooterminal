@@ -12,7 +12,7 @@ This client's text is written by Japanese. If you hope any another language, ple
 **一般ユーザの方**
 
 [こちら](https://wd-shiroma.github.io/tooterminal) からTooterminalを利用することが出来ます。  
-操作方法については [ドキュメント](https://github.com/wd-shiroma/tooterminal/tree/master/README.md) を参照してください。
+操作方法については [ドキュメント](https://github.com/wd-shiroma/tooterminal/blob/master/docs/README.md) を参照してください。
 
 **開発に参加してくれる方**
 
