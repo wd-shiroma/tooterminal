@@ -203,7 +203,7 @@
 
 .status_contents>p>span,.status_contents>span,.status_contents>div>p>span {
     width: 100%;
-    word-break: break-all;
+    word-break: keep-all;
     word-wrap: break-word;
     white-space: pre-wrap;
 }
