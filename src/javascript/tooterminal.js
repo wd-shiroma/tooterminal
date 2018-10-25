@@ -561,6 +561,9 @@ $(function() {
             $('.img_background').trigger('click');
         }
     })
+    .on('keyup', (event) => {
+        if (event.keyCode === 18) return false;
+    })
     .on('click', '.status_enquete span', function(e) {
         let enquete = $(e.target).parent();
         let index = $(enquete).children().index(e.target);
