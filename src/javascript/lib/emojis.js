@@ -2826,6 +2826,14 @@ class Emojis {
         return this;
     }
 
+    get custom_emojis() {
+        return this._custom_emojis;
+    }
+
+    get payload() {
+        return this.custom_emojis.map(e => e.payload)
+    }
+
     toString() {
         return this.filterd.map(e => e.code).join('');
     }

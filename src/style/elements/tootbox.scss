@@ -111,8 +111,26 @@
     display: inline-block;
 }
 
-#emoji_picker {
+#toot_utils {
     margin: 3px 0px 0px 0px;
+    display: block;
+    width: 100%;
+
+    button {
+        float: none;
+        font-size: 1.5em;
+
+        &.active {
+            background-color: #555;
+        }
+    }
+}
+
+#emoji_picker {
+    display: none;
+    border-top: solid 1px #333;
+    margin: 2px 0px 0px 0px;
+    padding: 2px 0px 0px 0px;
     #toot_emoji_keyword {
         float: right;
         width: inherit;
@@ -142,6 +160,29 @@
                 background-color: #999;
             }
         }
+    }
+}
+
+#toot_preview {
+    display: none;
+    border: solid 1px #333;
+    margin: 2px 0px 0px 0px;
+    padding: 3px;
+    background-color: #000;
+    max-height: 10em;
+    overflow-y: auto;
+    overflow-x: none;
+
+    .sensitive, .content {
+        font-family: sans-serif;
+        margin: 0px;
+        padding: 1px 6px;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        word-break: keep-all;
+    }
+    .sensitive {
+        border-bottom: solid 1px #333;
     }
 }
 

@@ -39,6 +39,14 @@
                 <button id="toot_post">Toot!</button>
             </div>
             <div id="toot_utils">
+                <div id="util_selector">
+                    <button name="emoji_picker">
+                        <i class="fas fa-grin-alt"></i>
+                    </button>
+                    <button name="toot_preview">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
                 <div id="emoji_picker">
                     <div class="picker_commands">
                         <select id="toot_emoji_category">
@@ -64,6 +72,10 @@
                         <input type="text" id="toot_emoji_keyword" placeholder="emoji keywords" />
                     </div>
                     <div id="toot_emoji_list"></div>
+                </div>
+                <div id="toot_preview">
+                    <div class="sensitive"></div>
+                    <div class="content"></div>
                 </div>
             </div>
             <div class="toot_media" id="toot_media">

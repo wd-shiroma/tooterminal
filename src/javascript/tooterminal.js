@@ -169,9 +169,25 @@ let exit_instance = function() {
     ins.name('');
 };
 
-let count_toot_size = () => {
+let update_toot_status = () => {
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
     $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
+
+    let preview = $('#toot_preview');
+    if (preview.is(':visible')) {
+        let sensitive = $('#toot_cw').val().escape_html();
+        let content = $('#toot_box').val().escape_html();
+        sensitive = sensitive.replace(/: {1,2}:/g, '​');
+        sensitive = parse_emojis_from_content(sensitive, emojis.payload);
+        sensitive = parse_twemoji(sensitive);
+        preview.children('.sensitive').html(sensitive);
+
+        content = content.replace(/: {1,2}:/g, ':​:');
+        content = parse_emojis_from_content(content, emojis.payload);
+        content = parse_twemoji(content);
+        preview.children('.content').html(content);
+    }
+
 };
 
 let update_emoji_picker = () => {
@@ -190,7 +206,7 @@ let update_emoji_picker = () => {
     }
 
     let _html = _emojis.map(e => `<li class="emoji_picker">${e.code}</li>`).join('');
-    _html = parse_emojis(_html, emojis._custom_emojis.map(e => e.payload));
+    _html = parse_emojis(_html, emojis.payload);
     _html = parse_twemoji(_html);
 
     list_area.html(_html).slideDown('fast');
@@ -219,7 +235,7 @@ function upload_img(imageFile) {
             $('#media_' + len).attr('src', data.preview_url);
             $('#toot_box').val($('#toot_box').val() + ' ' + data.text_url);
             autosize.update($('#toot_box'));
-            count_toot_size();
+            update_toot_status();
         };
         img.onerror = (e) => {
             console.log(e);
@@ -324,10 +340,21 @@ $(function() {
             upload_img(files[i]);
         }
     });
-    $('#toot_cw').on('keyup', count_toot_size);
-    $('#toot_box').on('keyup', count_toot_size);
+    $('#toot_cw').on('keyup', update_toot_status);
+    $('#toot_box').on('keyup', update_toot_status);
     $('#toot_post').on('click', () => {
         post_status();
+    });
+    $('#util_selector button').on('click', (e) => {
+        let target = $(e.currentTarget);
+        if (target.hasClass('active')) {
+            target.removeClass('active');
+            $(`#${target.attr('name')}`).slideUp('fast');
+        }
+        else {
+            target.addClass('active');
+            $(`#${target.attr('name')}`).slideDown('fast');
+        }
     });
     $('#help_close').on('click', () => {
         $('#help').slideUp('first');
@@ -514,7 +541,7 @@ $(function() {
             .prop('selectionEnd', pos)
             .focus();
 
-        setTimeout(count_toot_size, 10);
+        setTimeout(update_toot_status, 10);
     })
     .on('click', '.emoji_summary', function(e) {
         let term = $.terminal.active();
@@ -638,7 +665,7 @@ $(function() {
                 $.terminal.active().focus(false);
             }
         }
-        else if (!e.target.id.match(/^toot_/)
+        else if (!$(e.target).parents('#toot').length
             && !e.ctrlKey && e.keyCode !== 17
             && !e.altKey && e.keyCode !== 18)
         {
@@ -1196,15 +1223,40 @@ function parse_emojis(cont, emojis = []) {
             .attr('src', url);
         let re = new RegExp(tag + '(?!")', 'g')
         cont = cont.replace(re, e_tag.prop('outerHTML'));
+    }
+    return cont;
+}
 
-        let img = new Image();
-        img.onload = () => {
-            $('[name=' + img_name + ']').attr('src', url);
-        };
-        img.onerror = (e) => {
-            console.log(e);
-        };
-        img.src = url;
+function parse_emojis_from_content(cont, emojis = []) {
+    let matches = (cont.match(/.?:@?[a-zA-Z0-9_]+:.?/g) || []).map(m => {
+        let em = m.match(/^(.)?(:(.+):)(.)?/);
+        let shortcode = em[3];
+        let em_target = emojis.find(e => e.shortcode === shortcode);
+        let valid = (em[1] === undefined || em[1].match(/[ ​]/)) &&
+                    (em[4] === undefined || em[4].match(/[ ​]/));
+        return {
+            matches: em,
+            valid: valid,
+            shortcode: shortcode,
+            target: em_target
+        }
+    });
+
+    for (let i = 0; i < matches.length; i++) {
+        let match = matches[i];
+        if (!match.valid || !match.target) continue;
+
+        let img_name = 'emoji_' + match.target.shortcode.replace(/^@/, 'p-');
+        let url = match.target.url;
+        let tag = `:${match.shortcode}:`;
+        let e_tag = $('<img />')
+            .addClass('emoji')
+            .attr('name', img_name)
+            .attr('alt', tag)
+            .attr('title', tag)
+            .attr('src', url);
+        let re = new RegExp(tag + '(?!")', 'g')
+        cont = cont.replace(re, e_tag.prop('outerHTML'));
     }
     return cont;
 }
