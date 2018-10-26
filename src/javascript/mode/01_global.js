@@ -69,7 +69,7 @@ var GlobalModeElement = (function () {
                     {
                         "type": "paramater",
                         "name": "instance_name",
-                        "description": "インスタンスを登録します。",
+                        "description": "インスタンス名",
                         "execute": this.entry_instance
                     }
                 ]
@@ -275,14 +275,22 @@ var GlobalModeElement = (function () {
         function auth_account() {
             let account = callAPI('/api/v1/accounts/verify_credentials');
             let instance = callAPI('/api/v1/instance');
-            $.when(account, instance)
-            .then((data_acc, data_ins) => {
+            let custom_emojis = callAPI('/api/v1/custom_emojis');
+            $.when(account, instance, custom_emojis)
+            .then((data_acc, data_ins, data_emo) => {
                 let data = data_acc[0];
                 let account = parse_account(data);
+                let _emojis = data_emo[0] || [];
 
                 term.echo(`<span>Hello! ${account.parsed_display_name} @${account.acct_full}</span>`, {raw: true});
                 _ins.user = data;
                 _ins.info = data_ins[0];
+
+                emojis.add_custom_emojis(_emojis.map(e => ({
+                    'keyword': e.shortcode,
+                    'code': `:${e.shortcode}:`,
+                    'payload': e
+                })))
 
                 ins.save();
                 term.resume();

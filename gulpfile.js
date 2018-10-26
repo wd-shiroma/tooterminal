@@ -8,6 +8,11 @@ const concat      = require('gulp-concat');
 const babel       = require('gulp-babel');
 const runSequence = require('run-sequence');
 
+function handleError (error) {
+    console.log(error.toString());
+    this.emit('end');
+}
+
 gulp.task('browser-sync', function() {
     browserSync({
         server: {
@@ -36,6 +41,7 @@ gulp.task('minify-js', function() {
         ])
         .pipe(sourcemaps.init())
         .pipe(babel())
+        .on('error', handleError)
         .pipe(concat('main.js'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('./dist/js'));
