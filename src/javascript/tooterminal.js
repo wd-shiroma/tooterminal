@@ -10,6 +10,7 @@ let mode_instance;
 let mode_config_instance;
 let instance_name;
 let beep_buf;
+let emojis;
 
 let resize_term = function(term) {
     let _width = window.innerWidth - 36;
@@ -166,12 +167,34 @@ let exit_instance = function() {
     term_mode = mode_global;
     closeTootbox();
     ins.name('');
-}
+};
 
 let count_toot_size = () => {
     let msg_size = 500 - $('#toot_box').val().length - $('#toot_cw').val().length;
     $('#toot_size').css('color', msg_size < 0 ? '#F00' : '#bbb').text(msg_size);
-}
+};
+
+let update_emoji_picker = () => {
+    let conditions = {
+        category: $('#toot_emoji_category').val(),
+        tone: $('#toot_emoji_tone').val(),
+        keyword: $('#toot_emoji_keyword').val() || ''
+    };
+    let list_area = $('#toot_emoji_list');
+
+    let _emojis = emojis.find(conditions).filterd;
+
+    if (conditions.category === 'all' && conditions.keyword === '' || _emojis.length === 0) {
+        list_area.html('').hide();
+        return true;
+    }
+
+    let _html = _emojis.map(e => `<li class="emoji_picker">${e.code}</li>`).join('');
+    _html = parse_emojis(_html, emojis._custom_emojis.map(e => e.payload));
+    _html = parse_twemoji(_html);
+
+    list_area.html(_html).slideDown('fast');
+};
 
 function upload_img(imageFile) {
     let formData = new FormData();
@@ -217,6 +240,7 @@ $(function() {
     //mode_config_instance = new ModeManager(new InstanceConfigModeElement);
     ins = new InstanceManager();
     term_mode          = mode_global;
+    emojis = new Emojis();
     let greetings = "=== CiscoIOS風 マストドンクライアント ===\n"
         + " _____      _                 _          _ \n"
         + "|_   _|_ __| |_ ____ _ _ __ _(_) __  __ | |\n"
@@ -471,7 +495,7 @@ $(function() {
         if ($('#toot').is(':hidden')) {
             term.exec('toot');
         }
-        let elem = $(this);
+        let elem = $(this).children('img');
         let content = $('#toot_box').val();
         let pos = $('#toot_box').prop('selectionStart');
         let before = content.slice(0, pos);
@@ -482,13 +506,15 @@ $(function() {
         if (after.slice(0, 1) !== ' ') {
             after = ' ' + after;
         }
-        let inserted = before + elem.data('tag') + after;
+        let inserted = before + elem.attr('alt') + after;
         pos = inserted.length - after.length + 1;
         $('#toot_box')
             .val(inserted)
             .prop('selectionStart', pos)
             .prop('selectionEnd', pos)
             .focus();
+
+        setTimeout(count_toot_size, 10);
     })
     .on('click', '.emoji_summary', function(e) {
         let term = $.terminal.active();
@@ -556,6 +582,8 @@ $(function() {
             term.exec(command);
         }
     })
+    .on('change', '#toot_emoji_category, #toot_emoji_tone', update_emoji_picker)
+    .on('keyup', '#toot_emoji_keyword', update_emoji_picker)
     .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
             $('.img_background').trigger('click');

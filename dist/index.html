@@ -22,7 +22,7 @@
                 <div class="reply_head" id="reply_head"></div>
                 <div class="reply_body" id="reply_body"></div>
             </div>
-            <input type="text" id="toot_cw" placeholder="contents warning...">
+            <input type="text" id="toot_cw" placeholder="contents warning..." />
             <textarea id="toot_box" placeholder="toot message..." dropzone="copy"></textarea>
             <div class="commands">
                 <select id="toot_visibility">
@@ -33,10 +33,38 @@
                 </select>
                 <div id="toot_size">500</div>
                 <div class="nsfw">
-                    <input type="checkbox" id="nsfw">
+                    <input type="checkbox" id="nsfw" />
                     <label for="nsfw">NSFW</label>
                 </div>
                 <button id="toot_post">Toot!</button>
+            </div>
+            <div id="toot_utils">
+                <div id="emoji_picker">
+                    <div class="picker_commands">
+                        <select id="toot_emoji_category">
+                            <option value="all">✅</option>
+                            <option value="custom">🔧</option>
+                            <option value="smileys_n_people">😀</option>
+                            <option value="animals_n_nature">🐶</option>
+                            <option value="food_n_drink">🍎</option>
+                            <option value="travel_n_places">🚗</option>
+                            <option value="activities">⚾</option>
+                            <option value="objects">💡</option>
+                            <option value="symbols">📛</option>
+                            <option value="flags">🚩</option>
+                        </select>
+                        <select id="toot_emoji_tone">
+                            <option value="default">👨</option>
+                            <option value="light">👨🏻</option>
+                            <option value="medium-light">👨🏼</option>
+                            <option value="medium">👨🏽</option>
+                            <option value="medium-dark">👨🏾</option>
+                            <option value="dark">👨🏿</option>
+                        </select>
+                        <input type="text" id="toot_emoji_keyword" placeholder="emoji keywords" />
+                    </div>
+                    <div id="toot_emoji_list"></div>
+                </div>
             </div>
             <div class="toot_media" id="toot_media">
             </div>
