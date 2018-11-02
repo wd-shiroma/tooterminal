@@ -13,8 +13,12 @@ let beep_buf;
 let emojis;
 
 let resize_term = function(term) {
-    let _width = window.innerWidth - 36;
-    let _height = window.innerHeight - 36;
+    let _width = window.innerWidth;
+    let _height = window.innerHeight;
+    let is_narrow = _width > 350 && window.parent.screen.width > 450;
+    _width -= is_narrow ? 36 : 6;
+    _height -= is_narrow ? 36 : 20;
+
     _width = _width < 200 ? 200 : _width;
     term.resize(_width, _height);
 };

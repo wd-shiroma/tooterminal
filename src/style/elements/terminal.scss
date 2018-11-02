@@ -81,3 +81,36 @@ a {
     font-family: 'Source Code Pro', 'Courier New', Courier, monospace;
 }
 
+@media screen and (max-width: 350px) {
+    .tooterminal {
+        margin: 0px;
+    }
+    .terminal, .terminal .terminal-fill {
+        padding: 10px 3px;
+    }
+}
+
+@media screen and (max-device-width: 450px) {
+    body {
+        margin: 0px;
+    }
+    .tooterminal {
+        margin: 0px;
+    }
+    .terminal, .terminal .terminal-fill {
+        padding: 3px;
+        padding: 10px 3px;
+    }
+    .terminal, .cmd, .cmd *, .terminal-wrapper *, .terminal .terminal-output div div, .cmd .prompt {
+        font-size: 20px;
+        line-height: 22px;
+    }
+    .toot.window {
+        width: 90%;
+        font-size: 20px;
+        top: 6px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+    }
+}
