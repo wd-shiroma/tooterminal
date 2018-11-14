@@ -10,6 +10,10 @@
          url('../webfonts/TTF/SourceCodePro-Regular.ttf') format('truetype');
 }
 
+html {
+    overflow: hidden;
+}
+
 body {
     margin: 0px;
     padding: 0px;
@@ -34,6 +38,7 @@ a {
 
 .timeline {
     ime-mode: inactive;
+    overflow-x: none;
 }
 
 .img_background {
@@ -79,6 +84,7 @@ a {
 
 .terminal, .cmd, .cmd *, .terminal-wrapper *, .terminal .terminal-output div div, .cmd .prompt {
     font-family: 'Source Code Pro', 'Courier New', Courier, monospace;
+    overflow-x: none;
 }
 
 @media screen and (max-width: 350px) {

@@ -203,9 +203,11 @@
 
 .status_contents>p>span,.status_contents>span,.status_contents>div>p>span {
     width: 100%;
-    word-break: keep-all;
+    word-break: break-all;
     word-wrap: break-word;
     white-space: pre-wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .status_notify {
