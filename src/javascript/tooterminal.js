@@ -439,6 +439,9 @@ $(function() {
         else if (target.hasClass('fa-check-circle') || target.hasClass('fa-retweet')) {
             boost(status);
         }
+        else if (target.hasClass('tofu')) {
+            tofu_on_fire(status);
+        }
       /*+ $('<i />').addClass('fa fa-' + (contents.favourited ? 'star' : 'star-o')).attr('aria-hidden', 'true').prop('outerHTML') + ' '
         + $('<i />').addClass('fa fa-' + (contents.visibility === 'direct' || contents.visibility === 'private' ? 'times-circle-o'
                         : contents.reblogged ? 'check-circle-o' : 'retweet'))*/
@@ -788,6 +791,7 @@ function makeStatus(payload, optional) {
                  : is_mention ? payload.status
                  : payload;
     let date = new Date(contents.created_at);
+    let tofu = config.find('debug.tofu-on-fire');
 
     if (typeof optional !== 'object') {
         optional = {};
@@ -829,6 +833,7 @@ function makeStatus(payload, optional) {
     }
 
     let head = (is_reblog ? $.terminal.format("[[!i;;]reblogged by " + escapeHtml(payload.account.display_name) + ' @' + payload.account.acct + ']') + "<br />" : '') + '[ '
+        + (tofu === true ? '<span class="tofu actions">(□)</span> ' : '')
         + (typeof contents.account.display_name === 'undefined' ? '' : escapeHtml(contents.account.display_name))
         + ' ' + $.terminal.format('[[!;;]@' + contents.account.acct + ']') + ' '
         + $('<i />').addClass((contents.favourited ? 'fas' : 'far') + ' fa-star actions').attr('aria-hidden', 'true').prop('outerHTML') + ' '
@@ -1699,6 +1704,28 @@ function boost(status) {
         $(head_fa[1]).removeClass().addClass('actions fas fa-' + (isReb ? 'check-circle' : 'retweet'));
         console.log(jqxhr);
     });
+}
+
+function tofu_on_fire(status) {
+    let burned_status = $('<div>')
+        .append($('<div>')
+            .addClass('status_table')
+            .append($('<div>')
+                .addClass('status_cell status_avatar')
+                .append($('<img>')
+                    .addClass('avatar_static avatar_animate')
+                    .attr('src', 'https://twemoji.maxcdn.com/2/72x72/1f525.png')))
+            .append($('<div>')
+                .addClass('status_cell status_main')
+                .append($('<div>')
+                    .addClass('status_head')
+                    .append($('<span>')
+                        .html(twemoji.parse('[ 📛 🔥🔥🔥 🔥🔥🔥@🔥🔥 🔥🔥🔥 🔥🔥-🔥-🔥 🔥:🔥:🔥.🔥 ]'))))
+                .append($('<div>')
+                    .addClass('status_contents')
+                    .append($('<p>')
+                        .html(twemoji.parse('<span>🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥</span>'))))));
+    $(status).html(burned_status.html());
 }
 
 function tab(arg1, arg2, indent){

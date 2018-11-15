@@ -302,6 +302,12 @@ var ConfigurationModeElement = (function () {
                         "name": "development",
                         "description": "開発者モードを有効にします。",
                         "execute": this.set_true
+                    },
+                    {
+                        "type": "command",
+                        "name": "tofu-on-fire",
+                        "description": "豆腐オンファイア",
+                        "execute": this.set_true
                     }
                 ]
             }, {
@@ -478,6 +484,12 @@ var ConfigurationModeElement = (function () {
                                 "type": "command",
                                 "name": "development",
                                 "description": "開発者モードを無効にします。",
+                                "execute": this.set_default
+                            },
+                            {
+                                "type": "command",
+                                "name": "tofu-on-fire",
+                                "description": "豆腐オンファイア",
                                 "execute": this.set_default
                             }
                         ]
