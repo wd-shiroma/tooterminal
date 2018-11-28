@@ -85,6 +85,9 @@ function push_monitor(stream, hashtag, list_id) {
     else if (stream === 'list') {
         url += '&stream=list&list=' + list_id;
     }
+    else if (stream === 'direct') {
+        url += '&stream=direct';
+    }
     else {
         term.error('Monitor stream type error.');
         return false;

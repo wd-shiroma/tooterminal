@@ -266,6 +266,20 @@ var ConfigurationModeElement = (function () {
                                 "execute": this.set_command
                             }
                         ]
+                    }, {
+                        "type": "command",
+                        "name": "request-timeout",
+                        "description": "リクエストに対するタイムアウト時間を設定します。",
+                        "children": [
+                            {
+                                "type": "number",
+                                "name": "number",
+                                "max": 300,
+                                "min": 1,
+                                "description": "タイムアウト時間(秒)",
+                                "execute": this.set_number
+                            }
+                        ]
                     }/*, { そのうち対応するよ
                         "type": "command",
                         "name": "mode",
@@ -545,8 +559,17 @@ var ConfigurationModeElement = (function () {
         return config.erase(nodes);
     };
     ConfigurationModeElement.prototype.set_number = function (term, analyzer) {
-        let limit = parseInt(analyzer.paramaters.number);
-        return config.write(['instances', 'terminal', 'length'], limit);
+        let index = analyzer.line_parsed.length - 1;
+        let meta = analyzer.line_parsed[index];
+
+        console.log(meta);
+
+        let nodes = [];
+        for (let i = 0; i < index; i++) {
+            nodes.push(analyzer.line_parsed[i].name);
+        }
+
+        return config.write(nodes, meta.param);
     };
     ConfigurationModeElement.prototype.set_true = function (term, analyzer) {
         if (analyzer.line_parsed[0].name === 'no') {
