@@ -31,6 +31,19 @@ let InstanceModeElement = (function () {
                                         "execute": this.show_statuses
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "max_date",
+                                "optional": "max_date",
+                                "description": '指定日時以前のトゥートを表示(SnowFlake準拠)',
+                                "children": [
+                                    {
+                                        "type": "paramater",
+                                        "name": "datetime",
+                                        "description": '日付時刻',
+                                        "execute": this.show_statuses
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -45,6 +58,37 @@ let InstanceModeElement = (function () {
                         "type": "paramater",
                         "name": "status_id",
                         "description": 'トゥートID',
+                        "execute": this.show_statuses,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "limit",
+                                "optional": "limit",
+                                "description": '取得トゥート数',
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "post_limits",
+                                        "min": 1,
+                                        "max": 40,
+                                        "description": 'トゥート数(初期値20)',
+                                        "execute": this.show_statuses
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "type": "command",
+                "name": "max_date",
+                "optional": "max_date",
+                "description": '指定日時以前のトゥートを表示(SnowFlake準拠)',
+                "children": [
+                    {
+                        "type": "paramater",
+                        "name": "datetime",
+                        "description": '日付時刻',
                         "execute": this.show_statuses,
                         "children": [
                             {
@@ -543,7 +587,7 @@ let InstanceModeElement = (function () {
                                 "name": "direct",
                                 "description": 'ダイレクトメッセージ',
                                 "execute": this.show_statuses,
-                                "children": this._sh_stats_opt
+                                "children": this._sh_stats_opt,
                             }
                         ]
                     }, {
@@ -1708,6 +1752,17 @@ let InstanceModeElement = (function () {
         if (analyzer.optional.max_id) {
             params.max_id = analyzer.paramaters.status_id;
         }
+        else if (analyzer.optional.max_date) {
+            try {
+                let _date = new Date(analyzer.paramaters.datetime);
+                params.max_id = _date.snowflake();
+            }
+            catch {
+                term.error('Invalid datetime format.');
+                return;
+            }
+        }
+
 
         if (typeof path === 'undefined') {
             term.error('show status error.');

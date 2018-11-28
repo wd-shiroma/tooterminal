@@ -54,3 +54,8 @@ Date.prototype.term_date = function() {
     let _date = new Date();
     return `${_date.getMonthName()} ${_date.getDate()} ${_date.getTimeFormat(true)}`;
 };
+
+Date.prototype.snowflake = function(randmize = false) {
+    let flake = this.valueOf() * 65535 + parseInt(randmize ? Math.random() * 65536 : 0);
+    return flake.toString();
+};
