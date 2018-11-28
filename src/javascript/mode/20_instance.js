@@ -538,6 +538,12 @@ let InstanceModeElement = (function () {
                                         "children": this._sh_stats_opt
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "direct",
+                                "description": 'ダイレクトメッセージ',
+                                "execute": this.show_statuses,
+                                "children": this._sh_stats_opt
                             }
                         ]
                     }, {
@@ -723,6 +729,11 @@ let InstanceModeElement = (function () {
                                         "execute": this.terminal_monitor,
                                     }
                                 ]
+                            }, {
+                                "type": "command",
+                                "name": "direct",
+                                "description": 'ダイレクトメッセージをモニターします。',
+                                "execute": this.terminal_monitor,
                             }
                         ]
                     }, {

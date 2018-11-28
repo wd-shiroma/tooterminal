@@ -1427,6 +1427,8 @@ function callAPI(path, opts = {}) {
     let def;
     let _ins = typeof opts.instance_name === 'undefined'
             ? ins.get() : ins.get(opts.instance_name);
+    let timeout = config.find('instances.request-timeout') || 10;
+    timeout *= 1000;
     if (typeof path === 'undefined') {
         def = new $.Deferred;
         def.reject('Undefined path');
@@ -1448,7 +1450,7 @@ function callAPI(path, opts = {}) {
             },
             data: typeof opts.data ? opts.data : '',
             dataType: 'json',
-            timeout: 10000
+            timeout: timeout
         })
         .then((data, status, jqxhr) => {
             return jqxhr;
