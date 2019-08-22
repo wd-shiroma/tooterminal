@@ -50,5 +50,8 @@
     "run-sequence": "^2.2.1",
     "source-code-pro": "^2.30.1",
     "twemoji": "^11.0.1"
+  },
+  "dependencies": {
+    "lodash.template": "^4.5.0"
   }
 }
