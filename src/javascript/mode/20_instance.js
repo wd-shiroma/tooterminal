@@ -1704,7 +1704,7 @@ let InstanceModeElement = (function () {
         let api;
         let path;
         let params;
-
+        let is_public = false;
 
         let limit = ( analyzer.optional.limit && analyzer.paramaters.post_limits > 0 )
                 ? analyzer.paramaters.post_limits
@@ -1724,6 +1724,7 @@ let InstanceModeElement = (function () {
             else if (type === 'list') {
                 path += '/' + analyzer.paramaters.list_id;
             }
+            is_public = (type === 'public' || type === 'local' || type === 'tag');
         }
         else if (analyzer.line_parsed[1].name === 'user'){
             let userid = (analyzer.line_parsed.length === 2 || analyzer.line_parsed[2].name === 'self')
@@ -1745,8 +1746,16 @@ let InstanceModeElement = (function () {
             }
             else {
                 term.error('no login.');
+                term.resume();
                 return;
             }
+            is_public = true;
+        }
+
+        if ((analyzer.optional.max_id || analyzer.optional.max_date) && !is_public) {
+            term.error('max_id can be specified in only public timeline.');
+            term.resume();
+            return;
         }
 
         if (analyzer.optional.max_id) {
@@ -1759,6 +1768,7 @@ let InstanceModeElement = (function () {
             }
             catch {
                 term.error('Invalid datetime format.');
+                term.resume();
                 return;
             }
         }
@@ -1766,6 +1776,7 @@ let InstanceModeElement = (function () {
 
         if (typeof path === 'undefined') {
             term.error('show status error.');
+            term.resume();
             return;
         }
         callMore(path, (data) => {

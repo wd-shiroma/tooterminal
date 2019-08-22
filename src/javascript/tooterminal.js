@@ -817,7 +817,7 @@ function makeStatus(payload, optional) {
 
     // ヘッダー部作るよ
     let app;
-    if (contents.application === null) {
+    if (!contents.application) {
         app = '';
     }
     else if(!contents.application.website) {
@@ -1576,6 +1576,7 @@ function callMore(path, cb_mkmsg, optional = {}) {
                     }
                     else if (statuses.length === 0){
                         moreterm.pop();
+                        return;
                     }
                     if (!(statuses.length > 0)) {
                         callAPI(path, {
@@ -1856,6 +1857,7 @@ function more(term, lines, optional = {}){
         }
     });
 }
+
 function begin(term, lines, reverse, search){
     let i = 0;
     //console.log(search);

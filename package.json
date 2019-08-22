@@ -37,7 +37,7 @@
     "browser-sync": "^2.24.7",
     "common-js": "^0.3.8",
     "gh-pages": "^1.2.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-clean-css": "^3.10.0",
     "gulp-concat": "^2.6.1",
