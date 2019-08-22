@@ -244,20 +244,23 @@ function push_monitor(stream, hashtag, list_id) {
     };
 
     let onclose = (e, t, a) => {
-        term.echo(stream + " Streaming closed.");
+        let _interval = config.find(['instances', 'terminal', 'interval']);
         if (e.code === 1006) {
-            term.error('Abnormal error. reconnecting...');
-            setTimeout(connect_ws, 10000);
+            term.error('Abnormal close.');
         }
+        if (ws.stream.length > 0) {
+            term.echo(stream + " Streaming closed. reconnecting...");
+            setTimeout(connect_ws, (_interval || 10) * 1000);
+        }
+        else {
+            term.echo(stream + " Streaming closed.");
+        }
+
     };
 
     let onerror = (e, t, a) => {
         term.error(stream + ' Streaming error. closed.');
         term_error('streaming error', e);
-        if (e.code === 1006) {
-            term.error('Abnormal error. reconnecting...');
-            setTimeout(connect_ws, 10000);
-        }
     };
 
     let connect_ws = function() {

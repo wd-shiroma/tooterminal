@@ -6,7 +6,7 @@ const browserSync = require('browser-sync');
 const cleanCSS    = require('gulp-clean-css');
 const concat      = require('gulp-concat');
 const babel       = require('gulp-babel');
-const runSequence = require('run-sequence');
+//const runSequence = require('run-sequencdde');
 
 function handleError (error) {
     console.log(error.toString());
@@ -85,26 +85,22 @@ gulp.task('webfonts', function() {
         .pipe(gulp.dest('./dist/webfonts'));
 });
 
-gulp.task('scss-watch', ['minify-scss','browser-sync'], function(){
-    gulp.watch("./dist/*.html",['bs-reload']);
-    gulp.watch(["./src/style/*.scss", "./src/style/*/*.scss"], function() {
-        return runSequence(
-            'minify-scss',
-            'bs-reload'
-        );
-    });
-    gulp.watch(["./src/javascript/*.js", "./src/javascript/*/*.js"],function() {
-        return runSequence(
-            'minify-js',
-            'bs-reload'
-        );
-    });
+gulp.task('watch', function() {
+    gulp.watch(
+        "./dist/*.html",
+        gulp.parallel('bs-reload', 'watch')
+    );
+    gulp.watch(
+        ["./src/style/*.scss", "./src/style/*/*.scss"],
+        gulp.series('minify-scss', gulp.parallel('bs-reload', 'watch'))
+    );
+    gulp.watch(
+        ["./src/javascript/*.js", "./src/javascript/*/*.js"],
+        gulp.series('minify-js', gulp.parallel('bs-reload', 'watch'))
+    );
 });
 
-gulp.task('default', function() {
-    return runSequence(
-        ['build'],
-        ['scss-watch','browser-sync']
-    )
-});
-gulp.task('build',['minify-scss', 'minify-js', 'webfonts']);
+gulp.task('scss-watch', gulp.series('minify-scss',gulp.parallel('browser-sync', 'watch')));
+
+gulp.task('build', gulp.parallel('minify-scss', 'minify-js', 'webfonts'));
+gulp.task('default', gulp.series('build', 'scss-watch'));

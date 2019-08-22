@@ -194,6 +194,20 @@ var ConfigurationModeElement = (function () {
                                 ]
                             }, {
                                 "type": "command",
+                                "name": "interval",
+                                "description": "接続断時の再試行間隔を設定します",
+                                "children": [
+                                    {
+                                        "type": "number",
+                                        "name": "number",
+                                        "max": 60,
+                                        "min": 1,
+                                        "description": "時間(初期値10sec)",
+                                        "execute": this.set_number
+                                    }
+                                ]
+                            }, {
+                                "type": "command",
                                 "name": "auto",
                                 "description": "ログイン後、terminal monitorを自動発行します。",
                                 "execute": this.set_true

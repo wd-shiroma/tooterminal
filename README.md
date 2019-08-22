@@ -26,11 +26,8 @@ This client's text is written by Japanese. If you hope any another language, ple
 
 多分やる
 
-- メタフィールド表示
 - 未認証ストリーミング再生
 - 設定エクスポート/インポート機能
-- hoverのCSS追加とか
-- 簡易モバイル対応
 
 issueが上がったらやるかも
 
