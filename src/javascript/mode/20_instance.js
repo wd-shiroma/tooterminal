@@ -1793,14 +1793,23 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.show_status_id = function (term, analyzer) {
         term.pause();
         let sid = analyzer.paramaters.status_id;
+        let is_version = ins.ck_version('3.0.0');
+        let _opt = {type: 'GET'};
+
+        if (is_version.compared >= 0) {
+            _opt = null;
+        }
         $.when(
             callAPI('/api/v1/statuses/' + sid, { type: 'GET' }),
             callAPI('/api/v1/statuses/' + sid + '/context', { type: 'GET' }),
-            callAPI('/api/v1/statuses/' + sid + '/card', { type: 'GET' })
+            callAPI('/api/v1/statuses/' + sid + '/card', _opt)
         ).then((res_status, res_context, res_card) => {
             let status = res_status[0];
             let context = res_context[0];
-            let card = res_card[0];
+            let card = Array.isArray(res_card) ? res_card[0] : status.card;
+            if (!card) {
+                card = {};
+            }
 
             let s;
             for (let i = 0; i < context.ancestors.length; i++) {
