@@ -439,17 +439,17 @@ let InstanceManager = (function () {
         }
 
         let vers;
-        if (!this._ins.info.hasOwnProperty('version')){
-            result.is_checked = true;
-            result.type = 'mastodon';
-            result.compared = -1;
-            return result;
-        }
-        else if (vers = this._ins.info.version.match(/^Pleroma (\S+)/)) {
+        if (vers = this._ins.info.version.match(/^Pleroma (\S+)/)) {
             result.is_checked = true;
             result.type = 'pleroma';
             result.version = vers[1];
             result.compared = (vers[1] === version ? 0 : -1);
+            return result;
+        }
+        else if (!this._ins.info.hasOwnProperty('version')){
+            result.is_checked = true;
+            result.type = 'mastodon';
+            result.compared = -1;
             return result;
         }
         else if (vers = this._ins.info.version.match(/(\d+)\.(\d+)\.(\d+)/)) {
