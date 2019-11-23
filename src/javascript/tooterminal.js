@@ -1424,6 +1424,9 @@ function reduce_output() {
 }
 
 function callAPI(path, opts = {}) {
+    if (opts === null) {
+        return (new $.Deferred).resolve(null);
+    }
     let def;
     let _ins = typeof opts.instance_name === 'undefined'
             ? ins.get() : ins.get(opts.instance_name);
