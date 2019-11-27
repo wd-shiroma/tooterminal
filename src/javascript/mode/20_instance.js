@@ -1431,7 +1431,8 @@ let InstanceModeElement = (function () {
             echo_user(ins.get().user.id);
         }
         else if (analyzer.line_parsed[2].name === 'name'){
-            callAPI('/api/v1/search', {
+            let _api = ins.ck_version('3.0.0') < 0 ? '/api/v1/search' : '/api/v2/search';
+            callAPI(_api, {
                 type: 'GET',
                 data: {
                     q: analyzer.paramaters.account,
@@ -1454,7 +1455,8 @@ let InstanceModeElement = (function () {
     InstanceModeElement.prototype.search_query = function (term, analyzer) {
         term.pause();
         if (analyzer.line_parsed[1].name === 'local') {
-            callAPI('/api/v1/search', {
+            let _api = ins.ck_version('3.0.0') < 0 ? '/api/v1/search' : '/api/v2/search';
+            callAPI(_api, {
                 type: 'GET',
                 data: {
                     q: analyzer.paramaters['query']
