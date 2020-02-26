@@ -11,6 +11,7 @@ let mode_config_instance;
 let instance_name;
 let beep_buf;
 let emojis;
+let context;
 
 let resize_term = function(term) {
     let _width = window.innerWidth;
@@ -24,6 +25,31 @@ let resize_term = function(term) {
 };
 
 let enterCommand = (command, term) => {
+    if (!context) {
+        context = new (window.AudioContext || window.webkitAudioContext);
+        let src_url = './sounds/boop.ogg';
+        let req = new XMLHttpRequest();
+        req.responseType = 'arraybuffer';
+        req.onreadystatechange = function() {
+            if (req.readyState === 4) {
+                if (req.status === 0 || req.status === 200) {
+                    if (req.response) {
+                        context.decodeAudioData(req.response, function(buffer) {
+                            beep_buf = buffer;
+                        });
+                    }
+                    else {
+                        $.terminal.active().error('Error: ポコポコできません');
+                        console.log('error');
+                        beep_buf = undefined;
+                    }
+                }
+            }
+        };
+        req.open('GET', src_url, true);
+        req.send('');
+    }
+
     command = command.trim();
     reduce_output();
     resize_term(term);
@@ -63,28 +89,6 @@ let initConfig = (term) => {
         console.log('Initialization: read default config')
         config = defconf;
     }*/
-    let src_url = './sounds/boop.ogg';
-    let req = new XMLHttpRequest();
-    req.responseType = 'arraybuffer';
-    req.onreadystatechange = function() {
-        if (req.readyState === 4) {
-            if (req.status === 0 || req.status === 200) {
-                if (req.response) {
-                    context.decodeAudioData(req.response, function(buffer) {
-                        beep_buf = buffer;
-                    });
-                }
-                else {
-                    $.terminal.active().error('Error: ポコポコできません');
-                    console.log('error');
-                    beep_buf = undefined;
-                }
-            }
-        }
-    };
-    req.open('GET', src_url, true);
-    req.send('')
-
     config = new ConfigManager(defconf, st_conf ? JSON.parse(st_conf) : {});
     url_params = {};
 
