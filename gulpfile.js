@@ -32,7 +32,7 @@ gulp.task('minify-js', function() {
         "./node_modules/jquery/dist/jquery.js",
         "./node_modules/jquery.mousewheel/jquery.mousewheel.js",
         "./node_modules/autosize/dist/autosize.js",
-        "./node_modules/twemoji/2/twemoji.js",
+        "./node_modules/twemoji/dist/twemoji.js",
         "./src/javascript/lib/*.js",
         "./src/javascript/mode/*.js",
         "./config/client_info.js",
