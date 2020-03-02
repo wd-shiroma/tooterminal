@@ -273,18 +273,27 @@ var GlobalModeElement = (function () {
     };
     GlobalModeElement.prototype.entry_instance = function (term, analyzer) {
         function auth_account() {
-            let account = callAPI('/api/v1/accounts/verify_credentials');
-            let instance = callAPI('/api/v1/instance');
-            let custom_emojis = callAPI('/api/v1/custom_emojis');
-            $.when(account, instance, custom_emojis)
-            .then((data_acc, data_ins, data_emo) => {
-                let data = data_acc[0];
-                let account = parse_account(data);
-                let _emojis = data_emo[0] || [];
+            let is_ver = ins.ck_version('3.1.0')
+            Promise.all([
+                callAPI('/api/v1/instance'),
+                callAPI('/api/v1/accounts/verify_credentials'),
+                callAPI('/api/v1/custom_emojis'),
+                is_ver.type === 'mastodon' && is_ver.compared <= 0 ? callAPI('/api/v1/announcements') : null
+            ])
+            .then((response_all) => {
+                let instance = response_all[0];
+                let account = parse_account(response_all[1]);
+                let _emojis = response_all[2] || [];
+                let announces = response_all[3] || [];
 
                 term.echo(`<span>Hello! ${account.parsed_display_name} @${account.acct_full}</span>`, {raw: true});
-                _ins.user = data;
-                _ins.info = data_ins[0];
+                _ins.user = response_all[1];
+                _ins.info = instance;
+
+                if (announces.length) {
+                    term.echo('announcements:')
+                    term.echo(make_announcements(announces), {raw: true})
+                }
 
                 emojis.add_custom_emojis(_emojis.map(e => ({
                     'keyword': e.shortcode,

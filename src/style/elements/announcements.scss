@@ -1,0 +1,10 @@
+.announcements {
+    span, span>p, i {
+        font-weight: bold;
+        color: green;
+    }
+    .dismiss:hover {
+        color: lighten($color: green, $amount: 10);
+        cursor: pointer;
+    }
+}
