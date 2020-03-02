@@ -620,6 +620,9 @@ $(function() {
             term.exec(command);
         }
     })
+    .on('click', '.announcements .dismiss', (e) => {
+        console.log($(e.target).parents('.announcements'))
+    })
     .on('change', '#toot_emoji_category, #toot_emoji_tone', update_emoji_picker)
     .on('keyup', '#toot_emoji_keyword', update_emoji_picker)
     .on('keydown', '.img_background', (event) => {
@@ -1221,6 +1224,24 @@ function make_notification(payload, notifies) {
     }
     result.html = msg;
     return result;
+}
+
+function make_announcements(anno) {
+    let html = $('<div/>')
+        .addClass('announcements')
+    for (let i in anno) {
+        //if (!anno[i].read)
+            html.append($('<div/>')
+                .append($('<span/>')
+                    .addClass('updated_at')
+                    .text(`[${anno[i].updated_at}] `))
+                .append($('<span/>')
+                    .addClass('content')
+                    .html(anno[i].content)))
+                //.append($('<i/>')
+                //    .addClass('dismiss fas fa-trash-alt')))
+    }
+    return html.prop('outerHTML')
 }
 
 function parse_emojis(cont, emojis = []) {
