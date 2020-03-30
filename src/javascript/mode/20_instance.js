@@ -1459,7 +1459,8 @@ let InstanceModeElement = (function () {
             callAPI(_api, {
                 type: 'GET',
                 data: {
-                    q: analyzer.paramaters['query']
+                    q: analyzer.paramaters['query'],
+                    resolve: true
                 }
             }).then((data, status, jqxhr) => {
                 let max_len = 15;
@@ -1801,17 +1802,16 @@ let InstanceModeElement = (function () {
         if (is_version.compared >= 0) {
             _opt = null;
         }
-        $.when(
+        Promise.all([
             callAPI('/api/v1/statuses/' + sid, { type: 'GET' }),
             callAPI('/api/v1/statuses/' + sid + '/context', { type: 'GET' }),
-            callAPI('/api/v1/statuses/' + sid + '/card', _opt)
-        ).then((res_status, res_context, res_card) => {
-            let status = res_status[0];
-            let context = res_context[0];
-            let card = Array.isArray(res_card) ? res_card[0] : status.card;
-            if (!card) {
-                card = {};
-            }
+            is_version.type === 'mastodon' && is_version.compared >= 0 ? callAPI('/api/v1/statuses/' + sid + '/card', _opt) : null
+        ])
+        //.then((res_status, res_context, res_card) => {
+        .then((response_all) => {
+            let status = response_all[0] || {};
+            let context = response_all[1] || {};
+            let card = response_all[2] || status.card || [];
 
             let s;
             for (let i = 0; i < context.ancestors.length; i++) {
