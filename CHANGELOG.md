@@ -3,6 +3,7 @@
 ## v2.3.6 (2020-03-30)
 
 ### 不具合修正
+- Mastodon v3.0.0 以降で ログインできない不具合を修正
 - Mastodon v3.0.0 以降で `show status id` を打つと404が出る不具合を修正
 - Mastodon v3.0.0 以降で `search local {remote_url}` を打つとトゥートが取得できない不具合を修正
 

@@ -344,20 +344,27 @@ var GlobalModeElement = (function () {
         }
         else if (_ins.hasOwnProperty('auth_code')){
             term.pause();
-            $.ajax({
-                url: 'https://' + _ins.domain + '/oauth/token',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    grant_type: 'authorization_code',
-                    client_id: _ins.client_id,
-                    client_secret: _ins.client_secret,
-                    code: _ins.auth_code,
-                    redirect_uri: _ins.application.uris
-                }
-            }).then((data, status, jqxhr) => {
-                _ins.access_token = data.access_token;
-                _ins.token_type = data.token_type;
+            Promise.all([
+                $.ajax({
+                    url: 'https://' + _ins.domain + '/oauth/token',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        grant_type: 'authorization_code',
+                        client_id: _ins.client_id,
+                        client_secret: _ins.client_secret,
+                        code: _ins.auth_code,
+                        redirect_uri: _ins.application.uris
+                    }
+                }),
+                $.ajax({
+                    url: 'https://' + _ins.domain + '/api/v1/instance',
+                    type: 'GET'
+                })
+            ]).then((data) => {
+                _ins.access_token = data[0].access_token;
+                _ins.token_type = data[0].token_type;
+                _ins.info = data[1] || {};
                 delete(_ins.auth_code);
                 ins.save();
                 return auth_account();
