@@ -198,7 +198,7 @@ var GlobalModeElement = (function () {
             'http://terminal.jcubic.pl',
             'autosize (4.0.2)',
             'http://www.jacklmoore.com/autosize',
-            'twemoji(v11.0.1)',
+            'twemoji(v13.0.0)',
             'https://twitter.github.io/twemoji/',
             '',
             'License info:',

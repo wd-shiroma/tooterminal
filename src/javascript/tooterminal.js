@@ -633,26 +633,26 @@ $(function() {
     .on('keyup', (event) => {
         if (event.keyCode === 18) return false;
     })
-    .on('click', '.status_enquete span', function(e) {
-        let enquete = $(e.target).parent();
-        let index = $(enquete).children().index(e.target);
-        let status = enquete.parents('.status');
-        let time_limit = Date.now() - Date.parse($(enquete).data('created'));
+    .on('click', '.status_poll>span', function(e) {
+        let poll = $(e.target).parents('.status_poll');
+        let index = $(poll).children().index(e.target);
+        let expires = Date.parse(poll.data('expires')) - Date.now();
         let term = $.terminal.active();
 
-        if (time_limit > 30000) {
-            term.error('The vote has expired.');
+        if (expires < 0) {
+            term.error('The poll has expired.');
             return;
         }
 
-        let api = '/api/v1/votes/' + $(status).data('sid');
+        let api = '/api/v1/polls/' + poll.data('pollid') + '/votes';
         callAPI(api, {
             type: 'POST',
-            data: { item_index: index }
+            data: { choices: [ index.toString() ] }
         })
         .then((data, status, jqxhr) => {
-            if (data.valid) {
+            if (data.voted) {
                 term.echo('Vote: ' + $(e.target).text());
+                $(poll).html(make_poll(data));
             }
             else {
                 term.error(data.message);
@@ -941,56 +941,20 @@ function makeStatus(payload, optional) {
 
     // 本文部作るよ(ここから)
     let content;
-    let enquete;
 
-    // ニコフレアンケート機能だよ
-    if (typeof contents.enquete !== 'undefined' && contents.enquete !== null) {
-        enquete = JSON.parse(contents.enquete);
-        question = enquete.question;
-        if ($(question).find('span.fa-spin').length) {
-            question = $('<p />').append($(question).find('span').text()).prop('outerHTML');
-        }
-        question = question.replace(
-                /^(?:<p>)?(.*?)(?:<\/p>)?$/g, '<p><span>$1' +
-                (enquete.type === 'enquete' ? '(回答枠)' : '(結果)')
-                + '</span></p>')
-        content = $('<div />').append(question);
-        let enquete_items = $('<div />')
-                .addClass('status_' + enquete.type)
-                .attr('data-created', contents.created_at);
-        for (let i = 0; i < enquete.items.length; i++) {
-            if (enquete.type === 'enquete') {
-                enquete_items.append($('<span />')
-                    .html(enquete.items[i]));
-            }
-            else {
-                enquete_items
-                    .append($('<span />')
-                        .append($('<span />')
-                            .addClass('progress ratio')
-                            .text(enquete.ratios[i] + '%'))
-                        .append($('<span />')
-                            .addClass('progress item')
-                            .text(enquete.items[i]))
-                        .append($('<span />')
-                            .addClass('proceed')
-                            .css('width', enquete.ratios[i].toString() + '%')))
-            }
-        }
-        content = content.append(enquete_items).prop('outerHTML');
+    content = contents.content;
+    if (content.match(/^<.+>$/)) {
+        content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
     }
-    // その他の機能だよ
     else {
-        content = contents.content;
-        if (content.match(/^<.+>$/)) {
-            content = content.replace(/<p>(.*?)<\/p>/g, '<p><span>$1</span></p>');
-        }
-        else {
-            content = $('<p />').append($('<span />').html(content)).prop('outerHTML');
-        }
-        if ($(content).find('span.fa-spin').length) {
-            content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
-        }
+        content = $('<p />').append($('<span />').html(content)).prop('outerHTML');
+    }
+    if ($(content).find('span.fa-spin').length) {
+        content = $('<p />').append($(content).find('span').text()).prop('outerHTML');
+    }
+    // 投票機能だよ
+    if (typeof contents.poll !== 'undefined' && contents.poll !== null) {
+        content += make_poll(contents.poll, contents.account)
     }
 
 /*
@@ -1237,11 +1201,34 @@ function make_announcements(anno) {
                     .text(`[${anno[i].updated_at}] `))
                 .append($('<span/>')
                     .addClass('content')
-                    .html(anno[i].content)))
+                    .html(parse_emojis(anno[i].content, anno[i].emojis))))
                 //.append($('<i/>')
                 //    .addClass('dismiss fas fa-trash-alt')))
     }
     return html.prop('outerHTML')
+}
+
+function make_poll(poll, account = {}) {
+    let ratio;
+    let poll_options = $('<div />')
+            .addClass('status_poll' + (poll.voted || poll.expired || ins._ins.user.id === account.id ? '_result' : ''))
+            .attr('data-expires', poll.expires_at)
+            .attr('data-pollid', poll.id);
+    for (let i = 0; i < poll.options.length; i++) {
+        ratio = parseInt(poll.options[i].votes_count / poll.voters_count * 100) || 0;
+        poll_options
+            .append($('<span />')
+                .append($('<span />')
+                    .addClass('progress ratio')
+                    .text(ratio + '%'))
+                .append($('<span />')
+                    .addClass('progress item')
+                    .text(parse_emojis(poll.options[i].title, poll.emojis)))
+                .append($('<span />')
+                    .addClass('proceed')
+                    .css('width', ratio + '%')));
+    }
+    return $('<div />').append(poll_options).prop('outerHTML');
 }
 
 function parse_emojis(cont, emojis = []) {
