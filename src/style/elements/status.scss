@@ -229,19 +229,28 @@
     float: left;
 }
 
-.status_enquete {
-    span {
+.status_poll {
+    margin: 0 0 0.5em 0;
+    &>span {
         border-radius: 5px;
         border: 1px solid #353535;
         font-family: monospace;
         display: inline-block;
-        margin: 0 0.5em 0 0;
+        margin: 0 0.5em 0.5em 0;
         width: 15em;
         height: 1.5em;
-        padding: 0 0.5em;
+        padding: 0;
         vertical-align: middle;
 
+        .ratio, .proceed {
+            display: none !important;
+        }
+        .ratio, .progress {
+            padding: 0 0.5em;
+        }
+    
         &:hover {
+            cursor: pointer;
             background-color: #113;
         }
         &:active {
@@ -250,22 +259,28 @@
     }
 }
 
-.status_enquete_result {
+.status_poll_result {
+    margin: 0 0 0.5em 0;
     &>span {
-        margin: 0 0.5em 0 0;
-        width: 16em;
+        background-color: none;
+        margin: 0 0.5em 0.5em 0;
+        width: 15em;
+        height: 1.5em;
         border-radius: 5px;
         border: 1px solid #353535;
         position: relative;
-        padding: 1px;
+        padding: 0px;
         .item{
-            display: inline;
+            display: inline-block;
+            background-color: none !important;
         }
         .ratio{
             display: none !important;
         }
         &:hover .item{
             display: none;
+            background-color: none;
+            background-color: none !important;
         }
         &:hover .ratio{
             display: inline !important;
