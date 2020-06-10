@@ -1201,7 +1201,7 @@ function make_announcements(anno) {
                     .text(`[${anno[i].updated_at}] `))
                 .append($('<span/>')
                     .addClass('content')
-                    .html(anno[i].content)))
+                    .html(parse_emojis(anno[i].content, anno[i].emojis))))
                 //.append($('<i/>')
                 //    .addClass('dismiss fas fa-trash-alt')))
     }
