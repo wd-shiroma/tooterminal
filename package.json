@@ -1,6 +1,6 @@
 {
   "name": "tooterminal",
-  "version": "2.0.0",
+  "version": "2.3.8",
   "description": "Mastodon web client like IOS",
   "main": "main.js",
   "repository": "https://github.com/wd-shiroma/tooterminal.git",
