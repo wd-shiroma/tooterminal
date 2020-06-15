@@ -325,6 +325,13 @@ $(function() {
             upload_img(imageFile);
         }
     });
+    $('#toot_poll').on('click', '.poll_append', function(e) {
+        let choices = $(e.target).parent().prev()
+        choices.append(poll_choices_template())
+    })
+    .on('click', '.poll_remove', function(e) {
+        $(e.target).parent().remove()
+    });
     $('#toot_box').on('dragenter', (e) => {
         e.preventDefault();
         $('#toot_box').addClass('toot_imghover');
@@ -347,9 +354,8 @@ $(function() {
             }
             upload_img(files[i]);
         }
-    });
+    }).on('keyup', update_toot_status);
     $('#toot_cw').on('keyup', update_toot_status);
-    $('#toot_box').on('keyup', update_toot_status);
     $('#toot_post').on('click', () => {
         post_status();
     });
@@ -380,7 +386,7 @@ $(function() {
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     });
-    $(document)
+    $('#timeline')
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     })
@@ -635,7 +641,6 @@ $(function() {
     })
     .on('click', '.status_poll>span', function(e) {
         let poll = $(e.target).parents('.status_poll');
-        let index = $(poll).children().index(e.target);
         let expires = Date.parse(poll.data('expires')) - Date.now();
         let term = $.terminal.active();
 
@@ -647,7 +652,7 @@ $(function() {
         let api = '/api/v1/polls/' + poll.data('pollid') + '/votes';
         callAPI(api, {
             type: 'POST',
-            data: { choices: [ index.toString() ] }
+            data: { choices: [ $(e.target).data('choices') ] }
         })
         .then((data, status, jqxhr) => {
             if (data.voted) {
@@ -1218,6 +1223,7 @@ function make_poll(poll, account = {}) {
         ratio = parseInt(poll.options[i].votes_count / poll.voters_count * 100) || 0;
         poll_options
             .append($('<span />')
+                .attr('data-choices', i)
                 .append($('<span />')
                     .addClass('progress ratio')
                     .text(ratio + '%'))
@@ -1402,6 +1408,27 @@ function post_status() {
         data.sensitive = $('#nsfw').prop('checked');
     }
 
+    let poll = $('[name=toot_poll]');
+    let choices = $('#toot_poll').find('[name=poll_choices]').filter(function(e) { return this.value !== "" });
+    if (poll.hasClass('active') && choices.length > 0) {
+        let exp_unit = $('#poll_exp_unit').val();
+        let exp_val = parseInt($('#poll_exp_value').val())
+        let expired_in = exp_val * (
+            exp_unit === 'hour' ? 3600 :
+            exp_unit === 'day' ? 86400 :
+            60
+        );
+        if (expired_in < 300) {
+            $.terminal.active().error('Error: expired is too short (<5min)')
+            throw {expired_in: expired_in}
+        }
+        data.poll = {
+            options: Array.from(choices.map((i, e) => e.value)),
+            expires_in: expired_in,
+            multiple: $('#poll_multi').prop('checked')
+        };
+    }
+
     return $.ajax({
         url: 'https://' + _ins.domain + '/api/v1/statuses',
         type: 'POST',
@@ -1419,6 +1446,8 @@ function post_status() {
         $('#toot_visibility').val(visibility);
         $('#reply_close').trigger('click');
         $('#toot_media').html('');
+        $('#toot_poll').children('.choices').empty()
+            .append(poll_choices_template()).append(poll_choices_template());
         $('#toot_box').val('').trigger('keyup').focus();
         autosize.update($('#toot_box'));
     }, (jqxhr, status, error) => {
@@ -1682,6 +1711,7 @@ function closeTootbox() {
     $('#reply').hide();
     $('#toot_box').val('');
     $('#toot').slideUp('first');
+    $('#toot_poll').children('.choices').empty();
     $.terminal.active().enable();
 }
 
@@ -1722,6 +1752,16 @@ function boost(status) {
         $(head_fa[1]).removeClass().addClass('actions fas fa-' + (isReb ? 'check-circle' : 'retweet'));
         console.log(jqxhr);
     });
+}
+
+function poll_choices_template() {
+    return $('<div/>')
+        .append($('<input/>')
+            .attr('name', 'poll_choices')
+            .attr('placeholder', 'Question'))
+        .append($('<button>')
+            .addClass('poll_remove')
+            .text('-'));
 }
 
 function tofu_on_fire(status) {

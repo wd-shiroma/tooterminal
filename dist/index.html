@@ -28,7 +28,7 @@
                     <option value="direct">ダイレクト</option>
                 </select>
                 <div id="toot_size">500</div>
-                <div class="nsfw">
+                <div class="nsfw checkbox">
                     <input type="checkbox" id="nsfw" />
                     <label for="nsfw">NSFW</label>
                 </div>
@@ -41,6 +41,9 @@
                     </button>
                     <button name="toot_preview">
                         <i class="fas fa-search"></i>
+                    </button>
+                    <button name="toot_poll">
+                        <i class="fas fa-th-list"></i>
                     </button>
                 </div>
                 <div id="emoji_picker">
@@ -72,6 +75,22 @@
                 <div id="toot_preview">
                     <div class="sensitive"></div>
                     <div class="content"></div>
+                </div>
+                <div id="toot_poll">
+                    <div class="choices"></div>
+                    <div class="poll_cmds">
+                        <button class="poll_append">+</button>
+                        <div class="poll_multi checkbox">
+                            <input type="checkbox" id="poll_multi" />
+                            <label for="poll_multi">Multi</label>
+                        </div>
+                        <input type="number" min="1" max="60" id="poll_exp_value" value="1"/>
+                        <select id="poll_exp_unit">
+                            <option value="min">min</option>
+                            <option value="hour">hour</option>
+                            <option value="day" selected>day</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="toot_media" id="toot_media">

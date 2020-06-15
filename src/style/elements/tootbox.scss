@@ -70,7 +70,7 @@
     display: none;
 }
 
-.nsfw {
+.checkbox {
     display: inline-block;
     &>input {
         display: none;
@@ -184,6 +184,17 @@
     .sensitive {
         border-bottom: solid 1px #333;
     }
+}
+
+#toot_poll {
+    display: none;
+    border: solid 1px #333;
+    margin: 2px 0px 0px 0px;
+    padding: 3px;
+    background-color: #000;
+    max-height: 10em;
+    overflow-y: auto;
+    overflow-x: none;
 }
 
 .reply {
