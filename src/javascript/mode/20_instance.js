@@ -1293,6 +1293,8 @@ let InstanceModeElement = (function () {
         }
         $('#toot_visibility').val(visibility);
         $('#toot').slideDown('first');
+        $('#toot_poll').children('.choices').empty()
+            .append(poll_choices_template()).append(poll_choices_template());
         $('#toot_box').focus();
         term.focus(false);
     };
