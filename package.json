@@ -50,7 +50,7 @@
     "gulp-sass": "^4.0.2",
     "gulp-scss": "^1.4.0",
     "gulp-sourcemaps": "^2.6.5",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.1",
     "jquery.mousewheel": "^3.1.9",
     "node-gyp": "^7.0.0",
     "run-sequence": "^2.2.1",
