@@ -231,6 +231,7 @@
 
 .status_poll {
     margin: 0 0 0.5em 0;
+    vertical-align: middle;
     &>span {
         border-radius: 5px;
         border: 1px solid #353535;
@@ -256,6 +257,15 @@
         &:active {
             background-color: #101025;
         }
+        &.active {
+            background-color: #353535;
+        }
+    }
+    button {
+        border-radius: 5px;
+        border: 1px solid #353535;
+        background-color: #101025;
+        height: 1.5em;
     }
 }
 

@@ -641,7 +641,23 @@ $(function() {
     .on('keyup', (event) => {
         if (event.keyCode === 18) return false;
     })
-    .on('click', '.status_poll>span', function(e) {
+    .on('click', '.status_poll>span.poll_choices', function(e) {
+        let target = $(e.currentTarget)
+        let poll = target.parents('.status_poll')
+        if (target.hasClass('active')) {
+            $(target).removeClass('active')
+        }
+        else if (!poll.data('multiple')) {
+            poll.children('span').each((i, ee) => {
+                $(ee).removeClass('active');
+            });
+            $(target).addClass('active')
+        }
+        else {
+            $(target).addClass('active')
+        }
+    })
+    .on('click', '.status_poll>button.vote', function(e) {
         let poll = $(e.target).parents('.status_poll');
         let expires = Date.parse(poll.data('expires')) - Date.now();
         let term = $.terminal.active();
@@ -651,14 +667,24 @@ $(function() {
             return;
         }
 
+        let choices = Array.from(poll
+            .children('span')
+            .filter((i, e) => $(e).hasClass('active'))
+            .map((i, e) => $(e).data('choices'))
+        )
+        if (choices.length === 0) {
+            term.error('The poll has no choices.');
+            return;
+        }
+
         let api = '/api/v1/polls/' + poll.data('pollid') + '/votes';
         callAPI(api, {
             type: 'POST',
-            data: { choices: [ $(e.target).data('choices') ] }
+            data: { choices: choices }
         })
         .then((data, status, jqxhr) => {
             if (data.voted) {
-                term.echo(`Vote: ${data.options[data.own_votes[0]].title}`);
+                term.echo(`Vote: ${data.own_votes.map(e => data.options[e].title).join(', ')}`);
                 $(poll).html(make_poll(data));
             }
             else {
@@ -1222,11 +1248,13 @@ function make_poll(poll, account = {}) {
     let poll_options = $('<div />')
             .addClass('status_poll' + (poll.voted || poll.expired || ins._ins.user.id === account.id ? '_result' : ''))
             .attr('data-expires', poll.expires_at)
-            .attr('data-pollid', poll.id);
+            .attr('data-pollid', poll.id)
+            .attr('data-multiple', poll.multiple);
     for (let i = 0; i < poll.options.length; i++) {
         ratio = parseInt(poll.options[i].votes_count / poll.voters_count * 100) || 0;
         poll_options
             .append($('<span />')
+                .addClass('poll_choices')
                 .attr('data-choices', i)
                 .append($('<span />')
                     .addClass('progress ratio')
@@ -1238,6 +1266,13 @@ function make_poll(poll, account = {}) {
                     .addClass('proceed')
                     .css('width', ratio + '%')));
     }
+
+    if (!poll.voted && !poll.expired) {
+        poll_options.append($('<button />')
+            .addClass('vote')
+            .text('Vote'));
+    }
+
     return $('<div />').append(poll_options).prop('outerHTML');
 }
 
