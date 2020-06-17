@@ -220,6 +220,36 @@ let update_emoji_picker = () => {
     list_area.html(_html).slideDown('fast');
 };
 
+let insert_emoji = function(e) {
+    let term = $.terminal.active();
+    if (term.name() !== 'instance') {
+        return;
+    }
+    if ($('#toot').is(':hidden')) {
+        term.exec('toot');
+    }
+    let elem = $(this).children('img');
+    let content = $('#toot_box').val();
+    let pos = $('#toot_box').prop('selectionStart');
+    let before = content.slice(0, pos);
+    let after = content.slice(pos);
+    if (before.length > 0 && before.slice(-1).match(/[^ \n]/)) {
+        before += ' ';
+    }
+    if (after.slice(0, 1) !== ' ') {
+        after = ' ' + after;
+    }
+    let inserted = before + elem.attr('alt') + after;
+    pos = inserted.length - after.length + 1;
+    $('#toot_box')
+        .val(inserted)
+        .prop('selectionStart', pos)
+        .prop('selectionEnd', pos)
+        .focus();
+
+    setTimeout(update_toot_status, 10);
+};
+
 function upload_img(imageFile) {
     let formData = new FormData();
     let _ins = ins.get();
@@ -324,8 +354,11 @@ $(function() {
             let imageFile = elem.originalEvent.clipboardData.items[0].getAsFile();
             upload_img(imageFile);
         }
-    });
-    $('#toot_poll').on('click', '.poll_append', function(e) {
+    })
+    .on('click', '.emoji_picker', insert_emoji)
+    .on('change', '#toot_emoji_category, #toot_emoji_tone', update_emoji_picker)
+    .on('keyup', '#toot_emoji_keyword', update_emoji_picker)
+    .on('click', '.poll_append', function(e) {
         let choices = $(e.target).parent().prev()
         choices.append(poll_choices_template())
     })
@@ -386,7 +419,7 @@ $(function() {
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     });
-    $('#timeline')
+    $(window)
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     })
@@ -531,35 +564,7 @@ $(function() {
             img.src = elem.data('url');
         }
     })
-    .on('click', '.emoji_picker', function(e) {
-        let term = $.terminal.active();
-        if (term.name() !== 'instance') {
-            return;
-        }
-        if ($('#toot').is(':hidden')) {
-            term.exec('toot');
-        }
-        let elem = $(this).children('img');
-        let content = $('#toot_box').val();
-        let pos = $('#toot_box').prop('selectionStart');
-        let before = content.slice(0, pos);
-        let after = content.slice(pos);
-        if (before.length > 0 && before.slice(-1).match(/[^ \n]/)) {
-            before += ' ';
-        }
-        if (after.slice(0, 1) !== ' ') {
-            after = ' ' + after;
-        }
-        let inserted = before + elem.attr('alt') + after;
-        pos = inserted.length - after.length + 1;
-        $('#toot_box')
-            .val(inserted)
-            .prop('selectionStart', pos)
-            .prop('selectionEnd', pos)
-            .focus();
-
-        setTimeout(update_toot_status, 10);
-    })
+    .on('click', '.emoji_picker', insert_emoji)
     .on('click', '.emoji_summary', function(e) {
         let term = $.terminal.active();
         if (term.name() === 'more') {
@@ -629,8 +634,6 @@ $(function() {
     .on('click', '.announcements .dismiss', (e) => {
         console.log($(e.target).parents('.announcements'))
     })
-    .on('change', '#toot_emoji_category, #toot_emoji_tone', update_emoji_picker)
-    .on('keyup', '#toot_emoji_keyword', update_emoji_picker)
     .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
             $('.img_background').trigger('click');
