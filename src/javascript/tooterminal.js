@@ -631,7 +631,14 @@ $(function() {
         }
     })
     .on('click', '.announcements .dismiss', (e) => {
-        console.log($(e.target).parents('.announcements'))
+        let anno = $(e.currentTarget).parents('div.anno')
+        callAPI('/api/v1/announcements/' + anno.data('annoid') + '/dismiss', {
+            type: 'POST'
+        }).then((data, status, jqxhr) => {
+            $(anno).addClass('deleted');
+        }, (jqxhr, status, error) => {
+            term.error('Could not dismiss announcement.(' + jqxhr.status + ')')
+        });
     })
     .on('keydown', '.img_background', (event) => {
         if (event.keyCode === 27) {
@@ -1225,20 +1232,26 @@ function make_notification(payload, notifies) {
     return result;
 }
 
-function make_announcements(anno) {
+function make_announcements(anno, include_read = true) {
+    let elem;
     let html = $('<div/>')
         .addClass('announcements')
     for (let i in anno) {
-        //if (!anno[i].read)
-            html.append($('<div/>')
+        if (include_read || !anno[i].read)
+            elem = $('<div/>')
+                .attr('data-annoid', anno[i].id)
+                .addClass('anno')
                 .append($('<span/>')
                     .addClass('updated_at')
                     .text(`[${anno[i].updated_at}] `))
                 .append($('<span/>')
                     .addClass('content')
-                    .html(parse_emojis(anno[i].content, anno[i].emojis))))
-                //.append($('<i/>')
-                //    .addClass('dismiss fas fa-trash-alt')))
+                    .html(parse_emojis(anno[i].content, anno[i].emojis)))
+            if (!anno[i].read) {
+                elem.append($('<i/>')
+                    .addClass('dismiss fas fa-trash-alt'))
+            }
+            html.append(elem);
     }
     return html.prop('outerHTML')
 }

@@ -7,4 +7,7 @@
         color: lighten($color: green, $amount: 10);
         cursor: pointer;
     }
+    .anno.deleted span {
+        text-decoration: line-through;
+    }
 }

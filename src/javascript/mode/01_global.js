@@ -292,7 +292,7 @@ var GlobalModeElement = (function () {
 
                 if (announces.length) {
                     term.echo('announcements:')
-                    term.echo(make_announcements(announces), {raw: true})
+                    term.echo(make_announcements(announces, false), {raw: true})
                 }
 
                 emojis.add_custom_emojis(_emojis.map(e => ({
