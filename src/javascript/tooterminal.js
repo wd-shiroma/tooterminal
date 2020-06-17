@@ -658,7 +658,7 @@ $(function() {
         })
         .then((data, status, jqxhr) => {
             if (data.voted) {
-                term.echo('Vote: ' + $(e.target).text());
+                term.echo(`Vote: ${data.options[data.own_votes[0]].title}`);
                 $(poll).html(make_poll(data));
             }
             else {
@@ -1166,13 +1166,14 @@ function make_notification(payload, notifies) {
     let is_reb = (payload.type === 'reblog') && notifies.reblog;
     let is_fol = (payload.type === 'follow') && notifies.following;
     let is_men = (payload.type === 'mention') && notifies.mention;
+    let is_poll = (payload.type === 'poll') && notifies.poll;
 
     let result = {
         html: ''
     }
 
     let msg = '';
-    if (is_fav || is_reb || is_fol || is_men) {
+    if (is_fav || is_reb || is_fol || is_men || is_poll) {
         let content = '(Status was deleted)';
         let emojis = [];
         let status = payload.status ? parse_status(payload.status) : {};
@@ -1182,13 +1183,14 @@ function make_notification(payload, notifies) {
                 (payload.type === 'favourite') ? 'star' :
                 (payload.type === 'reblog') ? 'retweet' :
                 (payload.type === 'mention') ? 'comment-dots' :
-                (payload.type === 'follow') ? 'handshake' : 'bell')
+                (payload.type === 'follow') ? 'handshake' :
+                (payload.type === 'poll') ? 'list' : 'bell')
             + '" aria-hidden="true"></i> '
             + account.parsed_display_name + ' '
             + $.terminal.format('[[!;;]@' + account.acct_full + ']') + "<br />"
             + (status.parsed_content || '');
         msg = $('<span />').html(msg).addClass('status_notify').prop('outerHTML');
-        if (payload.type === 'mention') {
+        if (payload.type === 'mention' || payload.type === 'poll') {
             result.status = makeStatus(payload.status);
             msg += result.status.html;
         }
@@ -1228,7 +1230,7 @@ function make_poll(poll, account = {}) {
                 .attr('data-choices', i)
                 .append($('<span />')
                     .addClass('progress ratio')
-                    .text(`${ratio}% (${poll.options[i].votes_count}/${poll.voters_count}`))
+                    .text(`${ratio}% (${poll.options[i].votes_count}/${poll.voters_count})`))
                 .append($('<span />')
                     .addClass('progress item')
                     .html(parse_emojis(poll.options[i].title, poll.emojis)))

@@ -18,7 +18,8 @@ let defconf = {
                 favourite: true,
                 reblog: true,
                 mention: true,
-                following: true
+                following: true,
+                poll: true
             },
             monitor: [
                 'local',

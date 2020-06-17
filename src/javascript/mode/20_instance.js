@@ -1953,7 +1953,7 @@ let InstanceModeElement = (function () {
             limit = analyzer.paramaters.post_limits;
         }
         if (analyzer.optional.exclude_types) {
-            params.exclude_types = ['follow', 'reblog', 'mention', 'favourite'].filter((e, i, r) => {
+            params.exclude_types = ['follow', 'reblog', 'mention', 'favourite', 'poll'].filter((e, i, r) => {
                 return (analyzer.line_parsed[3].name !== e);
             })
         }
@@ -2436,6 +2436,7 @@ function config_notify() {
             reblog: noti_src.indexOf('reb') >= 0,
             mention: noti_src.indexOf('men') >= 0,
             following: noti_src.indexOf('fol') >= 0,
+            poll: noti_src.indexOf('pol') >= 0,
         };
     }
     else if (typeof noti_src === 'object') {
@@ -2444,7 +2445,8 @@ function config_notify() {
             favourite: (noti_src !== false && noti_src.favourite !== false),
             reblog: (noti_src !== false && noti_src.reblog !== false),
             mention: (noti_src !== false && noti_src.mention !== false),
-            following: (noti_src !== false && noti_src.following !== false)
+            following: (noti_src !== false && noti_src.following !== false),
+            poll: (noti_src !== false && noti_src.following !== false)
         };
     }
     else {
@@ -2453,7 +2455,8 @@ function config_notify() {
             favourite: true,
             reblog: true,
             mention: true,
-            following: true
+            following: true,
+            poll: true
         }
     }
     return notifies;
