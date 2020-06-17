@@ -143,6 +143,11 @@ var ConfigurationModeElement = (function () {
                                         "name": "following",
                                         "description": "フォロー通知を表示します。",
                                         "execute": this.set_default
+                                    }, {
+                                        "type": "command",
+                                        "name": "poll",
+                                        "description": "投票結果通知を表示します。",
+                                        "execute": this.set_default
                                     }
                                 ]
                             }, {
@@ -170,6 +175,11 @@ var ConfigurationModeElement = (function () {
                                         "type": "command",
                                         "name": "following",
                                         "description": "フォローの通知を表示します。",
+                                        "execute": this.set_true
+                                    }, {
+                                        "type": "command",
+                                        "name": "poll",
+                                        "description": "投票結果の通知を表示します。",
                                         "execute": this.set_true
                                     }
                                 ]
@@ -424,6 +434,11 @@ var ConfigurationModeElement = (function () {
                                                 "name": "following",
                                                 "description": "フォロー通知を非表示にします。",
                                                 "execute": this.set_false
+                                            }, {
+                                                "type": "command",
+                                                "name": "following",
+                                                "description": "投票結果通知を非表示にします。",
+                                                "execute": this.set_false
                                             }
                                         ]
                                     }, {
@@ -452,6 +467,11 @@ var ConfigurationModeElement = (function () {
                                                 "type": "command",
                                                 "name": "following",
                                                 "description": "フォロー通知を非表示にします。",
+                                                "execute": this.set_default
+                                            }, {
+                                                "type": "command",
+                                                "name": "poll",
+                                                "description": "投票結果通知を非表示にします。",
                                                 "execute": this.set_default
                                             }
                                         ]
