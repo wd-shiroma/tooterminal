@@ -355,7 +355,6 @@ $(function() {
             upload_img(imageFile);
         }
     })
-    .on('click', '.emoji_picker', insert_emoji)
     .on('change', '#toot_emoji_category, #toot_emoji_tone', update_emoji_picker)
     .on('keyup', '#toot_emoji_keyword', update_emoji_picker)
     .on('click', '.poll_append', function(e) {
@@ -419,7 +418,7 @@ $(function() {
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     });
-    $(window)
+    $(document)
     .on('click', '.read_more', function() {
         $(this).next().toggle('fast');
     })
@@ -1232,7 +1231,7 @@ function make_poll(poll, account = {}) {
                     .text(ratio + '%'))
                 .append($('<span />')
                     .addClass('progress item')
-                    .text(parse_emojis(poll.options[i].title, poll.emojis)))
+                    .html(parse_emojis(poll.options[i].title, poll.emojis)))
                 .append($('<span />')
                     .addClass('proceed')
                     .css('width', ratio + '%')));
