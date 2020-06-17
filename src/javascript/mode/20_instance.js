@@ -493,6 +493,14 @@ let InstanceModeElement = (function () {
                         "name": "instance",
                         "description": 'インスタンス情報を表示します。',
                         "execute": this.show_instance,
+                        "children": [
+                            {
+                                "type": "command",
+                                "name": "announcements",
+                                "description": 'お知らせを表示します',
+                                "execute": this.show_announcements,
+                            }
+                        ]
                     }, {
                         "type": "command",
                         "name": "application",
@@ -1687,6 +1695,17 @@ let InstanceModeElement = (function () {
             console.log(jqxhr);
             term.resume();
         });
+    };
+    InstanceModeElement.prototype.show_announcements = function (term, analyzer) {
+        term.pause();
+        callAPI('/api/v1/announcements', {
+            type: 'GET'
+        }).then((data, status, jqxhr) => {
+            term.echo(make_announcements(data), {raw: true});
+            term.resume();
+        }, (jqxhr, status, error) => {
+            term.error('Getting announcements is failed. (' + jqxhr.status + ')');
+        })
     };
     InstanceModeElement.prototype.show_application = function (term, analyzer) {
         term.pause();
