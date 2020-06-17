@@ -1228,7 +1228,7 @@ function make_poll(poll, account = {}) {
                 .attr('data-choices', i)
                 .append($('<span />')
                     .addClass('progress ratio')
-                    .text(ratio + '%'))
+                    .text(`${ratio}% (${poll.options[i].votes_count}/${poll.voters_count}`))
                 .append($('<span />')
                     .addClass('progress item')
                     .html(parse_emojis(poll.options[i].title, poll.emojis)))
