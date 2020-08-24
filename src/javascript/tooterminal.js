@@ -415,6 +415,7 @@ $(function() {
         $('#img_view').fadeOut('first');
         $('#pre_view').fadeOut('first');
         $('#video_view').fadeOut('first');
+        $('#video_view')[0].pause();
         $('.img_background').fadeOut('first');
         $.terminal.active().enable();
     });
@@ -554,7 +555,7 @@ $(function() {
         else if (typeof elem.data('url') !== 'undefined') {
             let img = new Image();
             img.onload = () => {
-                $('#img_view').attr('src', elem.data('url'));
+                $('#img_view').attr('src', elem.data('url')).fadeIn('first');
             };
             img.onerror = (e) => {
                 console.log(elem);
