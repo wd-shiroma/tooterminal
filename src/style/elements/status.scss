@@ -280,20 +280,21 @@
         border: 1px solid #353535;
         position: relative;
         padding: 0px;
-        .item{
+        span.item{
             display: inline-block;
-            background-color: none !important;
+            background-color: transparent;
         }
-        .ratio{
-            display: none !important;
-        }
-        &:hover .item{
+        span.ratio{
             display: none;
-            background-color: none;
-            background-color: none !important;
+            background-color: transparent;
         }
-        &:hover .ratio{
-            display: inline !important;
+    }
+    &:hover>span {
+        span.item{
+            display: none;
+        }
+        span.ratio{
+            display: inline;
         }
     }
     .progress {
@@ -302,9 +303,9 @@
         height: 1.5em;
         padding: 0 0.5em;
     }
-    .proceed{
+    span.proceed{
         border-radius: 5px;
-        background-color: #225 !important;
+        background-color: #225;
         height: 1.5em;
     }
 }
